@@ -79,16 +79,17 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 ### Aléas collectifs
 Une fois par an, le système tire un **aléa collectif** parmi ceux de toutes les saisons : il **remplace la carte** de sa saison. Aucun choix individuel (pas de parade, pas de boule d'évitement) : le village doit **réunir ensemble un objectif** avant la fin d'une étape donnée. Chaque ferme donne ce qu'elle veut, quand elle veut, depuis son mobile ; l'objectif est vérifié automatiquement à l'échéance. S'il est atteint, tout le village souffle ; sinon tout le village stresse. Les aléas collectifs ne sont jamais annoncés par la météo.
 
-L'objectif est **global** : un total à atteindre pour l'ensemble du village, quel que soit le nombre de fermes. Peu importe qui donne : une seule ferme peut même le réunir seule, c'est l'esprit solidaire. Il prend quatre formes :
+L'objectif est **global** : un total à atteindre pour l'ensemble du village, dont la **valeur dépend du nombre de fermes** (plus il y a de fermes, plus il est élevé). Peu importe qui donne : une seule ferme peut même le réunir seule, c'est l'esprit solidaire. Il prend quatre formes :
 - **Argent** : les EB donnés sont déduits de la banque de la ferme.
 - **Plats** : les plats offerts sont déduits du stock de la ferme (il faut les avoir transformés).
 - **Jetons bruts** : la ferme remet les jetons à l'animateur puis les déclare sur mobile ; l'animateur peut corriger avec −1 / +1.
 - **Boules** : des volontaires prennent des boules de stress, chaque boule prise compte pour l'objectif.
 
-- **Printemps** : Inondation (60 EB au total, échéance fin d'Achats) ; Semences communes (8 jetons de fruits et légumes, échéance fin de Transformation).
+Exemples avec 4 fermes (l'objectif s'adapte au nombre de fermes) :
+- **Printemps** : Inondation (60 EB, échéance fin d'Achats) ; Semences communes (8 jetons de fruits et légumes, échéance fin de Transformation).
 - **Été** : Feu de broussailles (2 boules prises par des volontaires, échéance fin de Transformation) ; Fête du village (2 fromages offerts, échéance fin du Marché).
-- **Automne** : Maladie du bétail (80 EB au total, échéance fin d'Achats) ; Soupe solidaire (8 jetons d'œufs, échéance fin de Transformation).
-- **Hiver** : Panne d'électricité (80 EB au total, échéance fin d'Achats) ; Marché de Noël (3 confitures offertes, échéance fin du Marché).
+- **Automne** : Maladie du bétail (80 EB, échéance fin d'Achats) ; Soupe solidaire (8 jetons d'œufs, échéance fin de Transformation).
+- **Hiver** : Panne d'électricité (80 EB, échéance fin d'Achats) ; Marché de Noël (3 confitures offertes, échéance fin du Marché).
 
 **Sanction et récompense : le stress uniquement.** Objectif atteint : **−1 boule** pour chaque ferme. Objectif manqué : **+1 boule** pour chaque ferme.
 
