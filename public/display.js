@@ -24,34 +24,16 @@
 
   var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 boule' };
 
-  // Frise du jeu : une route de 3 annees, 4 saisons chacune, la fete a la fin de chaque annee.
-  var SCOL = ['#8FD36B', '#F2B63D', '#F08A4B', '#8EC5F0'];
-  function timeline() {
-    var cur = V.phase === 'season' ? (V.year - 1) * 4 + V.season : V.phase === 'closing' || V.phase === 'end' ? V.year * 4 - 1 : (V.year - 1) * 4 - 0.5;
-    var h = '';
-    for (var y = 1; y <= 3; y++) {
-      var segs = '';
-      for (var s = 0; s < 4; s++) {
-        var i = (y - 1) * 4 + s;
-        var st = V.phase === 'end' || i < cur ? 'done' : i === cur && V.phase === 'season' ? 'now' : '';
-        segs += '<div class="tl-s ' + st + '" style="--c:' + SCOL[s] + '"><span class="e">' + FF.ICON.seasons[s] + '</span>' + (st === 'now' ? '<span class="n">' + esc(V.meta.seasons[s].name) + '</span>' : '') + '</div>';
-      }
-      var fete = V.fetes.filter(function (f) { return f.year === y; })[0];
-      var fst = fete ? (fete.success ? 'ok' : 'ko') : V.year === y && V.phase === 'closing' ? 'now' : '';
-      h += '<div class="tl-y' + (V.year === y ? ' cur' : '') + '"><div class="tl-lab">Année ' + y + '</div><div class="tl-track">' + segs + '<div class="tl-f ' + fst + '" title="Fête du Phoenix"><span>' + (fst === 'ok' ? '✓' : fst === 'ko' ? '✗' : '🎉') + '</span></div></div></div>';
-    }
-    return '<div class="tl">' + h + '</div>';
-  }
-
   function head() {
     var inSeason = V.phase === 'season';
     var badge = inSeason
       ? '<span class="d-season" style="background:' + V.seasonColor + '">' + FF.ICON.seasons[V.season] + ' ' + esc(V.seasonName) + '</span>'
       : '<span class="d-season" style="background:linear-gradient(135deg,var(--pb),var(--pc))">🚜 Farming\'s Folies</span>';
-    var steps = inSeason ? '<div class="d-steps">' + V.meta.steps.map(function (s, i) {
-      return '<span class="' + (i === V.step ? 'on' : i < V.step ? 'done' : '') + '">' + FF.ICON.steps[i] + (i === V.step ? '<b>' + esc(s.name.split(' ')[0]) + '</b>' : '') + '</span>';
+    var steps = inSeason ? '<div class="d-steps"><b>' + esc(V.meta.steps[V.step].name.split(' ')[0]) + '</b>' + V.meta.steps.map(function (s, i) {
+      return '<i class="' + (i === V.step ? 'on' : i < V.step ? 'done' : '') + '"></i>';
     }).join('') + '</div>' : '';
-    return '<div class="d-head"><div style="display:flex;align-items:center;gap:24px">' + badge + '</div>' + steps + '</div>' + timeline();
+    var yr = V.phase === 'lobby' ? '' : '<span class="d-year">Année ' + V.year + ' sur 3</span>';
+    return '<div class="d-head"><div style="display:flex;align-items:center;gap:28px">' + badge + yr + '</div>' + steps + '</div>';
   }
 
   function foot() {
@@ -106,7 +88,7 @@
     var rows = M.items.map(function (i) {
       var who = i.team ? '<span class="pill" style="font-size:' + (big ? 21 : 26) + 'px;background:var(--panel);border:2px solid var(--mint);color:var(--text)">' + esc(i.teamName) + '</span>' : '<span class="pill" style="font-size:' + (big ? 21 : 26) + 'px;background:var(--amber);color:var(--ink)">À prendre</span>';
       var done = V.phase === 'closing' && V.closedYear ? (i.delivered ? '<b style="color:var(--mint)">✓</b>' : '<b style="color:var(--flame)">✗</b>') : '';
-      return '<div class="d-q sm" style="padding:' + (big ? 8 : 10) + 'px 20px;gap:12px;font-size:' + (big ? 24 : 32) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 19 : 22) + 'px;font-weight:500;color:var(--muted)">' + esc(TIER[i.tier]) + ' · ' + esc(i.needs) + '</span></span>' + done + who + '</div>';
+      return '<div class="d-q sm" style="padding:' + (big ? 8 : 10) + 'px 20px;gap:12px;font-size:' + (big ? 24 : 32) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 19 : 22) + 'px;font-weight:500;color:var(--muted)">' + esc(i.needs) + '</span></span>' + done + who + '</div>';
     }).join('');
     return '<section style="flex:1.6;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:16px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Menu de la Fête du Phoenix · année ' + V.year + ' <span style="font-weight:500;color:var(--muted);font-size:26px">· chaque ferme prend ' + M.perFarm + ' plat' + (M.perFarm > 1 ? 's' : '') + '</span></div>' +
       '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:14px">' + rows + '</div></section>';
@@ -174,7 +156,7 @@
       stage.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
         '<div style="font-size:120px;font-weight:800;line-height:1">Farming\'s Folies</div><div style="font-size:56px;color:var(--muted)">Bienvenue au village du Phoenix</div>' +
         '<div style="font-size:44px;color:var(--muted)">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div>' +
-        '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:44px;padding:12px 32px">' + esc(t.name) + '</span>'; }).join('') + '</div></div>';
+        '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:38px;padding:12px 32px;background:var(--surface)">' + esc(t.name) + '</span>'; }).join('') + '</div></div>';
       drawQr();
       return;
     }

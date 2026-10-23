@@ -126,48 +126,32 @@ body.display { overflow: hidden; }
 #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; padding: 44px 96px 48px; display: flex; flex-direction: column; gap: 28px; }
 .d-head { display: flex; justify-content: space-between; align-items: center; }
 .d-season { border-radius: 999px; padding: 6px 34px; color: var(--ink); font: 800 46px/1.15 var(--f-body); white-space: nowrap; }
-.d-year { font-size: 34px; font-weight: 700; color: var(--muted); margin-left: 28px; white-space: nowrap; }
-.d-steps { display: flex; gap: 8px; font-size: 28px; align-items: center; white-space: nowrap; }
-.d-steps span { display: inline-flex; gap: 10px; align-items: center; padding: 6px 16px; border-radius: 999px; opacity: .4; font-size: 28px; }
-.d-steps span.done { opacity: .8; }
-.d-steps span.on { opacity: 1; background: linear-gradient(135deg, var(--pb), var(--pc)); color: var(--ink); }
-.d-steps b { font-size: 24px; }
+.d-year { font-size: 32px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.d-steps { display: flex; gap: 10px; font-size: 28px; align-items: center; white-space: nowrap; }
+.d-steps b { font-size: 30px; font-weight: 700; color: var(--muted); margin-right: 8px; }
+.d-steps i { width: 44px; height: 8px; border-radius: 99px; background: var(--line2); }
+.d-steps i.done { background: var(--muted); }
+.d-steps i.on { background: var(--pc); }
 .d-main { flex: 1; min-height: 0; display: flex; gap: 96px; }
 .d-big { font: 800 70px/1.05 var(--f-body); }
 .d-clock { font-size: 290px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .d-clock.low { color: var(--bad); }
-.d-q { display: flex; align-items: center; gap: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 28px; padding: 16px 28px; font-size: 40px; font-weight: 700; }
+.d-q { display: flex; align-items: center; gap: 24px; background: transparent; border: 0; border-radius: 28px; padding: 16px 28px; font-size: 40px; font-weight: 700; }
 .d-q .v { margin-left: auto; font-size: 80px; font-weight: 800; line-height: 1; }
 .d-q i { width: 30px; height: 30px; border-radius: 50%; display: inline-block; }
 .d-foot { display: flex; gap: 32px; }
-.d-team { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 28px; padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; font-size: 30px; font-weight: 700; }
+.d-team { flex: 1; min-width: 0; background: transparent; border: 0; border-top: 2px solid var(--line); border-radius: 0; padding: 20px 4px 0; display: flex; flex-direction: column; gap: 16px; font-size: 30px; font-weight: 700; }
 .d-team .dot { width: 28px; height: 28px; border-width: 4px; }
 .d-team .pill { font-size: 26px; padding: 4px 22px; }
-.d-card { background: var(--surface); border: 1px solid var(--line); border-radius: 36px; padding: 48px 72px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
+.d-card { background: transparent; border: 0; border-radius: 36px; padding: 48px 0; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
 .d-q.sm { padding: 10px 24px; font-size: 36px; }
 .d-q.sm .v { font-size: 64px; }
 .d-q.sm i { width: 26px; height: 26px; }
 
-/* Frise du jeu (ecran joueurs) : une route, trois annees, la fete a chaque bout */
-.tl { display: flex; gap: 32px; align-items: flex-end; margin: 8px 0; }
-.tl-y { flex: 1; display: flex; flex-direction: column; gap: 6px; opacity: .55; }
-.tl-y.cur { opacity: 1; }
-.tl-lab { font-size: 20px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-left: 6px; }
-.tl-y.cur .tl-lab { color: var(--sand); }
-.tl-track { display: flex; align-items: center; gap: 8px; height: 64px; padding: 5px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-.tl-s { flex: 1; height: 100%; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 28px; font-weight: 800; background: var(--surface-2); border: 3px solid transparent; filter: grayscale(.85); opacity: .5; transition: flex .3s; }
-.tl-s .n { font-size: 22px; color: #1B1410; }
-.tl-s.done { background: var(--c); filter: none; opacity: .9; }
-.tl-s.now { flex: 2.4; background: var(--c); filter: none; opacity: 1; border-color: #fff; box-shadow: 0 0 22px var(--c); }
-.tl-f { flex: none; width: 54px; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: 28px; background: var(--surface-2); border: 3px dashed var(--line2); }
-.tl-f.now { border-style: solid; border-color: var(--pb); background: var(--warn-soft); box-shadow: 0 0 18px var(--pb); }
-.tl-f.ok { background: var(--teal); color: var(--teal-ink); border: 3px solid transparent; font-weight: 800; }
-.tl-f.ko { background: var(--bad); color: #fff; border: 3px solid transparent; font-weight: 800; }
-
 /* Equipes en bas de l'ecran joueurs */
 .d-team-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .d-team .nm { font-size: 32px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.d-team .lv { font-size: 36px; line-height: 1; }
+.d-team .lv { font-size: 30px; line-height: 1; }
 .meter { display: flex; gap: 5px; }
 .meter i { flex: 1; height: 14px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); }
 .meter i.on.Zen { background: var(--teal); border-color: transparent; }
