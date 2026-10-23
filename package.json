@@ -1,0 +1,25 @@
+{
+  "name": "farming-folies",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jeu de gestion de ferme en equipes pour teambuilding : console animateur, ecran joueurs et mobile d'equipe en temps reel.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "gateway": {
+    "name": "Farming's Folies",
+    "description": "Jeu de gestion de ferme en equipes : console animateur, ecran joueurs, mobile d'equipe.",
+    "color": "#F2B63D",
+    "tags": ["temps reel"],
+    "route": "farming-folies"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

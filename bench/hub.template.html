@@ -1,0 +1,188 @@
+<title>Banc d'essai Farming's Folies</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Disposition : barre d'outils, trois onglets (console, écran joueurs, mobiles) qui gardent leurs pages vivantes. */
+:root{
+  --bg:#14211B; --panel:#1C2E25; --line:#34503F; --text:#F4F8F5; --muted:#9DB3A5;
+  --amber:#F2B63D; --mint:#6FD3A0; --ink:#14211B; --flame:#FF6B4A;
+  --display:'Bricolage Grotesque',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+.wrap{display:flex;flex-direction:column;gap:12px;min-height:100%}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+h1{margin:0;font:800 24px/1.1 var(--display);text-wrap:balance}
+.code{font:700 14px var(--body);letter-spacing:.12em;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:5px 14px;color:var(--amber)}
+.spacer{flex:1}
+button{font:inherit;font-weight:700;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}
+button.primary{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+button[disabled]{opacity:.45;cursor:not-allowed}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{min-height:38px;color:var(--muted)}
+nav button[aria-selected="true"]{background:var(--text);color:var(--ink);border-color:var(--text)}
+.note{margin:0;color:var(--muted);font-size:13px;max-width:70ch}
+.pane{display:none;flex:1;min-height:0}
+.pane.on{display:flex;flex-direction:column;gap:10px}
+iframe{border:1px solid var(--line);border-radius:12px;background:#0d1511;width:100%}
+#fConsole,#fHome{height:max(760px,calc(100vh - 190px))}
+.screen{width:100%;max-width:1280px;aspect-ratio:16/9}
+.screen iframe{height:100%}
+.phones{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.phone{flex:0 0 auto;width:min(390px,calc(100vw - 40px));display:flex;flex-direction:column;gap:6px}
+.phone span{font-weight:700;color:var(--muted);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.phone iframe{height:760px}
+.empty{color:var(--muted);padding:24px;border:1px dashed var(--line);border-radius:12px;max-width:60ch}
+.pane:fullscreen{background:var(--bg);padding:8px;overflow:auto}.pane:fullscreen #fConsole,.pane:fullscreen #fHome{height:calc(100vh - 16px)}.pane:fullscreen .screen{max-width:none;height:calc(100vh - 16px);aspect-ratio:auto}.pane:fullscreen .phone iframe{height:calc(100vh - 60px)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Banc d'essai · Farming's Folies</h1>
+    <span class="code" id="code" aria-live="polite">—</span>
+    <span class="spacer"></span>
+    <button id="fs" title="Plein écran">⛶ Plein écran</button>
+    <button id="add4">Ajouter 4 équipes</button>
+    <button id="addGuest">Nouveau mobile (lien unique)</button>
+    <button class="primary" id="newGame">Nouvelle partie</button>
+  </header>
+  <p class="note">Le vrai moteur de jeu et les vrais écrans tournent ici. Seul le réseau est simulé dans cette page : une partie n'existe que dans ce navigateur, et chaque écran se comporte comme sur un appareil différent.</p>
+  <nav role="tablist" aria-label="Écrans">
+    <button role="tab" id="tab-home" data-pane="home" aria-selected="false">Accueil · parties</button>
+    <button role="tab" id="tab-console" data-pane="console" aria-selected="true">Console animateur</button>
+    <button role="tab" id="tab-display" data-pane="display" aria-selected="false">Écran joueurs</button>
+    <button role="tab" id="tab-phones" data-pane="phones" aria-selected="false">Mobiles des équipes</button>
+  </nav>
+  <section class="pane" id="pane-home"><iframe id="fHome" allowfullscreen title="Accueil et historique des parties"></iframe></section>
+  <section class="pane on" id="pane-console"><iframe id="fConsole" allowfullscreen title="Console de l'animateur"></iframe></section>
+  <section class="pane" id="pane-display"><div class="screen"><iframe id="fDisplay" allowfullscreen title="Écran des joueurs"></iframe></div></section>
+  <section class="pane" id="pane-phones">
+    <div class="empty" id="noPhones">Ajoutez des équipes depuis la console (ou le bouton « Ajouter 4 équipes ») : un mobile par équipe apparaît ici.</div>
+    <div class="phones" id="phones"></div>
+  </section>
+</div>
+
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+(function () {
+  var PAGES = /*__PAGES__*/;
+  var E = window.FFEngine.engine, dispatch = window.FFEngine.dispatch;
+  var KEY = 'ff-bench-v1';
+  var session = null, conns = {}, phones = {};
+  var $ = function (id) { return document.getElementById(id); };
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(session)); } catch (e) {} }
+  function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); return s && s.code ? s : null; } catch (e) { return null; } }
+
+  // Plein ecran : l'onglet actif (console, ecran joueurs ou mobiles) occupe tout l'appareil.
+  document.getElementById('fs').addEventListener('click', function () {
+    var el = document.querySelector('.pane.on') || document.documentElement;
+    var cur = document.fullscreenElement || document.webkitFullscreenElement;
+    if (cur) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    var req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) { alert_('Plein écran indisponible ici : ouvre le lien de l\'artefact directement dans le navigateur de la tablette.'); return; }
+    var p = req.call(el); if (p && p.catch) p.catch(function () { alert_('Plein écran refusé par l\'aperçu : ouvre l\'artefact dans un nouvel onglet du navigateur.'); });
+  });
+  function alert_(t) { var n = document.querySelector('.note'); if (n) { n.textContent = t; n.style.color = 'var(--amber)'; } }
+  function frame(el, html, qs) {
+    el.srcdoc = html.replace('<head>', '<head><script>window.__QS=' + JSON.stringify(qs) + ';<\/script>');
+  }
+  function buildFrames() {
+    conns = {}; phones = {}; $('phones').innerHTML = '';
+    $('code').textContent = 'Partie ' + session.code;
+    frame($('fConsole'), PAGES.admin, '?s=' + session.code + '&k=' + session.adminToken);
+    frame($('fDisplay'), PAGES.display, '?s=' + session.code);
+    frame($('fHome'), PAGES.home, '?s=' + session.code);
+    syncPhones();
+  }
+  function syncPhones() {
+    session.teams.forEach(function (t) {
+      if (phones[t.id]) return;
+      var box = document.createElement('div'); box.className = 'phone';
+      var lab = document.createElement('span'); lab.textContent = t.name;
+      var f = document.createElement('iframe'); f.allowFullscreen = true; f.title = 'Mobile de ' + t.name;
+      box.appendChild(lab); box.appendChild(f); $('phones').appendChild(box);
+      phones[t.id] = { box: box, label: lab };
+      frame(f, PAGES.team, '?s=' + session.code + '&t=' + t.token);
+    });
+    Object.keys(phones).forEach(function (id) {
+      var t = session.teams.filter(function (x) { return x.id === id; })[0];
+      if (!t) { phones[id].box.remove(); delete phones[id]; } else phones[id].label.textContent = t.name;
+    });
+    $('noPhones').hidden = session.teams.length > 0;
+  }
+  function newSession() {
+    session = E.createSession(E.newCode());
+    save(); buildFrames();
+  }
+
+  function pushAll() {
+    Object.keys(conns).forEach(function (id) {
+      var c = conns[id]; if (!c.auth) return;
+      try { c.source.postMessage({ ff: 'state', id: id, data: E.viewFor(session, c.auth.role, c.auth.teamId) }, '*'); } catch (e) {}
+    });
+  }
+  window.addEventListener('message', function (ev) {
+    var m = ev.data;
+    if (m && m.ff === 'goto') { var tb = $('tab-' + m.pane); if (tb) tb.click(); return; }
+    if (!m || m.ff !== 'req') return;
+    var c = conns[m.id] || (conns[m.id] = { source: ev.source, auth: null });
+    c.source = ev.source;
+    var reply = function (r) { ev.source.postMessage({ ff: 'res', rid: m.rid, r: r }, '*'); };
+    if (m.ev === 'join') {
+      var p = m.p || {};
+      if (!session || String(p.code || '').toUpperCase() !== session.code) return reply({ ok: false, error: 'Session introuvable.' });
+      var auth = null;
+      if (p.role === 'admin' && p.token === session.adminToken) auth = { role: 'admin' };
+      else if (p.role === 'team') { var t = session.teams.filter(function (x) { return x.token === p.token; })[0]; if (t) auth = { role: 'team', teamId: t.id }; }
+      else if (p.role === 'display') auth = { role: 'display' };
+      else if (p.role === 'guest') auth = { role: 'guest' };
+      if (!auth) return reply({ ok: false, error: 'Lien invalide.' });
+      c.auth = auth; reply({ ok: true, role: auth.role });
+      ev.source.postMessage({ ff: 'state', id: m.id, data: E.viewFor(session, auth.role, auth.teamId) }, '*');
+      return;
+    }
+    if (!c.auth) return reply({ ok: false, error: 'Connexion non établie.' });
+    try {
+      var out = dispatch(session, c.auth, m.p); save(); reply(c.auth.role === 'guest' ? { ok: true, token: out.token } : { ok: true }); pushAll(); syncPhones();
+    } catch (e) {
+      if (e instanceof E.GameError) return reply({ ok: false, error: e.message });
+      console.error(e); reply({ ok: false, error: 'Erreur interne.' });
+    }
+  });
+
+  // onglets
+  var tabs = document.querySelectorAll('nav button');
+  Array.prototype.forEach.call(tabs, function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(tabs, function (x) { x.setAttribute('aria-selected', String(x === b)); });
+      ['home', 'console', 'display', 'phones'].forEach(function (n) { $('pane-' + n).classList.toggle('on', n === b.dataset.pane); });
+    });
+  });
+  $('newGame').addEventListener('click', function () {
+    if (this.dataset.armed !== '1') { this.dataset.armed = '1'; this.textContent = 'Confirmer : tout effacer'; var b = this; setTimeout(function () { b.dataset.armed = ''; b.textContent = 'Nouvelle partie'; }, 3500); return; }
+    this.dataset.armed = ''; this.textContent = 'Nouvelle partie'; newSession();
+  });
+  $('addGuest').addEventListener('click', function () {
+    var box = document.createElement('div'); box.className = 'phone';
+    var lab = document.createElement('span'); lab.textContent = 'Lien unique';
+    var f = document.createElement('iframe'); f.allowFullscreen = true; f.title = 'Mobile (lien unique)';
+    box.appendChild(lab); box.appendChild(f); $('phones').appendChild(box); $('noPhones').hidden = true;
+    frame(f, PAGES.team, '?s=' + session.code + '&g=1');
+  });
+  $('add4').addEventListener('click', function () {
+    var profs = ['bergers', 'maraichers', 'eleveurs', 'gourmets'];
+    profs.forEach(function (p) { try { dispatch(session, { role: 'admin' }, { type: 'addTeam', name: '', profile: p }); } catch (e) {} });
+    save(); pushAll(); syncPhones();
+  });
+
+  session = load();
+  if (session) { $('code').textContent = 'Partie ' + session.code; buildFrames(); } else newSession();
+})();
+</script>

@@ -1,0 +1,9 @@
+{
+  "name": "Farming's Folies",
+  "short_name": "Farming's Folies",
+  "description": "Jeu de gestion de ferme en équipes : console animateur, écran joueurs, mobile d'équipe.",
+  "theme_color": "#F2B63D",
+  "background_color": "#14211B",
+  "display": "standalone",
+  "icons": []
+}
