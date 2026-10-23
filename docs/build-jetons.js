@@ -14,54 +14,82 @@ const COL = Object.fromEntries(D.PRODUCTS.map((p) => [p.id, p.color]));
 COL.fromage = COL.lait; COL.confiture = COL.fl; COL.saucisson = COL.viande;
 const shade = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
 
-// Pictogrammes simples (viewBox 24x24, centres)
+const light = (hex, k) => '#' + [1, 3, 5].map((i) => { const v = parseInt(hex.slice(i, i + 2), 16); return Math.round(v + (255 - v) * k).toString(16).padStart(2, '0'); }).join('');
+const OL = `stroke="${INK}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"`;
+
+// Pictogrammes "autocollant" (viewBox 100x100) : aplats colores, gros contour, reflet.
 const ICONS = {
-  lait: '<path d="M12 3c3 4.5 6 7.2 6 10.5A6 6 0 0 1 6 13.5C6 10.2 9 7.5 12 3z"/>',
-  oeuf: '<ellipse cx="12" cy="13" rx="6" ry="7.5"/>',
-  viande: '<ellipse cx="14" cy="9.5" rx="7" ry="6" transform="rotate(-35 14 9.5)"/><path d="M9.5 13.5L5 18" fill="none" stroke-width="2.6" stroke-linecap="round"/><circle cx="4" cy="18" r="1.8"/><circle cx="6" cy="20" r="1.8"/>',
-  fl: '<path d="M5 19C4 10 9 4 19 5c1 10-5 15-14 14zM5 19l8-8" fill-rule="evenodd"/>'
+  lait: `<rect x="40" y="14" width="20" height="14" rx="3" fill="#E04F4F" ${OL}/>
+    <path d="M40 28h20l10 16v40a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6V44z" fill="#fff" ${OL}/>
+    <rect x="30" y="52" width="40" height="20" fill="#6BB6F0" stroke="${INK}" stroke-width="3"/>
+    <path d="M38 36l-4 8" stroke="#cfe6f7" stroke-width="3.5" stroke-linecap="round"/>`,
+  oeuf: `<path d="M50 12C66 12 80 40 80 60a30 30 0 0 1-60 0C20 40 34 12 50 12z" fill="#FFFDF5" ${OL}/>
+    <path d="M33 50c2-10 7-20 12-25" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+    <path d="M28 66c2 8 9 14 18 15" fill="none" stroke="#E9C27A" stroke-width="3.5" stroke-linecap="round"/>`,
+  viande: `<path d="M58 20c14-6 28 6 24 20-3 10-13 15-22 14l-6 1-16 16-5-5 15-17 1-6c-1-9 2-18 9-23z" fill="#C2543E" ${OL}/>
+    <circle cx="68" cy="34" r="6" fill="#E08A70" stroke="${INK}" stroke-width="2.6"/>
+    <path d="M32 62l-8 8" stroke="#FFF4D8" stroke-width="9" stroke-linecap="round"/><path d="M32 62l-8 8" stroke="${INK}" stroke-width="3" stroke-linecap="round" opacity=".0"/>
+    <circle cx="22" cy="74" r="6.5" fill="#FFF4D8" ${OL}/><circle cx="30" cy="80" r="6.5" fill="#FFF4D8" ${OL}/>`,
+  fl: `<path d="M50 30C26 24 14 44 22 64c6 16 20 22 28 18 8 4 22-2 28-18 8-20-4-40-28-34z" fill="#E4503E" ${OL}/>
+    <path d="M50 30c0-8 2-14 8-18" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M54 20c8-8 20-6 24 0-8 6-18 6-24 0z" fill="#4E9A34" ${OL}/>
+    <path d="M30 48c-3 5-3 11-1 16" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity=".85"/>`
 };
-function icon(id, x, y, size, fill) {
-  const k = size / 24;
-  return `<g transform="translate(${x - size / 2} ${y - size / 2}) scale(${k})" fill="${fill}" stroke="${INK}" stroke-width="${1.2}" stroke-linejoin="round">${ICONS[id]}</g>`;
+function icon(id, cx, cy, size) {
+  const k = size / 100;
+  return `<g transform="translate(${cx - 50 * k} ${cy - 50 * k}) scale(${k})">${ICONS[id]}</g>`;
 }
 
-// Jeton de produit brut : disque colore, anneau fonce, pointilles, pictogramme + nom.
+// Bord crante + face bombee (degrade) : donne l'allure d'une vraie piece.
+function coin(key, base) {
+  return `<defs><radialGradient id="g-${key}" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="${light(base, .55)}"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${shade(base, .82)}"/></radialGradient></defs>
+    <circle cx="50" cy="50" r="49" fill="${shade(base, .62)}"/>
+    <circle cx="50" cy="50" r="46.2" fill="none" stroke="${light(base, .35)}" stroke-width="4.4" stroke-dasharray="2.1 1.7"/>
+    <circle cx="50" cy="50" r="42.5" fill="${shade(base, .62)}"/>
+    <circle cx="50" cy="50" r="41" fill="url(#g-${key})"/>
+    <path d="M17 38A36 36 0 0 1 50 14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".5"/>`;
+}
+
+// Jeton de produit brut : piece coloree, gros pictogramme, nom en bandeau.
 function rawToken(p, d) {
-  const r = d / 2;
-  return `<svg class="tok" width="${d}mm" height="${d}mm" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="49" fill="${p.color}" stroke="${shade(p.color, .55)}" stroke-width="2"/>
-    <circle cx="50" cy="50" r="42" fill="none" stroke="${shade(p.color, .55)}" stroke-width="1.5" stroke-dasharray="3 3.5"/>
-    ${icon(p.id, 50, 44, 40, '#fff')}
-    ${p.short.split('|').map((l, i, a) => `<text x="50" y="${(a.length > 1 ? 76 : 82) + i * 11}" text-anchor="middle" font-size="11" font-weight="800" letter-spacing="1" fill="${INK}">${l}</text>`).join('')}</svg>`;
+  const lines = p.short.split('|');
+  return `<svg class="tok" width="${d}mm" height="${d}mm" viewBox="0 0 100 100">${coin(p.id, p.color)}
+    ${icon(p.id, 50, 46, 56)}
+    <rect x="22" y="${lines.length > 1 ? 66 : 70}" width="56" height="${lines.length > 1 ? 21 : 14}" rx="7" fill="${INK}"/>
+    ${lines.map((l, i) => `<text x="50" y="${(lines.length > 1 ? 76 : 80) + i * 9}" text-anchor="middle" font-size="${lines.length > 1 ? 8.5 : 10}" font-weight="800" letter-spacing=".8" fill="#fff9ec">${l}</text>`).join('')}</svg>`;
 }
 
-// Jeton de plat : anneau partage en couleurs d'ingredients, coeur creme avec nom, pastilles de niveau.
+// Jeton de plat : bord crante partage en couleurs d'ingredients, coeur creme, nom, produits utilises et niveau.
 function dishToken(dish, d) {
   const prods = [];
   const walk = (req) => Object.keys(req).forEach((k) => {
-    if (COL[k] && D.PRODUCTS.some((p) => p.id === k)) { if (!prods.includes(k)) prods.push(k); }
+    if (D.PRODUCTS.some((p) => p.id === k)) { if (!prods.includes(k)) prods.push(k); }
     else { const sub = D.DISHES.find((x) => x.id === k); if (sub) walk(sub.req); }
   });
   walk(dish.req);
   const cols = prods.map((k) => COL[k]);
-  let ring = '';
   const n = cols.length, R = 49;
+  const pt = (a, r) => [50 + r * Math.cos(a), 50 + r * Math.sin(a)].map((v) => v.toFixed(2)).join(' ');
+  let ring = '';
   cols.forEach((c, i) => {
     const a0 = (i / n) * 2 * Math.PI - Math.PI / 2, a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
-    const pt = (a) => [50 + R * Math.cos(a), 50 + R * Math.sin(a)].map((v) => v.toFixed(2)).join(' ');
-    ring += n === 1 ? `<circle cx="50" cy="50" r="${R}" fill="${c}"/>` : `<path d="M50 50 L${pt(a0)} A${R} ${R} 0 ${1 / n > .5 ? 1 : 0} 1 ${pt(a1)} Z" fill="${c}"/>`;
+    ring += n === 1 ? `<circle cx="50" cy="50" r="${R}" fill="${c}"/>` : `<path d="M50 50L${pt(a0, R)}A${R} ${R} 0 0 1 ${pt(a1, R)}Z" fill="${c}"/>`;
+    if (n > 1) ring += `<path d="M50 50L${pt(a0, R)}" stroke="${INK}" stroke-width="1.6"/>`;
   });
   const words = dish.name.split(' ');
   const lines = words.length > 2 ? [words.slice(0, 2).join(' '), words.slice(2).join(' ')] : words.length === 2 && dish.name.length > 9 ? words : [dish.name];
-  const text = lines.map((l, i) => `<text x="50" y="${(lines.length === 1 ? 52 : 47 + i * 12)}" text-anchor="middle" font-size="${lines.some((x) => x.length > 11) ? 8 : 10}" font-weight="800" fill="${INK}">${l}</text>`).join('');
-  const dots = Array.from({ length: dish.tier }, (_, i) => `<circle cx="${50 + (i - (dish.tier - 1) / 2) * 9}" cy="72" r="3.2" fill="${INK}"/>`).join('');
+  const fs = lines.some((x) => x.length > 11) ? 7 : lines.length > 1 ? 8.5 : 9.5;
+  const text = lines.map((l, i) => `<text x="50" y="${(lines.length === 1 ? 57 : 52 + i * 9.5)}" text-anchor="middle" font-size="${fs}" font-weight="800" fill="${INK}">${l}</text>`).join('');
+  const sz = 19, gap = 1;
+  const mini = prods.map((k, i) => icon(k, 50 + (i - (prods.length - 1) / 2) * (sz + gap), 36, sz)).join('');
+  const dots = Array.from({ length: dish.tier }, (_, i) => `<circle cx="${50 + (i - (dish.tier - 1) / 2) * 7.5}" cy="72" r="2.8" fill="#C2543E" stroke="${INK}" stroke-width="1.2"/>`).join('');
   return `<svg class="tok" width="${d}mm" height="${d}mm" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="49" fill="#fff" stroke="${INK}" stroke-width="2"/>
-    ${ring}
-    <circle cx="50" cy="50" r="49" fill="none" stroke="${INK}" stroke-width="2"/>
-    <circle cx="50" cy="50" r="32" fill="#FFF6E6" stroke="${INK}" stroke-width="1.5"/>
-    ${text}${dots}</svg>`;
+    <circle cx="50" cy="50" r="49.5" fill="${INK}"/>${ring}
+    <circle cx="50" cy="50" r="47" fill="none" stroke="${INK}" stroke-width="1.6"/>
+    <circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2.1 1.7" opacity=".7"/>
+    <circle cx="50" cy="50" r="30" fill="#FFF6E6" stroke="${INK}" stroke-width="2.4"/>
+    <circle cx="50" cy="50" r="27.5" fill="none" stroke="#E9C27A" stroke-width="1" stroke-dasharray="1.5 2"/>
+    ${mini}${text}${dots}</svg>`;
 }
 
 const SHORT = { lait: 'LAIT', oeuf: 'ŒUFS', viande: 'VIANDE', fl: 'FRUITS &|LÉGUMES' };
