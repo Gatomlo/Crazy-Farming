@@ -105,7 +105,7 @@ Un coureur par type de produit, un jeton par voyage, au plus un jeton par tuile 
 - Recettes simples (valeur ×3) : fromage (2 laits), confiture (2 fruits et légumes), saucisson (2 viandes).
 - Recettes mixtes (×4) : cake (1 œuf + 1 fruit ou légume), lasagne (1 lait + 1 viande), omelette au lard (1 œuf + 1 viande).
 - Plats composés (×5) : quiche (1 fromage + 1 œuf), gratin (1 fromage + 1 saucisson), tarte (1 confiture + 1 œuf). Ils consomment des plats déjà fabriqués.
-- Bourse : les fermes échangent librement entre elles pendant la minute ; tout accord conclu est définitif.
+- Bourse : les fermes échangent librement entre elles pendant la minute ; tout accord conclu est définitif. Depuis son mobile, une ferme **propose** un échange à une autre (un produit, une quantité, un prix en EB ou un don) ; la ferme destinataire **accepte ou refuse**. À l'acceptation, le stock (jetons bruts ou plats) et l'argent changent de ferme automatiquement ; les jetons passent ensuite de main en main. Les échanges ne se font qu'à cette étape ; l'animateur peut annuler une offre ou un échange conclu.
 
 ## Stock
 Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et Achats) et l'animateur le voit dans la console, ferme par ferme :

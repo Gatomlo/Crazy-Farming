@@ -690,3 +690,47 @@ test('table de marche : etal de 10 produits, camionnette 12, les deux cumulees 1
   t.equipment.splice(t.equipment.indexOf('table'), 1);
   assert.equal(E.salesQuote(s, t, t.sales).cap, 12);
 });
+
+test('bourse : offre, acceptation, paiement, stock transfere, annulation', () => {
+  const s = newGame();
+  toSeason(s);
+  const [a, b] = s.teams; // bergers (lait, oeufs) et maraichers (fruits et legumes, oeufs)
+  const stock = (t) => E.viewFor(s, 'admin').teams.find((x) => x.id === t.id).stock;
+  s.step = 1;
+  fullHarvest(s, a); fullHarvest(s, b);
+  s.step = 2;
+  a.pantry.fromage = 2; a.dishes.simple = 2;
+  assert.throws(() => E.offerTrade(s, a.id, { to: a.id, items: { lait: 1 } }), /autre ferme/);
+  assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: {} }), /au moins un produit/);
+  assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: { lait: 99 } }), /n’a que 6 lait/);
+  assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: { viande: 1 } }), /en stock/);
+  const id = E.offerTrade(s, a.id, { to: b.id, items: { lait: 2, fromage: 1 }, price: 30 });
+  assert.equal(stock(a).raw.lait, 6, 'rien ne bouge avant acceptation');
+  assert.throws(() => E.respondTrade(s, a.id, id, true), /destinataire/);
+  const [bankA, bankB] = [a.bank, b.bank];
+  E.respondTrade(s, b.id, id, true);
+  assert.equal(stock(a).raw.lait, 4); assert.equal(stock(b).raw.lait, 2);
+  assert.equal(a.pantry.fromage, 1); assert.equal(b.pantry.fromage, 1);
+  assert.equal(a.dishes.simple, 1); assert.equal(b.dishes.simple, 1);
+  assert.equal(a.bank, bankA + 30); assert.equal(b.bank, bankB - 30);
+  assert.throws(() => E.respondTrade(s, b.id, id, true), /plus en attente/);
+  // le destinataire peut maintenant vendre ce lait au marche
+  s.step = 3;
+  E.declareSales(s, b.id, { sup_lait: 2 });
+  s.step = 2; b.sales = null;
+  // annulation animateur d'un echange conclu
+  E.revertTrade(s, id);
+  assert.equal(stock(a).raw.lait, 6); assert.equal(stock(b).raw.lait, 0);
+  assert.equal(a.bank, bankA); assert.equal(b.bank, bankB);
+  // refus, annulation, solde insuffisant, etape
+  const id2 = E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 } });
+  E.respondTrade(s, b.id, id2, false);
+  assert.equal(s.trades.find((x) => x.id === id2).status, 'refused');
+  const id3 = E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 }, price: 5000 });
+  assert.throws(() => E.respondTrade(s, b.id, id3, true), /Solde insuffisant/);
+  E.cancelTrade(s, a.id, id3);
+  assert.equal(s.trades.find((x) => x.id === id3).status, 'cancelled');
+  assert.deepEqual(E.viewFor(s, 'team', b.id).trades.map((x) => x.id).sort(), ['e1', 'e2', 'e3']);
+  s.step = 3;
+  assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 } }), /Transformation et bourse/);
+});

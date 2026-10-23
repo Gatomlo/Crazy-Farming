@@ -221,6 +221,32 @@
       '<div class="muted" style="font-size:12px">Jetons bruts : récolte encodée moins les recettes. Les matières non transformées ni vendues sont perdues en fin de saison.</div></section>';
   }
 
+  // Bourse : propositions d'echange de stock (jetons bruts ou plats) avec la ferme de son choix, prix en option.
+  function tradePanel() {
+    if (V.phase !== 'season' || V.step !== 2) return '';
+    var name = function (id) { var t = V.teams.filter(function (x) { return x.id === id; })[0]; return t ? t.name : '?'; };
+    var items = function (tr) { return tr.items.map(function (i) { return i.n + ' × ' + esc(i.name.toLowerCase()); }).join(', '); };
+    var price = function (tr) { return tr.price ? ' pour <b>' + tr.price + ' EB</b>' : ' <span class="muted">(don)</span>'; };
+    var pending = (V.trades || []).filter(function (x) { return x.status === 'pending'; });
+    var incoming = pending.filter(function (x) { return x.to === me.id; }).map(function (tr) {
+      return '<div class="panel soft stack" style="padding:10px 14px"><div><b>' + esc(name(tr.from)) + '</b> vous propose ' + items(tr) + price(tr) + '</div><div class="row"><button class="btn primary small" data-act="respondTrade" data-trade="' + tr.id + '" data-accept="1">Accepter</button><button class="btn small" data-act="respondTrade" data-trade="' + tr.id + '">Refuser</button></div></div>';
+    }).join('');
+    var outgoing = pending.filter(function (x) { return x.from === me.id; }).map(function (tr) {
+      return '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:14px">En attente de ' + esc(name(tr.to)) + ' : ' + items(tr) + price(tr) + '</span><button class="btn small" data-act="cancelTrade" data-trade="' + tr.id + '">Annuler</button></div>';
+    }).join('');
+    var done = (V.trades || []).filter(function (x) { return x.status === 'done'; }).slice(-3).reverse().map(function (tr) {
+      return '<div class="muted" style="font-size:13px">✓ ' + esc(name(tr.from)) + ' → ' + esc(name(tr.to)) + ' : ' + items(tr) + (tr.price ? ' · ' + tr.price + ' EB' : '') + '</div>';
+    }).join('');
+    var others = V.teams.filter(function (x) { return x.id !== me.id; });
+    var prods = V.meta.sell.filter(function (x) { return (x.kind === 'raw' ? me.stock.raw[x.id] : me.stock.dishes[x.id] || 0) > 0; });
+    var form = !prods.length ? '<div class="muted" style="font-size:14px">Rien en stock à proposer pour le moment.</div>' :
+      '<div class="row"><select id="trdTo" aria-label="Ferme destinataire">' + others.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+      '<select id="trdItem" aria-label="Produit">' + prods.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + ' (' + (x.kind === 'raw' ? me.stock.raw[x.id] : me.stock.dishes[x.id]) + ')</option>'; }).join('') + '</select></div>' +
+      '<div class="row"><input id="trdN" inputmode="numeric" placeholder="Quantité" style="width:100px"><input id="trdPrice" inputmode="numeric" placeholder="Prix (EB)" style="width:110px"><button class="btn primary" data-act="offerTrade">Proposer</button></div>';
+    return '<section class="panel stack"><b>🔁 Bourse : échanger du stock</b>' + incoming + form + outgoing + done +
+      '<div class="muted" style="font-size:12px">Le destinataire doit accepter. Faites ensuite passer les jetons de main en main : l\'application suit le stock et l\'argent. Prix à 0 : c\'est un don.</div></section>';
+  }
+
   // Marche : 1) placer les produits (supermarche garanti / etal risque) 2) roue 3) paiement par l'animateur.
   function marketPanel() {
     if (V.phase !== 'season' || V.step !== 3 || !me.sales) return '';
@@ -314,7 +340,7 @@
     if (me.stopped) return h + col + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
     if (st === 0) return h + alea() + bocalPanel() + readyCard() + farmCard();
     if (st === 1) return h + col + harvestPanel() + collierPanel() + readyCard() + farmCard();
-    if (st === 2) return h + col + harvestPanel() + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
+    if (st === 2) return h + col + harvestPanel() + stockPanel() + tradePanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
     if (st === 3) return h + col + marketPanel() + readyCard() + farmCard();
     return h + col + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
   }
@@ -424,6 +450,14 @@
     if (a === 'undoBuy') return conn.act('undoBuy').then(function (r) { if (r && r.ok) FF.toast('Achat annulé.'); });
     if (a === 'choice') return conn.act('setChoice', { choice: b.dataset.choice });
     if (a === 'contribute') { var gn = parseInt(val('giveN'), 10); if (!(gn > 0)) return FF.toast('Indique une quantité.'); return conn.act('contribute', { n: gn }).then(function (r) { if (r && r.ok) FF.toast('Merci pour le village !'); }); }
+    if (a === 'offerTrade') {
+      var tn = parseInt(val('trdN'), 10), tp = parseInt(val('trdPrice'), 10), it = {};
+      if (!(tn > 0)) return FF.toast('Indique une quantité.');
+      it[val('trdItem')] = tn;
+      return conn.act('offerTrade', { to: val('trdTo'), items: it, price: tp > 0 ? tp : 0 }).then(function (r) { if (r && r.ok) { FF.toast('Offre envoyée.'); document.getElementById('trdN').value = ''; } });
+    }
+    if (a === 'respondTrade') return conn.act('respondTrade', { tradeId: b.dataset.trade, accept: !!b.dataset.accept });
+    if (a === 'cancelTrade') return conn.act('cancelTrade', { tradeId: b.dataset.trade });
     if (a === 'collier') return conn.act('collier');
     if (a === 'declareHarvest') {
       var hv = {};

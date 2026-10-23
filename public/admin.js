@@ -142,6 +142,21 @@
       '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Quota de jetons par tuile · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
   }
 
+  // Bourse : echanges de stock entre fermes (suivi, annulation).
+  function tradesPanel() {
+    if (V.phase !== 'season' || V.step !== 2) return '';
+    var name = function (id) { var t = V.teams.filter(function (x) { return x.id === id; })[0]; return t ? t.name : '?'; };
+    var ST = { pending: ['En attente', 'warn'], done: ['Conclu', 'ok'], refused: ['Refusé', 'bad'], cancelled: ['Annulé', ''], reverted: ['Annulé après coup', ''] };
+    var rows = (V.trades || []).slice().reverse().map(function (tr) {
+      var st = ST[tr.status] || [tr.status, ''];
+      var act = tr.status === 'pending' ? '<button class="btn small" data-act="cancelTrade" data-trade="' + tr.id + '">Annuler</button>' : tr.status === 'done' ? '<button class="btn small" data-act="revertTrade" data-trade="' + tr.id + '">Annuler l\'échange</button>' : '';
+      return '<tr><td>' + esc(name(tr.from)) + ' → ' + esc(name(tr.to)) + '</td><td>' + tr.items.map(function (i) { return i.n + ' × ' + esc(i.name.toLowerCase()); }).join(', ') + '</td><td class="num">' + (tr.price ? tr.price + ' EB' : 'don') + '</td><td><span class="pill ' + st[1] + '">' + st[0] + '</span></td><td>' + act + '</td></tr>';
+    }).join('');
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><h2 style="font-size:18px">Bourse : échanges entre fermes</h2>' +
+      (rows ? '<div class="tbl"><table><thead><tr><th>Échange</th><th>Produits</th><th>Prix</th><th>État</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="muted" style="margin:0">Aucun échange pour le moment. Les fermes proposent depuis leur mobile ; le destinataire accepte.</p>') +
+      '<p class="muted" style="margin:0;font-size:13px">Le stock et l\'argent suivent automatiquement à l\'acceptation ; les jetons passent de main en main entre les fermes.</p></section>';
+  }
+
   // Recolte encodee par une ferme (jetons rapportes / maximum), avec correction -1 / +1.
   function harvestLine(t) {
     if (V.phase !== 'season' || V.step < 1 || !t.harvest || !t.harvest.length) return '';
@@ -310,7 +325,7 @@
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
       } else if (V.phase === 'season') {
-        h += '<div class="cols">' + stepsPanel() + timerPanel(V.stepName, 'Étape ' + (V.step + 1) + ' sur 5') + (V.step <= 1 ? cardPanel() : V.card && V.card.collective ? '<section class="panel" style="flex:1 1 340px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:18px">Aléa collectif</h2>' + collectiveAdmin(V.card) + '</section>' : '') + '</div>' + transfoPanel() + marketPanel() + (V.step === 2 ? menuPanel() : '') + teamsTable() + '';
+        h += '<div class="cols">' + stepsPanel() + timerPanel(V.stepName, 'Étape ' + (V.step + 1) + ' sur 5') + (V.step <= 1 ? cardPanel() : V.card && V.card.collective ? '<section class="panel" style="flex:1 1 340px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:18px">Aléa collectif</h2>' + collectiveAdmin(V.card) + '</section>' : '') + '</div>' + tradesPanel() + transfoPanel() + marketPanel() + (V.step === 2 ? menuPanel() : '') + teamsTable() + '';
       } else if (V.phase === 'closing') {
         h += closing() + teamsTable() + '';
       } else if (V.phase === 'rearrange') {
@@ -386,6 +401,7 @@
       var keepEl = document.getElementById('timerKeep');
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
+    if (a === 'cancelTrade' || a === 'revertTrade') return conn.act(a, { tradeId: b.dataset.trade });
     if (a === 'adjustHarvest') return conn.act('adjustHarvest', { teamId: t, product: b.dataset.product, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'adjustContribution') return conn.act('adjustContribution', { teamId: t, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'jumpTo') {
