@@ -180,6 +180,11 @@
     }
     var strip = V.phase === 'season' || V.phase === 'setup' ? '<div style="display:flex;gap:20px;align-items:stretch">' + (V.card && V.card.when && V.card.when.indexOf(V.meta.steps[V.step].id) >= 0 && V.meta.steps[V.step].id !== 'recolte' ? cardBanner(V.meta.steps[V.step].id) : '') + '</div>' : '';
     stage.innerHTML = head() + '<div class="d-main">' + main() + '</div>' + strip + (V.phase === 'end' ? '' : foot());
+    if (V.showQr) {
+      stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:10;background:rgba(20,14,10,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
+        '<div style="font-size:64px;font-weight:800">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div></div>');
+      drawQr();
+    }
   }
 
   function tick() {

@@ -32,7 +32,7 @@
     return '<header class="row" style="justify-content:space-between">' +
       '<div class="brand"><div class="logo" aria-hidden="true">🚜</div><div><h1 style="font-size:44px">Farming\'s Folies</h1><div class="muted">Console de l\'animateur · partie <b class="num" style="color:var(--fg);letter-spacing:.15em">' + esc(V.code) + '</b></div></div></div>' +
       '<div class="row"><span class="pill" style="background:' + (V.phase === 'season' ? V.seasonColor : 'var(--panel2)') + ';color:' + (V.phase === 'season' ? 'var(--ink)' : 'var(--text)') + '">' + esc(title) + '</span>' +
-      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
+      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button><button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
   }
 
   function linksPanel() {
@@ -41,11 +41,8 @@
       return '<div class="row"><b style="min-width:150px">' + esc(t.name) + '</b><a href="' + esc(link) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(link) + '</a>' +
         '<button class="btn small" data-act="copy" data-text="' + esc(link) + '">Copier</button></div>';
     }).join('');
-    var join = url('team?s=' + V.code);
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><h2 style="font-size:18px">🔗 Lien unique pour les équipes</h2><div class="row"><a href="' + esc(join) + '" target="_blank" rel="noopener" style="word-break:break-all;flex:1">' + esc(join) + '</a><button class="btn small" data-act="copy" data-text="' + esc(join) + '">Copier</button></div><div class="muted" style="font-size:13px">Affiché aussi sur l\'écran joueurs. Chaque équipe crée sa ferme ou la reprend depuis ce lien.</div></section>' +
-    '<details id="links" class="panel"><summary>Liens individuels des fermes et écran joueurs</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
-      '<div class="row"><b style="min-width:150px">Écran joueurs</b><a href="' + esc(url('display?s=' + V.code)) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(url('display?s=' + V.code)) + '</a>' +
-      '<button class="btn small" data-act="copy" data-text="' + esc(url('display?s=' + V.code)) + '">Copier</button></div>' + rows + '</div></details>';
+    return '<details id="links" class="panel"><summary>Liens individuels des fermes</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
+      rows + '</div></details>';
   }
 
   function lobby() {
