@@ -30,10 +30,7 @@ app.get('/admin', page('admin.html'));
 app.get('/display', page('display.html'));
 app.get('/team', page('team.html'));
 
-// Client Socket.IO servi par nous (chemin stable et relatif, quel que soit le prefixe de montage).
-app.get('/vendor/socket.io.min.js', (req, res) => {
-  res.sendFile(require.resolve('socket.io/client-dist/socket.io.min.js'));
-});
+// Client Socket.IO : fichier local public/vendor/socket.io.min.js (servi par express.static, chemin relatif au montage).
 
 // ---------- Acces animateur (mot de passe) ----------
 app.set('trust proxy', 1);
