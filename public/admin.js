@@ -301,7 +301,7 @@
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
       } else if (V.phase === 'season') {
-        h += '<div class="cols">' + stepsPanel() + timerPanel(V.stepName, 'Étape ' + (V.step + 1) + ' sur 5') + (V.step <= 1 ? cardPanel() : '') + '</div>' + transfoPanel() + marketPanel() + (V.step === 2 ? menuPanel() : '') + teamsTable() + '';
+        h += '<div class="cols">' + stepsPanel() + timerPanel(V.stepName, 'Étape ' + (V.step + 1) + ' sur 5') + (V.step <= 1 ? cardPanel() : V.card && V.card.collective ? '<section class="panel" style="flex:1 1 340px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:18px">Aléa collectif</h2>' + collectiveAdmin(V.card) + '</section>' : '') + '</div>' + transfoPanel() + marketPanel() + (V.step === 2 ? menuPanel() : '') + teamsTable() + '';
       } else if (V.phase === 'closing') {
         h += closing() + teamsTable() + '';
       } else if (V.phase === 'rearrange') {

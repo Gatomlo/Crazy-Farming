@@ -129,6 +129,12 @@ body.display { overflow: hidden; }
 .d-meteo { display: flex; align-items: center; gap: 20px; font-size: 34px; font-weight: 700; }
 .d-meteo .ic { font-size: 60px; line-height: 1; }
 .d-meteo small { display: block; font-size: 22px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.d-collect { display: flex; align-items: center; gap: 22px; font-size: 28px; padding: 10px 24px; border-radius: 20px; background: var(--surface); }
+.d-collect .t { font-weight: 800; white-space: nowrap; }
+.d-collect .g { color: var(--muted); white-space: nowrap; }
+.d-collect i { flex: 1; height: 16px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.d-collect u { display: block; height: 100%; text-decoration: none; }
+.d-collect b { font-size: 32px; white-space: nowrap; }
 .d-village { display: flex; align-items: center; gap: 24px; font-size: 26px; color: var(--muted); }
 .d-village b { font-size: 34px; color: var(--fg); }
 .d-village i { flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }

@@ -97,13 +97,17 @@
     return '<section class="t-bank"><div class="sub">💰 Compte en banque</div><div class="big">' + me.bank + ' <small>EB</small></div>' +
       '<div class="row" style="justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.2);padding-top:10px;font-size:14px"><span class="sub">Charges estimées à la clôture</span><b class="num">' + ch.total + ' EB</b></div>' +
       '<div class="row" style="justify-content:space-between;font-size:14px"><span class="sub">Reste après charges</span><b class="num">' + (me.bank - ch.total) + ' EB</b></div></section>' +
-      transferPanel() +
+      activeCollective() + transferPanel() +
       '<section class="panel"><b>Derniers mouvements</b><div style="margin-top:4px">' + mv + '</div></section>';
   }
 
   // Alea collectif : le village reunit un objectif commun avant l'echeance (argent, plats, jetons bruts ou boules).
   function dueName(c) { var st = V.meta.steps.filter(function (x) { return x.id === c.due; })[0]; return st ? st.name : ''; }
   function potSum(c) { return Object.keys(c.pot || {}).reduce(function (n, k) { return n + c.pot[k]; }, 0); }
+  // Alea collectif en cours (ou regle cette saison) : reste accessible apres l'annonce, depuis la ferme et la banque.
+  function activeCollective() {
+    return V.phase === 'season' && V.card && V.card.collective ? collectivePanel(V.card) : '';
+  }
   function collectivePanel(c) {
     var tot = potSum(c), left = Math.max(0, c.need - tot), pct = Math.min(100, Math.round(tot / c.need * 100));
     var bar = '<div class="bar" style="height:14px"><i style="width:' + pct + '%"></i></div><div class="row" style="justify-content:space-between"><b class="num">' + tot + ' / ' + c.need + '</b><span class="muted" style="font-size:13px">avant la fin de l\'étape « ' + esc(dueName(c)) + ' »</span></div>';
@@ -300,12 +304,13 @@
         chargesCard() + fetePanel() + meteo() + farmCard();
     }
     var st = V.step, h = hero(FF.ICON.steps[st], 'Étape ' + (st + 1) + ' sur 5', V.meta.steps[st].name, STEP_HINT[st]);
-    if (me.stopped) return h + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
+    var col = st === 0 ? '' : activeCollective();
+    if (me.stopped) return h + col + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
     if (st === 0) return h + alea() + bocalPanel() + readyCard() + farmCard();
-    if (st === 1) return h + harvestPanel() + collierPanel() + readyCard() + farmCard();
-    if (st === 2) return h + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
-    if (st === 3) return h + marketPanel() + readyCard() + farmCard();
-    return h + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
+    if (st === 1) return h + col + harvestPanel() + collierPanel() + readyCard() + farmCard();
+    if (st === 2) return h + col + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
+    if (st === 3) return h + col + marketPanel() + readyCard() + farmCard();
+    return h + col + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
   }
 
   function shopItem(i) {

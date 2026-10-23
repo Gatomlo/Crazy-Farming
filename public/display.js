@@ -124,6 +124,17 @@
       '<div class="bar" style="height:28px;flex:none"><i style="width:' + pct + '%;background:var(--pc)"></i></div><div style="font-size:48px;font-weight:800">' + tot + ' / ' + c.need + '</div><div style="display:flex;gap:16px;flex-wrap:wrap">' + who + '</div>' + res + '</section>';
   }
 
+  // Jauge de l'alea collectif : reste visible a toutes les etapes de la saison (sauf sur l'ecran de l'alea, qui l'affiche deja en grand).
+  function collectiveStrip() {
+    var c = V.card;
+    if (V.phase !== 'season' || !c || !c.collective || V.meta.steps[V.step].id === 'alea') return '';
+    var tot = Object.keys(c.pot || {}).reduce(function (n, k) { return n + c.pot[k]; }, 0), pct = Math.min(100, Math.round(tot / c.need * 100));
+    var done = c.resolved !== null && c.resolved !== undefined;
+    var due = (V.meta.steps.filter(function (x) { return x.id === c.due; })[0] || {}).name || '';
+    var state = done ? '<span style="color:' + (c.resolved ? 'var(--mint)' : 'var(--flame)') + ';font-weight:800">' + (c.resolved ? '✓ Objectif atteint' : '✗ Objectif manqué') + '</span>' : '<span class="muted">avant la fin de « ' + esc(due) + ' »</span>';
+    return '<div class="d-collect"><span class="t">🤝 ' + esc(c.title) + '</span><span class="g">' + esc(c.goalText) + '</span><i><u style="width:' + pct + '%;background:' + (done && !c.resolved ? 'var(--flame)' : done ? 'var(--mint)' : 'var(--pc)') + '"></u></i><b>' + tot + ' / ' + c.need + '</b>' + state + '</div>';
+  }
+
   function main() {
     if (V.phase === 'setup') return clockBlock('Installation des fermes', 'Année 1 · répartissez la commande de la fête, puis achetez vos tuiles') + menuBoard();
     if (V.phase === 'rearrange') return clockBlock('Réaménagement', 'Année ' + V.year + ' · répartissez le menu de la fête') + menuBoard();
@@ -180,7 +191,7 @@
       return;
     }
     var strip = V.phase === 'season' || V.phase === 'setup' ? '<div style="display:flex;gap:20px;align-items:stretch">' + (V.card && V.card.when && V.card.when.indexOf(V.meta.steps[V.step].id) >= 0 && V.meta.steps[V.step].id !== 'recolte' ? cardBanner(V.meta.steps[V.step].id) : '') + '</div>' : '';
-    stage.innerHTML = head() + '<div class="d-main">' + main() + '</div>' + strip + (V.phase === 'end' ? '' : foot());
+    stage.innerHTML = head() + '<div class="d-main">' + main() + '</div>' + strip + collectiveStrip() + (V.phase === 'end' ? '' : foot());
     if (V.showQr) {
       stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:10;background:rgba(20,14,10,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
         '<div style="font-size:64px;font-weight:800">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div></div>');
