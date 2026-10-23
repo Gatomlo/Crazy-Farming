@@ -114,7 +114,7 @@ function play(P, seed, strat) {
       // 4. Marche : roue puis ventes
       for (const a of agents) {
         const t = T(a); if (t.stopped) { continue; }
-        const greve = card.id === 'greve' && !t.equipment.includes('camionnette') && !(t.choice === 'parade');
+        const greve = card.mods && card.mods.directBlocked && !t.equipment.includes('camionnette') && !(t.choice === 'parade');
         const cap = t.equipment.includes('camionnette') ? P.vanCap : P.stallCap;
         const bonus = card.id === 'hiver_gourmand' ? 5 : 0;
         const MM = D.MARKET.mult;

@@ -323,8 +323,8 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   assert.throws(() => E.spinWheel(s, t.id), /déjà payées/);
   // supermarche seul : paye sans roue
   const u = s.teams[1];
-  s.card = { id: 'greve', tone: 'neg', mods: {} };
-  assert.throws(() => E.declareSales(s, u.id, { dir_raw: 3 }), /Grève/);
+  s.card = { id: 'routes_enneigees', tone: 'neg', mods: { directBlocked: true } };
+  assert.throws(() => E.declareSales(s, u.id, { dir_raw: 3 }), /vente directe/);
   E.declareSales(s, u.id, { sup_raw: 2, sup_composed: 1 });
   const before = u.bank; E.settleSales(s, u.id);
   assert.equal(u.bank, before + 14 + 35);
@@ -453,4 +453,19 @@ test('ecran de connexion unique : un invite cree ou reprend une ferme', () => {
   assert.equal(dispatch(s, { role: 'guest' }, { type: 'joinTeam', teamId: 't1' }).token, a.token);
   assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'joinTeam', teamId: 'zz' }));
   assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'startSetup' }));
+});
+
+test('aleas : paquets par saison, chances et parades', () => {
+  const D = require('../lib/data');
+  const neg = (i) => D.CARDS[i].filter((c) => c.tone === 'neg').length;
+  const ratio = (i) => neg(i) / D.CARDS[i].length;
+  for (const pool of D.CARDS) assert.ok(pool.length >= 4);
+  assert.equal(ratio(0), 0.5); // printemps
+  assert.ok(ratio(1) < 0.5); // ete : plus de positif
+  assert.equal(ratio(2), 0.5); // automne
+  assert.ok(ratio(3) > 0.5); // hiver : plus de negatif
+  const ids = D.CARDS.flat().map((c) => c.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const c of D.CARDS.flat()) if (c.parade) assert.ok(D.CATALOGUE.some((x) => x.id === c.parade), c.id);
+  assert.ok(D.CARDS.flat().filter((c) => c.parade === 'serre').length >= 2);
 });

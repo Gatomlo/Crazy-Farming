@@ -26,16 +26,49 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 - Brouette 40 EB : un type de produit, son coureur ramène 2 jetons par voyage.
 - Charrette 70 EB : un coureur supplémentaire sur un type.
 - Tracteur 150 EB : un coureur supplémentaire sur chaque type.
-- Parades : chien de berger 30 EB (renard), serre 30 EB (gel), arrosage 30 EB (canicule), lampe-tempête 25 EB (brouillard), camionnette 80 EB (grève, relance gratuite de la roue, étal de 12 produits).
+- Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
 - Hamac 80 EB : −1 boule à la fin de chaque saison.
 
 ## Aléas
 Une carte par saison, tirée par l'animateur. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter une boule** pour éviter l'effet. Dès l'année 2, le dé des activités s'ajoute.
 
-- Printemps : gel tardif (fruits et légumes −2 par tuile) ou naissances (lait +2 par tuile).
-- Été : canicule (récolte raccourcie de 30 s) ou touristes (la roue ne descend pas sous « trois quarts vendus »).
-- Automne : renard (plus d'œufs) ou brouillard (−1 jeton par tuile).
-- Hiver : grève (pas de vente directe) ou hiver gourmand (produits transformés +5 EB).
+La carte est tirée au hasard dans le paquet de la saison. Les chances dépendent de la composition du paquet (une carte de plus ou de moins change la probabilité) :
+
+- Printemps : 4 cartes, 2 négatives et 2 positives (50 % / 50 %).
+- Été : 5 cartes, 2 négatives et 3 positives (40 % / 60 %).
+- Automne : 6 cartes, 3 négatives et 3 positives (50 % / 50 %).
+- Hiver : 6 cartes, 4 négatives et 2 positives (67 % / 33 %).
+
+Plusieurs cartes négatives partagent la même parade : un seul achat protège contre toutes. Chaque saison revient trois fois dans la partie : les cartes peuvent donc se répéter d'une année à l'autre.
+
+**Printemps**
+- Gel tardif (−) : fruits et légumes −2 jetons par tuile. Parade : serre.
+- Grêle (−) : œufs et fruits et légumes −1 jeton par tuile. Parade : serre.
+- Naissances (+) : lait +2 jetons par tuile.
+- Printemps doux (+) : fruits et légumes +2 jetons par tuile.
+
+**Été**
+- Canicule (−) : récolte raccourcie de 30 s. Parade : arrosage.
+- Sécheresse (−) : lait et fruits et légumes −1 jeton par tuile. Parade : arrosage.
+- Touristes (+) : la roue ne descend pas sous « trois quarts vendus ».
+- Pâturages gras (+) : lait et viande +1 jeton par tuile.
+- Potager généreux (+) : fruits et légumes +2 jetons par tuile.
+
+**Automne**
+- Renard au poulailler (−) : plus aucun œuf à rapporter. Parade : chien de berger.
+- Loup rôdeur (−) : viande −2 jetons par tuile. Parade : chien de berger.
+- Brouillard (−) : −1 jeton par tuile sur tous les produits. Parade : lampe-tempête.
+- Belles vendanges (+) : fruits et légumes +2 jetons par tuile.
+- Année des glands (+) : viande +2 jetons par tuile.
+- Bonne ponte (+) : œufs +2 jetons par tuile.
+
+**Hiver**
+- Grève des transporteurs (−) : pas de vente directe. Parade : camionnette.
+- Routes enneigées (−) : pas de vente directe. Parade : camionnette.
+- Tempête de neige (−) : récolte raccourcie de 30 s. Parade : lampe-tempête.
+- Canalisations gelées (−) : lait et viande −1 jeton par tuile. Parade : arrosage.
+- Hiver gourmand (+) : produits transformés +5 EB l'unité.
+- Hiver doux (+) : lait et œufs +1 jeton par tuile.
 
 ## Récolte en relais
 Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule) permet de dépasser le rythme : l'équipe l'enregistre sur mobile.
@@ -54,7 +87,7 @@ Chaque ferme **place d'abord** ses produits, puis tourne la roue, une fois le pl
 - **Grande distribution** : 7 EB par produit brut, toujours payé, sans risque.
 - **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (12 avec la camionnette), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
 - Un plat vaut son multiplicateur × le prix du produit brut (×3, ×4, ×5).
-- Cartes : touristes (au moins trois quarts vendus), grève (étal fermé), hiver gourmand (+5 EB par plat).
+- Cartes : touristes (au moins trois quarts vendus), grève et routes enneigées (étal fermé), hiver gourmand (+5 EB par plat).
 - Dé des activités (dès l'année 2) : gîte (transformés vendus tout de suite), magasin (une catégorie vendue d'office), ferme pédagogique (quota d'un type doublé), restaurant (invendus frais écoulés), ou toutes les activités.
 
 ## Bocal de stress
