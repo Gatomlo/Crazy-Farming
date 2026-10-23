@@ -639,7 +639,7 @@ test('marche : jetons bruts disponibles = quota de la saison moins les recettes'
   assert.throws(() => E.declareSales(s, t.id, { dir_lait: 5 }), /que 4 lait/);
 });
 
-test('table de marche : etal de 10 produits, camionnette 12, pas de cumul', () => {
+test('table de marche : etal de 10 produits, camionnette 12, les deux cumulees 14', () => {
   const s = newGame();
   toSeason(s);
   s.step = 3;
@@ -651,6 +651,9 @@ test('table de marche : etal de 10 produits, camionnette 12, pas de cumul', () =
   E.declareSales(s, t.id, { dir_fl: 10 });
   assert.throws(() => E.declareSales(s, t.id, { dir_fl: 11 }), /10 produits/);
   t.equipment.push('camionnette');
-  E.declareSales(s, t.id, { dir_fl: 12 });
+  E.declareSales(s, t.id, { dir_fl: 14 });
+  assert.equal(E.salesQuote(s, t, t.sales).cap, 14);
+  assert.throws(() => E.declareSales(s, t.id, { dir_fl: 15 }), /14 produits/);
+  t.equipment.splice(t.equipment.indexOf('table'), 1);
   assert.equal(E.salesQuote(s, t, t.sales).cap, 12);
 });

@@ -27,7 +27,7 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 - Charrette 70 EB : un coureur supplémentaire sur un type.
 - Tracteur 150 EB : un coureur supplémentaire sur chaque type.
 - Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
-- Table de marché 40 EB : l'étal passe à 10 produits (8 au départ). La camionnette le porte à 12 ; les deux ne se cumulent pas.
+- Table de marché 40 EB : l'étal passe à 10 produits (8 au départ). Elle se cumule avec la camionnette : 14 produits avec les deux.
 - Hamac 80 EB : −1 boule à la fin de chaque saison.
 
 ## Aléas
@@ -114,7 +114,7 @@ Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et A
 Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits bruts, 9 plats), puis tourne la roue, une fois le placement déclaré (il est alors figé). Un produit absent du stock n'est pas vendable : sa case est grisée.
 
 - **Grande distribution** : 7 EB par produit brut, toujours payé, sans risque.
-- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
+- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette, 14 avec les deux), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
 - **Goût du moment** : chaque saison, certains produits sont recherchés (part vendue +25 points) et d'autres boudés (−25 points), en plus de la roue. Cela ne joue que sur l'étal, jamais au supermarché. Après la roue, chaque ferme lit un retour de marché par produit (« Vos fromages se sont arrachés : par ce froid, tout le monde veut du fromage… »).
   - Printemps : œufs, fruits et légumes, omelette recherchés ; saucisson, gratin, lasagne boudés.
   - Été : fruits et légumes, confiture, cake, tarte, lait recherchés ; gratin, lasagne, quiche boudés.
