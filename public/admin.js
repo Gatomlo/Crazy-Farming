@@ -18,7 +18,6 @@
 
   var PHASES = { lobby: 'Salle d\'attente', setup: 'Installation', season: 'Saison', closing: 'Clôture de l\'année', rearrange: 'Réaménagement', end: 'Partie terminée' };
 
-  function url(p) { return location.origin + FF.BASE + '/' + p; }
   function tilesText(t) {
     var parts = [];
     Object.keys(t.tilesByType).forEach(function (k) { if (t.tilesByType[k] > 0) parts.push(t.tilesByType[k] + ' ' + V.meta.tileNames[k]); });
@@ -35,16 +34,6 @@
       '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button><button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
   }
 
-  function linksPanel() {
-    var rows = V.teams.map(function (t) {
-      var link = url('team?s=' + V.code + '&t=' + t.token);
-      return '<div class="row"><b style="min-width:150px">' + esc(t.name) + '</b><a href="' + esc(link) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(link) + '</a>' +
-        '<button class="btn small" data-act="copy" data-text="' + esc(link) + '">Copier</button></div>';
-    }).join('');
-    return '<details id="links" class="panel"><summary>Liens individuels des fermes</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
-      rows + '</div></details>';
-  }
-
   function lobby() {
     var opts = V.meta.profiles.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '<option value="">Sans profil (aucune tuile)</option>';
     var list = V.teams.map(function (t) {
@@ -55,8 +44,7 @@
       '<form class="row" data-form="addTeam"><label class="muted" for="newName">Nom</label><input id="newName" maxlength="40" placeholder="Nom de la ferme (facultatif)">' +
       '<label class="muted" for="newProfile">Profil</label><select id="newProfile">' + opts + '</select><button class="btn primary">Ajouter</button></form>' +
       (list || '<p class="muted" style="margin:0">Aucune ferme pour le moment.</p>') +
-      '<div class="row"><button class="btn primary" data-act="startSetup"' + (V.teams.length ? '' : ' disabled') + '>Lancer l\'installation</button><span class="muted">Chrono de 10 minutes pour poser les tuiles.</span></div></section>' +
-      linksPanel();
+      '<div class="row"><button class="btn primary" data-act="startSetup"' + (V.teams.length ? '' : ' disabled') + '>Lancer l\'installation</button><span class="muted">Chrono de 10 minutes pour poser les tuiles.</span></div></section>';
   }
 
   function timerPanel(title, sub) {
@@ -260,7 +248,6 @@
     var h = header();
     if (V.phase === 'lobby') h += lobby();
     else {
-      h += linksPanel();
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
       } else if (V.phase === 'season') {
