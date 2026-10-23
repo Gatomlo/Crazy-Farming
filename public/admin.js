@@ -72,16 +72,34 @@
       '<div class="muted" id="jumpNote" style="font-size:12px">Saut direct au début de la saison : les charges et la fête des années sautées ne sont pas jouées.</div>';
   }
 
+  // Phrase a dire a chaque etape (mode pas a pas).
+  var SAY = [
+    '« Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter une boule. »',
+    '« Coureurs en place… Trois, deux, un, partez ! »',
+    '« Déclarez vos recettes sur l\'app, je prépare vos jetons. Négociez entre fermes pendant ce temps. »',
+    '« Placez vos produits, déclarez, puis tournez la roue. »',
+    '« Dernière minute : matériel et vacances. Regardez la météo de la saison suivante ! »'
+  ];
+
+  function forecastBanner() {
+    var f = V.forecast;
+    if (!f) return '';
+    return '<section class="panel row" style="gap:14px;flex-wrap:nowrap"><div style="font-size:36px;line-height:1" aria-hidden="true">' + f.icon + '</div><div style="flex:1;min-width:0"><div class="muted" style="font-size:13px">Prévision météo affichée aux joueurs · ' + esc(f.seasonName.toLowerCase()) + ', année ' + f.year + '</div><div style="font-weight:800">' + esc(f.text) + '</div></div>' +
+      (f.truth ? '<div class="muted" style="font-size:13px;text-align:right">Carte déjà tirée en secret :<br><b style="color:var(--fg)">' + esc(f.truth) + '</b></div>' : '') + '</section>';
+  }
+
   function stepsPanel() {
     var items = V.meta.steps.map(function (s, i) {
       var cls = i === V.step ? 'active' : i < V.step ? 'done' : '';
       var dur = i === 1 ? V.harvestSec : [30, 0, 60, 60, 30][i];
-      return '<div class="step ' + cls + '"><b class="n">' + (i < V.step ? '✓' : i + 1) + '</b><div style="flex:1"><b>' + esc(s.name) + '</b><div class="muted" style="font-size:13px">' + esc(s.hint) + '</div></div><span class="muted num">' + FF.fmt(dur * 1000) + '</span></div>';
+      var say = i === V.step ? '<div style="font-size:13px;margin-top:4px;color:var(--sand)">' + esc(i === 0 && V.card && V.card.collective ? '« Aléa collectif : tout le village relève le défi ensemble ! »' : SAY[i]) + '</div>' : '';
+      return '<div class="step ' + cls + '"><b class="n">' + (i < V.step ? '✓' : i + 1) + '</b><div style="flex:1"><b>' + esc(s.name) + '</b><div class="muted" style="font-size:13px">' + esc(s.hint) + '</div>' + say + '</div><span class="muted num">' + FF.fmt(dur * 1000) + '</span></div>';
     }).join('');
     var last = V.step === 4;
     var nextLabel = last ? (V.season === 3 ? 'Clôturer l\'année' : 'Saison suivante') : 'Étape suivante';
+    var allReady = V.teams.length > 0 && V.teams.every(function (t) { return t.ready || t.stopped; }) && V.teams.some(function (t) { return t.ready; });
     return '<section class="panel" style="flex:1 1 300px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:18px">Déroulé de la saison</h2>' + items +
-      '<div class="row" style="margin-top:auto"><button class="btn" style="flex:1" data-act="prevStep"' + (V.step === 0 ? ' disabled' : '') + '>Précédente</button><button class="btn primary" style="flex:1" data-act="nextStep">' + nextLabel + '</button></div>' + jumpPanel() + '</section>';
+      '<div class="row" style="margin-top:auto"><button class="btn" style="flex:1" data-act="prevStep"' + (V.step === 0 ? ' disabled' : '') + '>Précédente</button><button class="btn primary' + (allReady ? ' pulse' : '') + '" style="flex:1" data-act="nextStep">' + (allReady ? '✓ Toutes prêtes · ' : '') + nextLabel + '</button></div>' + jumpPanel() + '</section>';
   }
 
   function cardPanel() {
@@ -89,7 +107,12 @@
     var q = V.quotaEff, prods = V.meta.products.map(function (p) {
       return '<span class="pill" style="display:inline-flex;gap:8px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:' + p.color + ';display:inline-block"></i>' + esc(p.name) + ' ' + q[p.id] + '</span>';
     }).join(' ');
-    var cardHtml = c
+    var cardHtml = c && c.collective
+      ? '<span class="pill warn" style="align-self:flex-start">Aléa collectif · tout le village</span><div style="font-size:28px;font-weight:800">' + esc(c.title) + '</div><div style="font-size:16px">' + esc(c.challenge) + '</div>' +
+        (c.resolved === null || c.resolved === undefined
+          ? '<div class="muted" style="font-size:13px">Si réussi : ' + esc(c.winText) + '<br>Si raté : ' + esc(c.loseText) + '</div><div class="row"><button class="btn good" data-act="resolveCollective" data-success="1">✅ Défi réussi</button><button class="btn" data-act="resolveCollective" data-success="0">❌ Défi raté</button></div>'
+          : '<div class="pill ' + (c.resolved ? 'ok' : 'bad') + '" style="align-self:flex-start">' + (c.resolved ? 'Défi réussi' : 'Défi raté') + '</div><div>' + esc(c.resolved ? c.winText : c.loseText) + '</div>')
+      : c
       ? '<span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="align-self:flex-start">' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
         '<div style="font-size:28px;font-weight:800">' + esc(c.title) + '</div><div style="font-size:16px">' + esc(c.effect) + '</div>' +
         '<div class="muted">Parade : <b style="color:var(--text)">' + esc(c.parade ? equipName(c.parade) : 'aucune') + '</b></div>'
@@ -97,7 +120,7 @@
     return '<section style="flex:1 1 340px;display:flex;flex-direction:column;gap:16px">' +
       '<div class="panel" style="display:flex;flex-direction:column;gap:10px;flex:1"><h2 style="font-size:18px">Carte aléa</h2>' + cardHtml +
       '<div class="muted" style="font-size:13px">La grille « à rapporter par tuile » est déjà ajustée sur l\'écran des joueurs ; les fermes qui ont joué leur parade ou pris +1 boule gardent les valeurs de base.</div>' +
-      '<button class="btn" style="margin-top:auto" data-act="drawCard">' + (c ? 'Tirer une autre carte' : 'Tirer une carte') + '</button></div>' +
+      (c && c.collective ? '' : '<button class="btn" style="margin-top:auto" data-act="drawCard">' + (c ? 'Tirer une autre carte' : 'Tirer une carte') + '</button>') + '</div>' +
       '<div class="panel row"><div style="width:64px;height:64px;border-radius:14px;background:var(--text);color:var(--ink);display:grid;place-items:center;font-size:40px;font-weight:800">' + (V.die || '–') + '</div>' +
       '<div style="flex:1;min-width:140px"><div class="muted" style="font-size:13px">Dé des activités</div><div style="font-weight:700">' + esc(V.dieLabel || 'Pas encore lancé') + '</div></div>' +
       '<button class="btn primary" data-act="rollDie">Lancer le dé</button></div>' +
@@ -248,6 +271,7 @@
     var h = header();
     if (V.phase === 'lobby') h += lobby();
     else {
+      h += forecastBanner();
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
       } else if (V.phase === 'season') {
@@ -327,6 +351,7 @@
       var keepEl = document.getElementById('timerKeep');
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
+    if (a === 'resolveCollective') return conn.act('resolveCollective', { success: b.dataset.success === '1' });
     if (a === 'jumpTo') {
       var jy = parseInt(val('jumpYear'), 10), js = parseInt(val('jumpSeason'), 10);
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Confirmer le saut'; return; }

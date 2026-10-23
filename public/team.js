@@ -56,7 +56,7 @@
   try { localStorage.setItem('ff-team', JSON.stringify({ code: code, token: token })); } catch (e) { /* ignore */ }
   var conn = FF.connect({
     role: 'team', code: code, token: token,
-    onState: function (v) { notifyIncoming(v); V = v; me = v.teams.filter(function (t) { return t.id === v.me; })[0]; FF.keepInputs(root, render); tick(); },
+    onState: function (v) { notifyIncoming(v); buzzOnChange(v); V = v; me = v.teams.filter(function (t) { return t.id === v.me; })[0]; FF.keepInputs(root, render); tick(); },
     onFatal: function (m) { root.innerHTML = '<p style="padding:16px">' + esc(m) + '</p>'; }
   });
 
@@ -103,9 +103,14 @@
 
   function alea() {
     var die = V.die ? '<div class="row panel soft" style="padding:10px 14px;gap:10px"><div style="width:40px;height:40px;border-radius:10px;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:24px;font-weight:800">' + V.die + '</div><div><div class="muted" style="font-size:12px">Dé des activités</div><b>' + esc(V.dieLabel || '') + '</b></div></div>' : '';
-    if (V.phase !== 'season' || !V.card) return '<section class="panel stack"><b>🎴 Carte aléa</b><p class="muted" style="margin:0">L\'animateur n\'a pas encore tiré la carte.</p></section>' + die;
+    if (V.phase !== 'season' || !V.card) return '<section class="panel stack"><b>🎴 Carte aléa</b><p class="muted" style="margin:0">L\'animateur n\'a pas encore tiré la carte.</p></section>' + meteo() + die;
     var c = V.card, has = c.parade && me.equipment.indexOf(c.parade) >= 0;
     var par = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : null;
+    if (c.collective) {
+      var res = c.resolved === true ? '<div class="pill ok" style="align-self:flex-start">Défi réussi</div><div>' + esc(c.winText) + '</div>' : c.resolved === false ? '<div class="pill bad" style="align-self:flex-start">Défi raté</div><div>' + esc(c.loseText) + '</div>' : '<div class="muted" style="font-size:14px">Le village relève le défi ensemble : l\'animateur arbitre. Pas de choix individuel.</div>';
+      return '<section class="panel stack" style="border-color:var(--pb)"><div class="row" style="justify-content:space-between"><b>🤝 Aléa collectif</b><span class="pill warn">Tout le village</span></div>' +
+        '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.challenge) + '</div>' + res + '</section>' + die;
+    }
     var neg = c.tone === 'neg';
     var btn = function (k, label, sub, dis) { return '<button class="btn ' + (me.choice === k ? 'primary' : '') + '" data-act="choice" data-choice="' + k + '"' + (dis ? ' disabled' : '') + '><span><b>' + (me.choice === k ? '✓ ' : '') + label + '</b><small>' + sub + '</small></span></button>'; };
     var choices = neg
@@ -253,11 +258,11 @@
     if (V.phase === 'setup' || V.phase === 'rearrange') {
       var setup = V.phase === 'setup';
       return hero(setup ? '🏡' : '🔧', setup ? 'Installation' : 'Réaménagement · avant l\'année ' + V.year, setup ? 'Montez votre ferme' : 'Adaptez votre ferme', 'Regardez le menu de la fête, répartissez les plats, puis achetez vos tuiles et votre matériel.') +
-        fetePanel() + buyHint() + readyCard() + farmCard();
+        meteo() + fetePanel() + buyHint() + readyCard() + farmCard();
     }
     if (V.phase === 'closing') {
       return hero('🎉', 'Clôture de l\'année ' + V.year, V.closedYear ? 'La Fête du Phoenix' : 'Le bilan de l\'année', V.closedYear ? 'Les plats sont livrés à l\'animateur.' : 'L\'animateur applique les charges, puis la fête commence.') +
-        chargesCard() + fetePanel() + farmCard();
+        chargesCard() + fetePanel() + meteo() + farmCard();
     }
     var st = V.step, h = hero(FF.ICON.steps[st], 'Étape ' + (st + 1) + ' sur 5', V.meta.steps[st].name, STEP_HINT[st]);
     if (me.stopped) return h + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
@@ -265,7 +270,7 @@
     if (st === 1) return h + harvestPanel() + collierPanel() + readyCard() + farmCard();
     if (st === 2) return h + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
     if (st === 3) return h + marketPanel() + readyCard() + farmCard();
-    return h + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
+    return h + meteo() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
   }
 
   function shopItem(i) {
@@ -280,7 +285,8 @@
     var tiles = me.shop.filter(function (i) { return i.kind === 'tile'; }), eq = me.shop.filter(function (i) { return i.kind !== 'tile'; });
     var tileNote = V.canExpand ? '<div class="muted" style="font-size:13px">Les agrandissements s\'achètent maintenant : plus tard, il faudra attendre la fin de l\'année.</div>' : '<div class="panel warn" style="padding:10px 14px">🔒 Les agrandissements s\'achètent seulement à l\'installation et en fin d\'année.</div>';
     var eqNote = V.canShop ? '' : '<div class="panel warn" style="padding:10px 14px">🔒 Le matériel s\'achète à l\'étape Achats.</div>';
-    return '<div class="row" style="justify-content:space-between"><h2 style="font-size:40px">Boutique</h2><span class="pill num">💰 ' + me.bank + ' EB</span></div>' +
+    var undo = me.undo ? '<div class="panel row" data-undo="' + (Date.now() + me.undo.ms) + '" style="justify-content:space-between"><span>Achat : <b>' + esc(me.undo.name) + '</b></span><button class="btn small" data-act="undoBuy">↩ Annuler</button></div>' : '';
+    return undo + '<div class="row" style="justify-content:space-between"><h2 style="font-size:40px">Boutique</h2><span class="pill num">💰 ' + me.bank + ' EB</span></div>' +
       '<div class="muted" style="font-size:14px">Seul le comptable valide un achat. Annoncez-le à l\'équipe avant de confirmer.</div>' +
       '<h3 style="font-size:30px;margin-top:6px">🏡 Agrandissements</h3>' + tileNote + tiles.map(shopItem).join('') +
       '<h3 style="font-size:30px;margin-top:6px">🧰 Matériel</h3>' + eqNote + eq.map(shopItem).join('');
@@ -302,6 +308,21 @@
     seenIn = last;
   }
 
+  // Vibration quand l'etape ou la phase change (si le telephone le permet).
+  var lastPos = null;
+  function buzzOnChange(v) {
+    var pos = v.phase + '|' + v.year + '|' + v.season + '|' + v.step;
+    if (lastPos !== null && pos !== lastPos) { try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (e) { /* ignore */ } }
+    lastPos = pos;
+  }
+
+  // Prevision meteo : annoncee pendant les achats, pas toujours fiable.
+  function meteo() {
+    var f = V.forecast;
+    if (!f) return '';
+    return '<section class="panel row" style="gap:14px;flex-wrap:nowrap"><div style="font-size:44px;line-height:1" aria-hidden="true">' + f.icon + '</div><div style="min-width:0"><div class="muted" style="font-size:13px">Météo · ' + esc(f.seasonName.toLowerCase()) + (f.year !== V.year || V.phase !== 'season' ? ' de l\'année ' + f.year : '') + '</div><div style="font-weight:800;font-size:18px">' + esc(f.text) + '</div><div class="muted" style="font-size:13px">Les prévisions ne sont pas toujours fiables : à vous de juger si une parade vaut le coup.</div></div></section>';
+  }
+
   function topBar() {
     var inSeason = V.phase === 'season';
     var badge = inSeason
@@ -321,7 +342,7 @@
     root.innerHTML = '<div class="t-wrap">' + topBar() + body + '</div><nav class="t-nav" aria-label="Navigation de l\'équipe">' + navBtn('ferme', '🏡', 'Ferme') + navBtn('boutique', '🛍️', 'Boutique') + navBtn('banque', '🏦', 'Banque') + '</nav>';
   }
 
-  function tick() { if (!V) return; var el = root.querySelector('[data-clock]'); if (el) { var ms = FF.remaining(V); el.textContent = FF.fmt(ms); var box = root.querySelector('[data-chrono]'); if (box) box.classList.toggle('low', V.timer.running && ms <= 10000); } }
+  function tick() { if (!V) return; var u = root.querySelector('[data-undo]'); if (u && Date.now() > parseInt(u.getAttribute('data-undo'), 10)) u.remove(); var el = root.querySelector('[data-clock]'); if (el) { var ms = FF.remaining(V); el.textContent = FF.fmt(ms); var box = root.querySelector('[data-chrono]'); if (box) box.classList.toggle('low', V.timer.running && ms <= 10000); } }
   setInterval(tick, 250);
   root.addEventListener('change', function (e) { if (e.target.id === 'trTo') { var rs = document.getElementById('trReason'); if (rs) rs.innerHTML = ''; FF.keepInputs(root, render); } });
 
@@ -354,6 +375,7 @@
     if (a === 'claimDish') return conn.act('claimDish', { key: b.dataset.key });
     if (a === 'releaseDish') return conn.act('releaseDish', { key: b.dataset.key });
     if (a === 'buy') return conn.act('buy', { itemId: b.dataset.item });
+    if (a === 'undoBuy') return conn.act('undoBuy').then(function (r) { if (r && r.ok) FF.toast('Achat annulé.'); });
     if (a === 'choice') return conn.act('setChoice', { choice: b.dataset.choice });
     if (a === 'collier') return conn.act('collier');
     if (a === 'vacation') return conn.act('vacation', { n: parseInt(val('vacN'), 10) });

@@ -33,7 +33,9 @@
       return '<i class="' + (i === V.step ? 'on' : i < V.step ? 'done' : '') + '"></i>';
     }).join('') + '</div>' : '';
     var yr = V.phase === 'lobby' ? '' : '<span class="d-year">Année ' + V.year + ' sur 3</span>';
-    return '<div class="d-head"><div style="display:flex;align-items:center;gap:28px">' + badge + yr + '</div>' + steps + '</div>';
+    var f = V.forecast;
+    var meteo = f ? '<div class="d-meteo"><span class="ic">' + f.icon + '</span><span><small>Météo · ' + esc(f.seasonName.toLowerCase()) + (f.year !== V.year ? ' · année ' + f.year : '') + '</small>' + esc(f.text) + '</span></div>' : '';
+    return '<div class="d-head"><div style="display:flex;align-items:center;gap:28px">' + badge + yr + '</div>' + (meteo || steps) + '</div>';
   }
 
   function foot() {
@@ -46,7 +48,7 @@
       var segs = ''; for (var i = 0; i < V.meta.bocalMax; i++) segs += '<i class="' + (i < t.bocal ? 'on ' + t.level : '') + '"></i>';
       return '<div class="d-team"><div class="d-team-top"><span class="nm">' + esc(t.name) + '</span><span class="lv" title="' + t.level + '">' + FF.ICON.level[t.level] + '</span></div>' +
         '<div class="meter" role="img" aria-label="' + t.bocal + ' boules sur ' + V.meta.bocalMax + '">' + segs + '</div>' + (extra ? '<div>' + extra + '</div>' : '') + '</div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>' + (V.villageGoal ? '<div class="d-village"><span>Caisse du village</span><b>' + V.villageBank + ' EB</b><i><u style="width:' + Math.min(100, Math.round(V.villageBank / V.villageGoal * 100)) + '%"></u></i><span>objectif ' + V.villageGoal + ' EB</span></div>' : '');
   }
 
   function clockBlock(title, sub) {
@@ -64,7 +66,7 @@
       return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:52px">' + val + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
-    var banner = c ? '<div class="d-q sm" style="background:' + (c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(c.effect) + '</span></div>' : '';
+    var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
     var stop = mods.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(mods.stopEarlySec * 1000) + ' du chrono</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (valeur de base) : ' + esc(safe.join(', ')) + '</div>' : '';
     return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">À rapporter par tuile <span style="font-weight:500;color:var(--muted);font-size:26px">· jetons = tuiles × valeur</span></div>' + rows +
@@ -95,10 +97,11 @@
   }
 
   // Rappel de la carte aleas pendant les etapes qu'elle concerne (bourse, marche).
+  function cardText(c) { return c.collective ? (c.resolved === false ? c.loseText : c.resolved === true ? c.winText : c.challenge) : c.effect; }
   function cardBanner(id) {
     var c = V.card;
     if (!c || !c.when || c.when.indexOf(id) < 0) return '';
-    return '<section style="flex:1 1 0"><div class="d-q sm" style="background:' + (c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:36px;flex-direction:column;align-items:flex-start;gap:4px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:32px">' + esc(c.effect) + '</span></div></section>';
+    return '<section style="flex:1 1 0"><div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:36px;flex-direction:column;align-items:flex-start;gap:4px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:32px">' + esc(cardText(c)) + '</span></div></section>';
   }
 
   function list(items) {
@@ -130,9 +133,15 @@
       var c = V.card;
       var die = V.die ? '<div style="font-size:40px;color:var(--muted)">Dé des activités : <b style="color:var(--text)">' + V.die + '</b> · ' + esc(V.dieLabel) + '</div>' : '';
       if (!c) return '<section class="d-card"><div class="d-big">Aléa du ' + esc(V.seasonName.toLowerCase()) + '</div><div style="font-size:48px;color:var(--muted)">Le maire tire une carte…</div>' + die + '</section>';
-      return '<section class="d-card"><span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
+      if (c.collective) {
+        var done = c.resolved === true ? '<div style="font-size:52px;font-weight:800;color:var(--mint)">✓ Défi réussi · ' + esc(c.winText) + '</div>' : c.resolved === false ? '<div style="font-size:52px;font-weight:800;color:var(--flame)">✗ Défi raté · ' + esc(c.loseText) + '</div>' : '<div style="font-size:40px;color:var(--muted)">Tout le village relève le défi ensemble.</div>';
+        return '<section class="d-card pop"><span class="pill" style="font-size:36px;align-self:flex-start;padding:8px 32px;background:var(--amber);color:var(--ink)">🤝 Aléa collectif · tout le village</span>' +
+          '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:52px;font-weight:700;line-height:1.15">' + esc(c.challenge) + '</div>' + done + '</section>';
+      }
+      var parName = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : '';
+      return '<section class="d-card pop"><span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
-        '<div style="font-size:36px;color:var(--muted)">Parade : <b style="color:var(--text)">' + esc(c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : 'aucune') + '</b></div>' + die + '</section>';
+        (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }
     if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par type de produit') + quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Fabriquez vos plats · échangez entre fermes') + menuBoard();
@@ -169,11 +178,35 @@
     }
   }
 
+  // Bip a 10 s, puis chaque seconde de 3 a 0 (le navigateur exige un clic initial sur la page pour le son).
+  var audio = null, lastBeep = null;
+  function beep(freq, len) {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = freq; g.gain.value = 0.15; o.connect(g); g.connect(audio.destination);
+      o.start(); o.stop(audio.currentTime + len);
+    } catch (e) { /* pas de son */ }
+  }
+  function beepFor(sec) {
+    if (sec === null) { lastBeep = null; return; }
+    if (sec === lastBeep) return;
+    lastBeep = sec;
+    if (sec === 10) beep(660, 0.25);
+    else if (sec <= 3 && sec >= 1) beep(880, 0.2);
+    else if (sec === 0) beep(440, 0.7);
+  }
+  ['click', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) { /* ignore */ } }); });
+
   function tick() {
     if (!V) return;
     var ms = FF.remaining(V);
     var clock = stage.querySelector('[data-clock]');
     if (clock) { clock.textContent = FF.fmt(ms); clock.classList.toggle('low', V.timer.running && ms <= 10000); }
+    var alert = !!(clock && V.timer.running && ms <= 10000);
+    stage.classList.toggle('alert', alert);
+    beepFor(alert ? Math.ceil(ms / 1000) : null);
     var bar = stage.querySelector('[data-bar]');
     if (bar) bar.style.width = (V.timer.durationMs ? Math.round((ms / V.timer.durationMs) * 100) : 0) + '%';
   }

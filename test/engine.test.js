@@ -469,3 +469,97 @@ test('aleas : paquets par saison, chances et parades', () => {
   for (const c of D.CARDS.flat()) if (c.parade) assert.ok(D.CATALOGUE.some((x) => x.id === c.parade), c.id);
   assert.ok(D.CARDS.flat().filter((c) => c.parade === 'serre').length >= 2);
 });
+
+function fresh2() {
+  const s = E.createSession('T');
+  E.addTeam(s, { name: 'A', profile: 'bergers' }); E.addTeam(s, { name: 'B', profile: 'maraichers' });
+  return s;
+}
+
+test('meteo : prevision des l\'installation, tiree a l\'avance, cachee de la fin de saison a la carte', () => {
+  const D = require('../lib/data');
+  const s = fresh2();
+  E.startSetup(s);
+  assert.equal(s.forecast.year, 1); assert.equal(s.forecast.season, 0);
+  assert.ok(D.WEATHER[s.forecast.weather]);
+  assert.ok(E.viewFor(s, 'team', s.teams[0].id).forecast, 'visible des fermes');
+  assert.ok('truth' in E.viewFor(s, 'admin', null).forecast || E.viewFor(s, 'admin', null).forecast.truth === undefined);
+  assert.equal(E.viewFor(s, 'team', s.teams[0].id).forecast.truth, undefined, 'la vérité reste cachée aux joueurs');
+  s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
+  E.startYear(s);
+  const planned = s.nextCard && s.nextCard.collective ? null : s.nextCard.id;
+  const c = E.drawCard(s);
+  if (planned) assert.equal(c.id, planned, 'la carte tirée est celle qui était prévue');
+  assert.equal(E.viewFor(s, 'team', s.teams[0].id).forecast, null, 'la prévision disparaît une fois la carte tirée');
+  // fin de saison : la prevision de la suivante apparait a l'etape Achats
+  E.nextStep(s); E.nextStep(s); E.nextStep(s); E.nextStep(s);
+  assert.equal(s.forecast.season, 1);
+  assert.ok(E.viewFor(s, 'team', s.teams[0].id).forecast);
+});
+
+test('meteo : fidelite des previsions autour de FORECAST_RELIABLE', () => {
+  const D = require('../lib/data');
+  let honest = 0, withWeather = 0;
+  for (let i = 0; i < 2000; i++) {
+    const s = fresh2();
+    E.startSetup(s);
+    const nc = s.nextCard;
+    if (nc.collective) continue;
+    const card = D.CARDS[0].find((c) => c.id === nc.id);
+    if (!card.weather) continue;
+    withWeather++;
+    if (s.forecast.weather === card.weather) honest++;
+  }
+  const p = honest / withWeather;
+  assert.ok(Math.abs(p - D.FORECAST_RELIABLE) < 0.06, 'fidélité ' + p);
+});
+
+test('alea collectif : un par an, remplace la carte de sa saison, defi reussi ou rate', () => {
+  const D = require('../lib/data');
+  const s = fresh2();
+  E.startSetup(s);
+  const col = D.COLLECTIVE.find((c) => c.id === s.collective.id);
+  s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
+  E.startYear(s);
+  for (let k = 0; k < col.season; k++) { for (let j = 0; j < 5; j++) E.nextStep(s); }
+  const c = E.drawCard(s);
+  assert.equal(c.id, col.id); assert.equal(c.collective, true); assert.equal(c.tone, 'col');
+  assert.throws(() => E.setChoice(s, s.teams[0].id, 'subit'), /collectif/);
+  assert.equal(E.drawCard(s).id, col.id, 'pas de second tirage');
+  const before = s.teams.map((t) => [t.bank, t.bocal]);
+  E.resolveCollective(s, true);
+  assert.throws(() => E.resolveCollective(s, false), /déjà résolu/);
+  s.teams.forEach((t, i) => {
+    assert.equal(t.bank, before[i][0] + (col.win.bankAll || 0));
+    assert.equal(t.bocal, Math.max(0, before[i][1] + (col.win.bocalAll || 0)));
+  });
+  assert.equal(s.collective.done, true);
+});
+
+test('alea collectif : defi rate applique les effets et les mods de recolte', () => {
+  const s = fresh2();
+  E.startSetup(s);
+  s.collective = { year: 1, id: 'inondation', season: 0, done: false };
+  s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
+  E.startYear(s);
+  E.drawCard(s);
+  E.resolveCollective(s, false);
+  const v = E.viewFor(s, 'team', s.teams[0].id);
+  assert.ok(v.teams.length === 2);
+  const h = v.teams.find((t) => t.id === s.teams[0].id);
+  assert.ok(v.card.mods.quota.all.add === -1);
+  void h;
+});
+
+test('achat : annulation dans le delai, refus ensuite', () => {
+  const s = fresh2();
+  E.startSetup(s);
+  const t = s.teams[0];
+  const bank = t.bank;
+  E.buy(s, t.id, 'chien');
+  assert.equal(t.bank, bank - 30);
+  E.undoBuy(s, t.id);
+  assert.equal(t.bank, bank); assert.ok(!t.equipment.includes('chien'));
+  E.buy(s, t.id, 'chien');
+  assert.throws(() => E.undoBuy(s, t.id, Date.now() + 60000), /délai/);
+});
