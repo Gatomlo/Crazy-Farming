@@ -32,6 +32,12 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 ## Aléas
 Une carte par saison, tirée par l'animateur. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter une boule** pour éviter l'effet. Dès l'année 2, le dé des activités s'ajoute.
 
+### Météo
+Pendant l'étape Achats (et dès l'installation pour le printemps de l'année 1), une **prévision météo** est annoncée pour la saison suivante, sur l'écran de projection et sur les mobiles : froid, chaleur, orages, brouillard, temps doux, ou ciel incertain. Elle aide à décider d'acheter une parade, mais elle **n'est pas fiable** :
+- quand la carte a un lien avec la météo, la prévision est juste 7 fois sur 10 ; sinon c'est une fausse alerte ou un ciel incertain ;
+- certaines cartes ne sont jamais annoncées (renard, loup, grève, touristes, hiver gourmand…) : il faut prendre le risque ou non, sans pouvoir tout planifier ;
+- l'animateur voit en secret la carte déjà tirée pour la saison suivante.
+
 La carte est tirée au hasard dans le paquet de la saison. Les chances dépendent de la composition du paquet (une carte de plus ou de moins change la probabilité) :
 
 - Printemps : 4 cartes, 2 négatives et 2 positives (50 % / 50 %).
@@ -69,6 +75,14 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 - Canalisations gelées (−) : lait et viande −1 jeton par tuile. Parade : arrosage.
 - Hiver gourmand (+) : produits transformés +5 EB l'unité.
 - Hiver doux (+) : lait et œufs +1 jeton par tuile.
+
+### Aléas collectifs
+Une fois par an, le système tire un **aléa collectif** parmi ceux de toutes les saisons : il **remplace la carte** de sa saison. Aucun choix individuel (pas de parade, pas de boule) : tout le village relève ensemble un **défi** que l'animateur arbitre (« Défi réussi » ou « Défi raté » dans la console). Les effets s'appliquent à toutes les fermes. Ils ne sont jamais annoncés par la météo.
+
+- **Printemps** : Inondation (chaîne de seaux, 10 jetons en 45 s ; réussi +10 EB, raté −1 jeton par tuile pour tous) ; Foire aux plants (présentations, accord unanime ; réussi +20 EB, raté rien).
+- **Été** : Feu de broussailles (chaîne d'eau, 40 s ; réussi +10 EB, raté +1 boule pour tous) ; Fête du village (slogan de six mots en 30 s ; réussi −1 boule pour tous, raté rien).
+- **Automne** : Maladie du bétail (gestes d'hygiène, trois tours ; raté : lait et viande −1 jeton par tuile) ; Récolte solidaire (répartir 8 jetons sans parler, chaque ferme en a un ; réussi +15 EB).
+- **Hiver** : Panne d'électricité (réciter les 5 étapes sans erreur ; raté +1 boule pour tous) ; Marché de Noël (décorer un stand à voix haute ; réussi +20 EB).
 
 ## Récolte en relais
 Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule) permet de dépasser le rythme : l'équipe l'enregistre sur mobile.

@@ -12,7 +12,7 @@
 
 ## Accueil et équipes (10 min)
 - Dire : « Bienvenue au village du Phoenix. Pendant 3 ans, vous dirigez chacun une ferme. Seul, personne n'y arrive : le village réussit ou échoue ensemble. »
-- Former des équipes de 4 à 8 et choisir un nom de ferme. **Sur l'app** : les joueurs scannent le QR code (ou ouvrent le lien unique) et créent leur ferme depuis l'écran de connexion. Le lien unique est aussi affiché dans la console, avec un bouton « Copier ».
+- Former des équipes de 4 à 8 et choisir un nom de ferme. **Sur l'app** : les joueurs scannent le QR code et créent leur ferme depuis l'écran de connexion. Le bouton « Afficher le QR code » de la console le réaffiche à tout moment sur l'écran de projection.
 - Distribuer les badges de rôles et poser les bocaux : « Chaque boule noire est un prix payé pour aller plus vite. Dix boules, c'est le burn-out. »
 - Vérifier que chaque comptable voit 500 EB sur l'onglet Banque. Puis cliquer « Lancer l'installation ».
 
@@ -24,11 +24,11 @@
 ## Une saison pas à pas (5 min)
 Sonner la cloche à chaque changement d'étape. Le chrono de l'écran externe suit ta console. Tu peux **ajuster le chrono** d'une étape (±15 s, ±30 s, +1 min, durée libre, avec l'option de la garder pour les saisons suivantes).
 
-- **1. Aléa (30 s)** : lire la carte avec emphase. Console : « Tirer une carte », dès l'année 2 « Lancer le dé ». Mobile : chaque équipe choisit subir, parade ou boule.
+- **1. Aléa (30 s)** : lire la carte avec emphase. Si c'est l'**aléa collectif** de l'année, lance le défi (texte affiché à l'écran), puis clique « Défi réussi » ou « Défi raté » : les effets s'appliquent à tout le village. Console : « Tirer une carte », dès l'année 2 « Lancer le dé ». Mobile : chaque équipe choisit subir, parade ou boule.
 - **2. Récolte (1 min 30, hiver 1 min 15)** : « Coureurs en place… Trois, deux, un, partez ! » Vérifier un coureur par type, compter les retours, faire arrêter un type quand son quota est atteint. Console : « Lancer le chrono ». Coup de collier : le gardien du bocal l'annonce, l'équipe l'enregistre sur mobile.
 - **3. Transformation et bourse (1 min)** : les fermes déclarent leurs recettes sur mobile ; la console liste ce que chacune doit te donner et ce que tu rends. Fais l'échange physique des jetons puis clique « Jetons échangés ». Les fermes négocient entre elles pendant ce temps.
 - **4. Marché (1 min)** : chaque ferme place ses produits (grande distribution ou étal) et déclare. Console, colonne roue : « Tourner » pour chaque ferme, puis « Valider et payer ».
-- **5. Achats et vacances (30 s)** : surveiller que les comptables annoncent chaque achat. Mobile : Boutique, Vacances. « Étape suivante » lance la saison d'après.
+- **5. Achats et vacances (30 s)** : surveiller que les comptables annoncent chaque achat. Mobile : Boutique, Vacances. « Étape suivante » lance la saison d'après. Annonce la **météo** de la saison suivante affichée à l'écran : elle n'est fiable que 7 fois sur 10, et certains aléas n'ont aucun signe avant-coureur.
 
 Besoin de rattraper du temps ? Le bouton « Aller à » de la console permet de sauter directement à n'importe quelle saison de n'importe quelle année.
 

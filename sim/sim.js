@@ -9,7 +9,7 @@ const DEFAULTS = {
   rawPrice: 5, directPrice: 10, stallFee: 10, stallCap: 8, vanCap: 12,
   recipeRaw: 2, transMult: 3, mixedMult: 4, atelierRecipes: 4, handRecipes: 1,
   runnerBonus: 0.2, brouetteBonus: 0.15, collierBonus: 0.3,
-  s3mult: D.S3_MULT, pFeteLeniency: 0
+  s3mult: D.S3_MULT, pFeteLeniency: 0, pCollective: 0.6
 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -56,12 +56,19 @@ function play(P, seed, strat) {
       if (can('brouette') && t.equipment.filter((e) => e === 'brouette').length < 2 && t.bank > 200) tryBuy('brouette');
       if (!t.equipment.includes('camionnette') && can('camionnette') && t.bank > 250) tryBuy('camionnette');
     }
-    if (P.parades !== 'none') for (const id of ['chien', 'serre', 'arrosage', 'lampe']) if ((P.parades === 'all' || a.invest > 0.4) && !t.equipment.includes(id) && can(id) && t.bank > (P.parades === 'all' ? 60 : 150) + reserve && (P.parades === 'all' || s.year <= 2)) tryBuy(id);
+    // Parades : 'meteo' = achat guide par la prevision de la saison suivante (le risque sans meteo n'est pas couvert).
+    const f = s.phase === 'season' || s.phase === 'setup' || s.phase === 'rearrange' || s.phase === 'closing' ? E.viewFor(s, 'team', t.id).forecast : null;
+    let paradeList = ['chien', 'serre', 'arrosage', 'lampe'];
+    if (P.parades === 'meteo') {
+      paradeList = [];
+      if (f && f.id !== 'incertain') for (const c of D.CARDS[f.season]) if (c.weather === f.id && c.parade && c.tone === 'neg' && a.invest > 0.2) paradeList.push(c.parade);
+    }
+    if (P.parades !== 'none') for (const id of paradeList) if ((P.parades === 'all' || P.parades === 'meteo' || a.invest > 0.4) && !t.equipment.includes(id) && can(id) && t.bank > (P.parades === 'all' ? 60 : P.parades === 'meteo' ? 80 : 150) + reserve && (P.parades === 'all' || P.parades === 'meteo' || s.year <= 2)) tryBuy(id);
     if (t.bocal >= 4 && can('hamac') && t.equipment.filter((e) => e === 'hamac').length < 1 && yearsLeft >= 1) tryBuy('hamac');
   }
 
   // installation
-  E.startSetup(s);
+  E.startSetup(s, r);
   for (const a of agents) shop(a, 150);
   E.autoAssign(s); E.startYear(s);
   let bonusFete = 0;
@@ -72,14 +79,15 @@ function play(P, seed, strat) {
       // 1. Alea
       const card = E.drawCard(s, undefined, r);
       E.rollDie(s, undefined, r);
+      if (card.collective) E.resolveCollective(s, r() < P.pCollective);
       for (const a of agents) {
-        const t = T(a); if (t.stopped) continue;
+        const t = T(a); if (t.stopped || card.collective) continue;
         const neg = card.tone === 'neg';
         if (card.parade && t.equipment.includes(card.parade)) E.setChoice(s, t.id, 'parade');
         else if (neg && t.bocal <= 2 && a.invest < 0.5) E.setChoice(s, t.id, 'boule');
         else E.setChoice(s, t.id, 'subit');
       }
-      E.nextStep(s);
+      E.nextStep(s, r);
       // 2. Recolte
       for (const a of agents) {
         const t = T(a); if (t.stopped) continue;
@@ -97,7 +105,7 @@ function play(P, seed, strat) {
           a.stock[type] += Math.round(q * Math.min(f, 1.6));
         }
       }
-      E.nextStep(s);
+      E.nextStep(s, r);
       // 3. Transformation
       for (const a of agents) {
         const t = T(a); if (t.stopped) continue;
@@ -110,7 +118,7 @@ function play(P, seed, strat) {
           else break;
         }
       }
-      E.nextStep(s);
+      E.nextStep(s, r);
       // 4. Marche : roue puis ventes
       for (const a of agents) {
         const t = T(a); if (t.stopped) { continue; }
@@ -149,7 +157,7 @@ function play(P, seed, strat) {
         a.income += gain;
         if ((t.tiles.activite || 0) > 0 && s.die >= 1 && s.die <= 5 && s.die !== 1) { E.addBank(s, t.id, 15 * t.tiles.activite, 'Activite', true); a.income += 15 * t.tiles.activite; }
       }
-      E.nextStep(s);
+      E.nextStep(s, r);
       // 5. Achats / vacances
       for (const a of agents) {
         const t = T(a);
@@ -157,7 +165,7 @@ function play(P, seed, strat) {
         const reserve = season === 3 ? est : Math.round(est * 0.3);
         if (!t.stopped) shop(a, reserve);
       }
-      E.nextStep(s);
+      E.nextStep(s, r);
     }
     // cloture
     E.closeYear(s);
@@ -170,7 +178,7 @@ function play(P, seed, strat) {
     if (!ok && r() < P.pFeteLeniency) ok = true;
     E.fete(s, ok);
     if (year < 3) {
-      E.nextYear(s);
+      E.nextYear(s, r);
       for (const a of agents) shop(a, Math.round(E.estimateCharges(T(a)).total * 0.5));
       E.autoAssign(s); E.startYear(s);
     }
