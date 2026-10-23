@@ -87,7 +87,7 @@
     lait: '🥛', oeuf: '🥚', viande: '🥩', fl: '🥕', atelier: '🍳', activite: '🎪',
     seasons: ['🌱', '☀️', '🍂', '❄️'], steps: ['🎴', '🧺', '🍳', '🏪', '🛒'],
     level: { Zen: '😌', Agité: '😬', Stressé: '🤯' }, bank: '💰', fete: '🎉', clock: '⏱️', farm: '🚜',
-    equip: { chien: '🐕', serre: '🌿', arrosage: '🚿', lampe: '🔦', brouette: '🛒', charrette: '🛺', tracteur: '🚜', hamac: '🛌', camionnette: '🚐' }
+    equip: { chien: '🐕', serre: '🌿', arrosage: '🚿', lampe: '🔦', brouette: '🛒', charrette: '🛺', tracteur: '🚜', hamac: '🛌', camionnette: '🚐', table: '🪑' }
   };
 
   // Acces animateur : jeton signe delivre par le serveur apres mot de passe, garde dans le navigateur.
