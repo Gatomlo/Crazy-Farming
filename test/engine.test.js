@@ -523,16 +523,16 @@ test('alea collectif : un par an, remplace la carte de sa saison, objectif commu
   E.startYear(s);
   const c = E.drawCard(s);
   assert.equal(c.id, 'inondation'); assert.equal(c.collective, true); assert.equal(c.tone, 'col');
-  assert.equal(c.need, 30); // 15 EB x 2 fermes
+  assert.equal(c.need, 60); // objectif global, quel que soit le nombre de fermes
   assert.throws(() => E.setChoice(s, s.teams[0].id, 'subit'), /collectif/);
   assert.equal(E.drawCard(s).id, 'inondation', 'pas de second tirage');
   const [a, b] = s.teams;
   const bankA = a.bank, bocalA = a.bocal;
   E.contribute(s, a.id, 15);
   assert.equal(a.bank, bankA - 15);
-  assert.throws(() => E.contribute(s, b.id, 16), /au plus 15/);
-  assert.throws(() => E.contribute(s, a.id, 99999), /au plus/);
-  E.contribute(s, b.id, 15);
+  assert.throws(() => E.contribute(s, b.id, 46), /au plus 45/);
+  E.contribute(s, b.id, 25);
+  E.contribute(s, a.id, 20); // une ferme peut financer le reste a elle seule
   assert.throws(() => E.contribute(s, a.id, 1), /déjà atteint/);
   // echeance : fin de l'etape Achats
   for (let i = 0; i < 4; i++) E.nextStep(s);
@@ -579,8 +579,8 @@ test('alea collectif : dons de plats (stock) et de boules', () => {
   for (let i = 0; i < 5; i++) E.nextStep(s2);
   E.drawCard(s2);
   const t2 = s2.teams[0], before = t2.bocal;
-  E.contribute(s2, t2.id, 1);
-  assert.equal(t2.bocal, before + 1);
+  E.contribute(s2, t2.id, 2); // une seule ferme peut porter tout l'objectif
+  assert.equal(t2.bocal, before + 2);
   E.settleCollective(s2);
   assert.equal(s2.card.resolved, true);
 });
