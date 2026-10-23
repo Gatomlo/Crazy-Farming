@@ -69,7 +69,7 @@
 
   function clockBlock(title, sub) {
     return '<section style="flex:1.5;display:flex;flex-direction:column;justify-content:center;gap:14px"><div class="d-big">' + esc(title) + '</div>' +
-      (sub ? '<div style="font-size:40px;color:var(--muted)">' + esc(sub) + '</div>' : '') +
+      (sub ? '<div style="font-size:32px;color:var(--muted)">' + esc(sub) + '</div>' : '') +
       '<div class="d-clock" data-clock>0:00</div><div class="bar" style="height:24px"><i data-bar style="width:100%;background:' + (V.phase === 'season' ? V.seasonColor : 'var(--amber)') + '"></i></div></section>';
   }
 
@@ -79,7 +79,7 @@
     var rows = V.meta.products.map(function (p) {
       var base = V.quota[p.id], eff = V.quotaEff[p.id], ch = eff !== base;
       var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + base + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + eff + '</span>' : String(base);
-      return '<div class="d-q sm" style="padding:10px 28px;font-size:38px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:64px">' + val + '</span></div>';
+      return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:52px">' + val + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(c.effect) + '</span></div>' : '';
@@ -104,9 +104,9 @@
     if (!M) return '';
     var n = M.items.length, cols = n > 12 ? 3 : n > 4 ? 2 : 1, big = cols > 1;
     var rows = M.items.map(function (i) {
-      var who = i.team ? '<span class="pill" style="font-size:' + (big ? 24 : 30) + 'px;background:var(--panel);border:2px solid var(--mint);color:var(--text)">' + esc(i.teamName) + '</span>' : '<span class="pill" style="font-size:' + (big ? 24 : 30) + 'px;background:var(--amber);color:var(--ink)">À prendre</span>';
+      var who = i.team ? '<span class="pill" style="font-size:' + (big ? 21 : 26) + 'px;background:var(--panel);border:2px solid var(--mint);color:var(--text)">' + esc(i.teamName) + '</span>' : '<span class="pill" style="font-size:' + (big ? 21 : 26) + 'px;background:var(--amber);color:var(--ink)">À prendre</span>';
       var done = V.phase === 'closing' && V.closedYear ? (i.delivered ? '<b style="color:var(--mint)">✓</b>' : '<b style="color:var(--flame)">✗</b>') : '';
-      return '<div class="d-q sm" style="padding:' + (big ? 8 : 10) + 'px 20px;gap:12px;font-size:' + (big ? 28 : 38) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 22 : 26) + 'px;font-weight:500;color:var(--muted)">' + esc(TIER[i.tier]) + ' · ' + esc(i.needs) + '</span></span>' + done + who + '</div>';
+      return '<div class="d-q sm" style="padding:' + (big ? 8 : 10) + 'px 20px;gap:12px;font-size:' + (big ? 24 : 32) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 19 : 22) + 'px;font-weight:500;color:var(--muted)">' + esc(TIER[i.tier]) + ' · ' + esc(i.needs) + '</span></span>' + done + who + '</div>';
     }).join('');
     return '<section style="flex:1.6;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:16px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Menu de la Fête du Phoenix · année ' + V.year + ' <span style="font-weight:500;color:var(--muted);font-size:26px">· chaque ferme prend ' + M.perFarm + ' plat' + (M.perFarm > 1 ? 's' : '') + '</span></div>' +
       '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:14px">' + rows + '</div></section>';
@@ -121,7 +121,7 @@
 
   function list(items) {
     return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px">' + items.map(function (t) {
-      return '<div class="d-q" style="font-size:40px"><span>' + esc(t) + '</span></div>';
+      return '<div class="d-q" style="font-size:34px"><span>' + esc(t) + '</span></div>';
     }).join('') + '</section>';
   }
 
@@ -131,9 +131,9 @@
     if (V.phase === 'closing') {
       var f = V.fete;
       return '<section class="d-card"><div class="d-big">Clôture de l\'année ' + V.year + '</div>' +
-        '<div style="font-size:56px;font-weight:700">' + (V.closedYear ? 'Charges payées.' : 'Bilan comptable : payez vos charges.') + '</div>' +
-        '<div style="font-size:48px;color:var(--muted)">Fête du Phoenix : ' + f.perFarm + ' produits transformés par ferme' + (f.mixed ? ', dont ' + f.mixed + ' recette' + (f.mixed > 1 ? 's' : '') + ' mixte' + (f.mixed > 1 ? 's' : '') : '') + '</div>' +
-        (V.feteDone ? '<div style="font-size:56px;font-weight:800;color:var(--mint)">' + (V.fetes[V.fetes.length - 1].success ? 'Fête réussie : −2 boules pour tous !' : 'Fête ratée : +1 boule pour tous, +1 pour les fermes dont un plat manque.') + '</div>' : '') + '</section>' + menuBoard();
+        '<div style="font-size:46px;font-weight:700">' + (V.closedYear ? 'Charges payées.' : 'Bilan comptable : payez vos charges.') + '</div>' +
+        '<div style="font-size:38px;color:var(--muted)">Fête du Phoenix : ' + f.perFarm + ' produits transformés par ferme' + (f.mixed ? ', dont ' + f.mixed + ' recette' + (f.mixed > 1 ? 's' : '') + ' mixte' + (f.mixed > 1 ? 's' : '') : '') + '</div>' +
+        (V.feteDone ? '<div style="font-size:46px;font-weight:800;color:var(--mint)">' + (V.fetes[V.fetes.length - 1].success ? 'Fête réussie : −2 boules pour tous !' : 'Fête ratée : +1 boule pour tous, +1 pour les fermes dont un plat manque.') + '</div>' : '') + '</section>' + menuBoard();
     }
     if (V.phase === 'end') {
       var s = V.stars;
@@ -149,13 +149,13 @@
       var die = V.die ? '<div style="font-size:40px;color:var(--muted)">Dé des activités : <b style="color:var(--text)">' + V.die + '</b> · ' + esc(V.dieLabel) + '</div>' : '';
       if (!c) return '<section class="d-card"><div class="d-big">Aléa du ' + esc(V.seasonName.toLowerCase()) + '</div><div style="font-size:48px;color:var(--muted)">Le maire tire une carte…</div>' + die + '</section>';
       return '<section class="d-card"><span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
-        '<div style="font-size:150px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:68px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
-        '<div style="font-size:44px;color:var(--muted)">Parade : <b style="color:var(--text)">' + esc(c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : 'aucune') + '</b></div>' + die + '</section>';
+        '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
+        '<div style="font-size:36px;color:var(--muted)">Parade : <b style="color:var(--text)">' + esc(c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : 'aucune') + '</b></div>' + die + '</section>';
     }
     if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par type de produit') + quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Fabriquez vos plats · échangez entre fermes') + menuBoard();
     if (id === 'marche') {
-      var spun = V.teams.map(function (t) { return '<div class="d-q" style="font-size:44px"><span>' + esc(t.name) + '</span>' + (t.paid ? '<span style="color:var(--mint);font-size:36px">✓ vendu</span>' : '') + '<span class="v" style="font-size:60px;margin-left:' + (t.paid ? '24px' : 'auto') + '">' + esc(t.wheel ? t.wheel.label : '…') + '</span></div>'; }).join('');
+      var spun = V.teams.map(function (t) { return '<div class="d-q" style="font-size:38px"><span>' + esc(t.name) + '</span>' + (t.paid ? '<span style="color:var(--mint);font-size:36px">✓ vendu</span>' : '') + '<span class="v" style="font-size:60px;margin-left:' + (t.paid ? '24px' : 'auto') + '">' + esc(t.wheel ? t.wheel.label : '…') + '</span></div>'; }).join('');
       return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide') + '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px">' + spun + '</section>';
     }
     return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']);
@@ -172,7 +172,7 @@
     if (!V) return;
     if (V.phase === 'lobby') {
       stage.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
-        '<div style="font-size:140px;font-weight:800;line-height:1">Farming\'s Folies</div><div style="font-size:56px;color:var(--muted)">Bienvenue au village du Phoenix</div>' +
+        '<div style="font-size:120px;font-weight:800;line-height:1">Farming\'s Folies</div><div style="font-size:56px;color:var(--muted)">Bienvenue au village du Phoenix</div>' +
         '<div style="font-size:44px;color:var(--muted)">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div>' +
         '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:44px;padding:12px 32px">' + esc(t.name) + '</span>'; }).join('') + '</div></div>';
       drawQr();
