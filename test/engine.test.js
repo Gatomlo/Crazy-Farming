@@ -546,15 +546,15 @@ test('alea collectif : un par an, remplace la carte de sa saison, objectif commu
 test('alea collectif : objectif manque applique la penalite a tout le village', () => {
   const s = fresh2();
   E.startSetup(s);
-  s.collective = { year: 1, id: 'semences', season: 0, done: false }; // jetons de fruits et legumes, perte de 10 EB
+  s.collective = { year: 1, id: 'semences', season: 0, done: false }; // jetons de fruits et legumes : echec = +1 boule pour tous
   s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
   E.startYear(s);
   E.drawCard(s);
-  const banks = s.teams.map((t) => t.bank);
+  const bocals = s.teams.map((t) => t.bocal);
   E.contribute(s, s.teams[0].id, 1);
   E.settleCollective(s);
   assert.equal(s.card.resolved, false);
-  s.teams.forEach((t, i) => assert.equal(t.bank, banks[i] - 10));
+  s.teams.forEach((t, i) => assert.equal(t.bocal, bocals[i] + 1));
   assert.throws(() => E.contribute(s, s.teams[0].id, 1), /déjà réglé/);
 });
 
