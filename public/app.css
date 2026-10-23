@@ -231,3 +231,12 @@ body.team .btn { white-space: normal; padding-top: 8px; padding-bottom: 8px; lin
 .doc-body p, .doc-body li { font-size: 15px; line-height: 1.5; }
 .doc-body ul { margin: 6px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 .doc-body code { background: var(--surface-2, rgba(0,0,0,.08)); padding: 1px 6px; border-radius: 6px; }
+
+/* En-tête équipe : budget + boules + niveau sur une seule ligne, même sur petit écran */
+.t-top .pill { white-space: nowrap; }
+.t-top .dots { flex-wrap: nowrap; flex-shrink: 1; min-width: 0; }
+.t-top .dot { width: 14px; height: 14px; border-width: 2px; flex-shrink: 1; }
+@media (max-width: 400px) {
+  .t-top .dot { width: 11px; height: 11px; }
+  .t-top .pill { padding: 3px 9px; }
+}
