@@ -142,6 +142,17 @@
       '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Quota de jetons par tuile · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
   }
 
+  // Stock d'une ferme : jetons bruts de la saison et plats transformes.
+  function stockLine(t) {
+    if (!t.stock) return '';
+    var parts = [];
+    V.meta.sell.forEach(function (x) {
+      var n = x.kind === 'raw' ? t.stock.raw[x.id] : t.stock.dishes[x.id];
+      if (n > 0) parts.push((x.kind === 'raw' ? (FF.ICON[x.id] || '') + ' ' : '') + esc(x.name) + ' ' + n);
+    });
+    return '<div style="font-size:13px;margin-top:4px">📦 ' + (parts.length ? parts.join(' · ') : '<span class="muted">stock vide</span>') + '</div>';
+  }
+
   function teamsTable() {
     var tileOpts = Object.keys(V.meta.tileNames).map(function (k) { return '<option value="' + k + '">' + esc(V.meta.tileNames[k]) + '</option>'; }).join('');
     var showWheel = V.phase === 'season' && V.step === 3;
@@ -153,7 +164,7 @@
         '<details id="adj-' + t.id + '"><summary>Ajuster</summary><div class="row" style="margin-top:6px"><input id="amt-' + t.id + '" inputmode="numeric" placeholder="± montant" style="width:110px"><input id="lbl-' + t.id + '" placeholder="Motif" style="width:140px"><button class="btn small" data-act="bank" data-team="' + t.id + '">Valider</button></div></details></td>' +
         '<td class="wide">' + FF.dots(t.bocal, V.meta.bocalMax) + '<div class="row" style="margin-top:6px;gap:8px"><span class="pill lv-' + t.level + '">' + t.level + '</span><span class="muted num">' + t.bocal + ' / ' + V.meta.bocalMax + '</span>' +
         '<button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="-1" aria-label="Retirer une boule à ' + esc(t.name) + '">−1</button><button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="1" aria-label="Ajouter une boule à ' + esc(t.name) + '">+1</button></div></td>' +
-        '<td><div>' + esc(tilesText(t)) + '</div><div class="muted" style="font-size:13px">' + esc(eq) + '</div>' +
+        '<td><div>' + esc(tilesText(t)) + '</div><div class="muted" style="font-size:13px">' + esc(eq) + '</div>' + stockLine(t) +
         '<details id="gift-' + t.id + '"><summary>Tuile gratuite</summary><div class="row" style="margin-top:6px"><select id="tile-' + t.id + '">' + tileOpts + '</select><button class="btn small" data-act="giftTile" data-team="' + t.id + '">Donner</button></div></details></td>' +
         '<td><button class="btn small ' + (t.ready ? 'good' : '') + '" data-act="setReady" data-team="' + t.id + '" data-ready="' + (t.ready ? '' : '1') + '">' + (t.ready ? '✓ Prête' : 'En cours') + '</button><div class="muted" style="font-size:13px;margin-top:4px">Aléa : ' + esc(choice) + '</div></td>' +
         (showWheel ? '<td><button class="btn small" data-act="spinWheel" data-team="' + t.id + '">Tourner</button><div style="margin-top:4px;font-weight:700">' + (t.wheel ? esc(t.wheel.label) : '<span class="muted" style="font-weight:400">Pas encore</span>') + '</div></td>' : '') + '</tr>';
@@ -219,7 +230,7 @@
     var rows = V.teams.map(function (t) {
       var S = t.sales, Q = S.quote;
       if (t.stopped) return '<tr><td><b>' + esc(t.name) + '</b></td><td colspan="4" class="muted">À l\'arrêt</td></tr>';
-      var det = S.declared ? [['raw', 'bruts'], ['simple', 'simples'], ['mixed', 'mixtes'], ['composed', 'composés']].filter(function (f) { return S['sup_' + f[0]] || S['dir_' + f[0]]; }).map(function (f) { return f[1] + ' : ' + (S['sup_' + f[0]] || 0) + ' super / ' + (S['dir_' + f[0]] || 0) + ' étal'; }).join(' · ') || 'rien à vendre' : '<span class="muted">pas encore déclaré</span>';
+      var det = S.declared ? Q.lines.map(function (l) { var tg = l.tag === 'hot' ? ' 🔥' : l.tag === 'cold' ? ' ❄️' : ''; return esc(l.name) + tg + ' : ' + l.sup + ' super / ' + l.dir + ' étal' + (l.frac != null && l.dir ? ' (vendu ' + l.soldUnits + ')' : ''); }).join(' · ') || 'Rien placé' : '<span class="muted">Pas encore placé</span>';
       var amt = S.settled ? '<b class="num">' + S.amount + ' EB</b>' : Q.total == null ? '<span class="muted">roue ?</span>' : '<b class="num">' + Q.total + ' EB</b>';
       var btn = S.settled ? '<span class="pill lv-Zen">Payé</span>' : '<button class="btn small primary" data-act="settleSales" data-team="' + t.id + '"' + (S.declared && (t.wheel || !Q.stallUnits) ? '' : ' disabled') + '>Valider et payer</button>';
       return '<tr><td><b>' + esc(t.name) + '</b></td><td>' + (t.wheel ? esc(t.wheel.label) : '<span class="muted">pas tournée</span>') + '</td><td>' + det + '</td><td>' + amt + '</td><td>' + btn + '</td></tr>';

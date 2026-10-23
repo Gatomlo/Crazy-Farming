@@ -199,29 +199,46 @@
       '<button class="btn primary" data-act="requestTransfo"' + (done ? ' disabled' : '') + '>' + (T ? 'Modifier ma demande' : 'Envoyer ma demande') + '</button>' + st + '</section>';
   }
 
-  var SALE_ROWS = [['raw', 'Produits bruts'], ['simple', 'Plats simples'], ['mixed', 'Plats mixtes'], ['composed', 'Plats composés']];
+  // Stock : jetons bruts de la saison (apres recettes) et plats transformes.
+  function stockPanel() {
+    if (!me.stock) return '';
+    var chips = [];
+    V.meta.sell.forEach(function (x) {
+      var n = x.kind === 'raw' ? me.stock.raw[x.id] : me.stock.dishes[x.id];
+      if (n > 0) chips.push('<span class="pill" style="font-size:14px">' + (x.kind === 'raw' ? (FF.ICON[x.id] || '') + ' ' : '') + esc(x.name) + ' <b>' + n + '</b></span>');
+    });
+    return '<section class="panel stack"><b>📦 Mon stock</b>' + (chips.length ? '<div class="row" style="gap:6px">' + chips.join('') + '</div>' : '<div class="muted" style="font-size:14px">Rien en stock pour le moment.</div>') +
+      '<div class="muted" style="font-size:12px">Jetons bruts : récolte de la saison moins les recettes. Les jetons non vendus ni transformés sont perdus en fin de saison.</div></section>';
+  }
+
   // Marche : 1) placer les produits (supermarche garanti / etal risque) 2) roue 3) paiement par l'animateur.
   function marketPanel() {
     if (V.phase !== 'season' || V.step !== 3 || !me.sales) return '';
     var S = me.sales, Q = S.quote, M = V.meta.market;
     if (me.stopped) return '<section class="panel"><b>Marché</b><p class="muted" style="margin:6px 0 0">Votre ferme est à l\'arrêt cette saison.</p></section>';
     var locked = S.settled || !!me.wheel;
-    var rows = SALE_ROWS.map(function (f) {
-      var m = M.mult[f[0]];
-      var cell = function (k, price, off) { return '<td><input id="sale-' + k + '_' + f[0] + '" inputmode="numeric" style="width:60px" placeholder="0" value="' + (S[k + '_' + f[0]] || '') + '"' + (locked || off ? ' disabled' : '') + '></td>'; };
-      return '<tr><td><b>' + f[1] + '</b>' + (f[0] === 'raw' ? '' : '<div class="muted" style="font-size:11px">stock : ' + me.dishes[f[0]] + '</div>') + '</td>' + cell('sup') + cell('dir', 0, Q.directBlocked) + '</tr>' +
-        '<tr><td class="muted" style="font-size:12px;padding-top:0">' + m * M.superPrice + ' / ' + m * M.directPrice + ' EB l\'unité</td><td></td><td></td></tr>';
+    var kinds = [['raw', 'Produits bruts'], [1, 'Plats simples'], [2, 'Plats mixtes'], [3, 'Plats composés']];
+    var rows = kinds.map(function (k) {
+      var list = V.meta.sell.filter(function (x) { return k[0] === 'raw' ? x.kind === 'raw' : x.tier === k[0]; });
+      var head = '<tr><td colspan="3" class="muted" style="font-size:12px;padding-top:8px;text-transform:uppercase;letter-spacing:.06em">' + k[1] + '</td></tr>';
+      return head + list.map(function (x) {
+        var stock = x.kind === 'raw' ? me.stock.raw[x.id] : me.stock.dishes[x.id] || 0;
+        var none = !(stock > 0);
+        var cell = function (w, extraOff) { return '<td><input id="sale-' + w + '_' + x.id + '" inputmode="numeric" max="' + stock + '" style="width:56px" placeholder="0" value="' + (S[w + '_' + x.id] || '') + '"' + (locked || none || extraOff ? ' disabled' : '') + '></td>'; };
+        return '<tr style="' + (none ? 'opacity:.4' : '') + '"><td><b>' + esc(x.name) + '</b><div class="muted" style="font-size:11px">stock : ' + stock + ' · ' + x.mult * M.superPrice + ' / ' + x.mult * M.directPrice + ' EB</div></td>' + cell('sup') + cell('dir', Q.directBlocked) + '</tr>';
+      }).join('');
     }).join('');
     var grid = '<table style="width:100%"><thead><tr><th></th><th>Supermarché<div class="muted" style="font-size:11px;font-weight:400">garanti</div></th><th>Étal<div class="muted" style="font-size:11px;font-weight:400">max ' + Q.cap + ' · frais ' + M.stallFee + '</div></th></tr></thead><tbody>' + rows + '</tbody></table>';
     var wheel = me.wheel ? '<div style="font-size:22px;font-weight:800">' + esc(me.wheel.label) + '</div>' : '<div class="muted">La roue ne concerne que l\'étal.</div>';
     var canSpin = S.declared && !S.settled && Q.stallUnits > 0;
     var spin = Q.stallUnits > 0 || me.wheel ? '<button class="btn" data-act="spinWheel"' + (canSpin ? '' : ' disabled') + '>' + (me.wheel ? (me.freeSpin ? 'Relancer la roue (gratuit)' : 'Relancer la roue (+1 boule)') : 'Tourner la roue de l\'étal') + '</button>' : '';
-    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue, frais ' + Q.fee + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' / ' + Q.stallUnits + (Q.fee ? ', frais ' + Q.fee : '') + ')</span>');
-    var status = S.settled ? '<div style="color:var(--good);font-weight:700">Payé : ' + (S.amount >= 0 ? '+' : '−') + Math.abs(S.amount) + ' EB. Bien joué !</div>' : me.wheel ? '<div style="font-weight:700;color:var(--warn)">Montrez vos produits à l\'animateur : il vérifie et paie.</div>' : S.declared ? '<div style="font-weight:700;color:var(--warn)">Produits placés' + (Q.stallUnits ? ' : tournez la roue.' : ' : montrez-les à l\'animateur.') + '</div>' : '';
+    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue et le goût du moment, frais ' + Q.fee + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' sur ' + Q.stallUnits + ', frais ' + Q.fee + ')</span>');
+    var report = Q.report && Q.report.length ? '<div class="stack" style="gap:6px"><b>📣 Retour du marché</b>' + Q.report.map(function (l) { return '<div style="border-left:4px solid ' + (l.level === 'tout' || l.level === 'bien' ? 'var(--good)' : 'var(--bad)') + ';padding-left:10px">' + esc(l.text) + '</div>'; }).join('') + '</div>' : '';
+    var status = S.settled ? '<div style="color:var(--good);font-weight:700">Payé : ' + (S.amount >= 0 ? '+' : '−') + Math.abs(S.amount) + ' EB. Bien joué !</div>' : me.wheel ? '<div style="font-weight:700;color:var(--warn)">Montrez vos produits à l\'animateur : il vérifie et paie.</div>' : S.declared ? '<div style="font-weight:700;color:var(--warn)">Placement validé : tournez la roue de l\'étal, ou attendez le paiement du supermarché.</div>' : '';
     var warn = Q.directBlocked ? '<div style="color:var(--bad);font-weight:700">Pas de vente directe cette saison.</div>' : '';
-    var intro = '<div class="muted" style="font-size:13px">1. Placez vos produits. 2. Tournez la roue (étal seulement) : elle dit quelle part de l\'étal se vend. Les invendus sont perdus.</div>';
+    var intro = '<div class="muted" style="font-size:13px">1. Placez vos produits (seuls ceux en stock sont ouverts). 2. Tournez la roue : elle dit quelle part de l\'étal se vend, et le goût du moment avantage ou pénalise certains produits. Les invendus sont perdus.</div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>Marché</b>' + wheel + '</div>' + intro + warn + grid +
-      '<button class="btn primary" data-act="declareSales"' + (locked ? ' disabled' : '') + '>' + (S.declared ? 'Modifier le placement' : 'Valider le placement') + '</button>' + spin + '<div>' + est + '</div>' + status + '</section>';
+      '<button class="btn primary" data-act="declareSales"' + (locked ? ' disabled' : '') + '>' + (S.declared ? 'Modifier le placement' : 'Valider le placement') + '</button>' + spin + '<div>' + est + '</div>' + report + status + '</section>';
   }
 
   // ---------- Ecran "Ferme" : seul ce qui sert a l'etape en cours ----------
@@ -286,9 +303,9 @@
     if (me.stopped) return h + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
     if (st === 0) return h + alea() + bocalPanel() + readyCard() + farmCard();
     if (st === 1) return h + harvestPanel() + collierPanel() + readyCard() + farmCard();
-    if (st === 2) return h + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
+    if (st === 2) return h + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
     if (st === 3) return h + marketPanel() + readyCard() + farmCard();
-    return h + meteo() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
+    return h + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
   }
 
   function shopItem(i) {
@@ -387,7 +404,7 @@
     if (a === 'spinWheel') return conn.act('spinWheel');
     if (a === 'declareSales') {
       var sales = {};
-      ['sup', 'dir'].forEach(function (w) { ['raw', 'simple', 'mixed', 'composed'].forEach(function (c) { var n = parseInt(val('sale-' + w + '_' + c), 10); sales[w + '_' + c] = n > 0 ? n : 0; }); });
+      ['sup', 'dir'].forEach(function (w) { V.meta.sell.forEach(function (x) { var n = parseInt(val('sale-' + w + '_' + x.id), 10); sales[w + '_' + x.id] = n > 0 ? n : 0; }); });
       return conn.act('declareSales', { sales: sales }).then(function (r) { if (r && r.ok) FF.toast('Déclaration envoyée.'); });
     }
     if (a === 'claimDish') return conn.act('claimDish', { key: b.dataset.key });

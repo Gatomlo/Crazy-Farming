@@ -136,7 +136,7 @@ test('roue : relance payante, relance gratuite, touristes', () => {
   const t = s.teams[0];
   assert.throws(() => E.spinWheel(s, t.id), /Placez d’abord/);
   s.step = 3;
-  E.declareSales(s, t.id, { dir_raw: 4 });
+  E.declareSales(s, t.id, { dir_lait: 4 });
   E.spinWheel(s, t.id, () => 0.99); // case 12 : relance gratuite
   assert.equal(t.freeSpin, true);
   E.spinWheel(s, t.id, () => 0);
@@ -146,7 +146,7 @@ test('roue : relance payante, relance gratuite, touristes', () => {
   s.card = { id: 'touristes' };
   let calls = 0;
   const rand = () => (calls++ < 3 ? 0.9 : 0.0); // rien ne se vend puis tout
-  E.declareSales(s, s.teams[1].id, { dir_raw: 2 });
+  E.declareSales(s, s.teams[1].id, { dir_oeuf: 2 });
   E.spinWheel(s, s.teams[1].id, rand);
   assert.ok(s.teams[1].wheel.frac >= 0.75);
 });
@@ -302,20 +302,24 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   toSeason(s);
   s.step = 3;
   const t = s.teams[0];
-  t.dishes.simple = 1; s.teams[1].dishes.composed = 1;
+  t.dishes.simple = 1; t.pantry.fromage = 1; s.teams[1].dishes.composed = 1; s.teams[1].pantry.quiche = 1;
   assert.throws(() => E.settleSales(s, t.id), /Aucun produit/);
-  assert.throws(() => E.declareSales(s, t.id, { dir_raw: 9 }), /8 produits/);
-  assert.throws(() => E.declareSales(s, t.id, { sup_raw: -1 }), /invalide/);
-  E.declareSales(s, t.id, { sup_raw: 4, dir_raw: 8, sup_simple: 1 });
+  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 6, dir_oeuf: 3 }), /8 produits/);
+  assert.throws(() => E.declareSales(s, t.id, { sup_lait: -1 }), /invalide/);
+  assert.throws(() => E.declareSales(s, t.id, { dir_viande: 1 }), /pas de viande en stock/);
+  assert.throws(() => E.declareSales(s, t.id, { sup_fromage: 2 }), /que 1 fromage/);
+  E.declareSales(s, t.id, { sup_lait: 1, dir_lait: 5, dir_oeuf: 3, sup_fromage: 1 });
   let q = E.salesQuote(s, t, t.sales);
-  assert.equal(q.safeTotal, 4 * 7 + 21);
+  assert.equal(q.safeTotal, 7 + 21);
   assert.equal(q.total, null);
   assert.throws(() => E.settleSales(s, t.id), /roue/);
   E.spinWheel(s, t.id, () => 0.5); // indice 6 : trois quarts
   assert.equal(t.wheel.frac, 0.75);
-  assert.throws(() => E.declareSales(s, t.id, { sup_raw: 1 }), /figé/);
+  assert.throws(() => E.declareSales(s, t.id, { sup_lait: 1 }), /figé/);
   q = E.salesQuote(s, t, t.sales);
-  assert.equal(q.total, 49 + Math.round(8 * 14 * 0.75) - 10);
+  // printemps : les oeufs sont recherches (+25 %), le lait est neutre
+  assert.equal(q.total, 28 + Math.round(5 * 14 * 0.75) + 3 * 14 - 10);
+  assert.ok(q.report.some((l) => l.id === 'oeuf' && /arrach/.test(l.text)), 'les oeufs se sont arrachés');
   const bank = t.bank;
   E.settleSales(s, t.id);
   assert.equal(t.bank, bank + q.total);
@@ -324,12 +328,12 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   // supermarche seul : paye sans roue
   const u = s.teams[1];
   s.card = { id: 'routes_enneigees', tone: 'neg', mods: { directBlocked: true } };
-  assert.throws(() => E.declareSales(s, u.id, { dir_raw: 3 }), /vente directe/);
-  E.declareSales(s, u.id, { sup_raw: 2, sup_composed: 1 });
+  assert.throws(() => E.declareSales(s, u.id, { dir_oeuf: 3 }), /vente directe/);
+  E.declareSales(s, u.id, { sup_oeuf: 2, sup_quiche: 1 });
   const before = u.bank; E.settleSales(s, u.id);
   assert.equal(u.bank, before + 14 + 35);
   s.step = 2;
-  assert.throws(() => E.declareSales(s, s.teams[2].id, { sup_raw: 1 }), /Marché/);
+  assert.throws(() => E.declareSales(s, s.teams[2].id, { sup_viande: 1 }), /Marché/);
 });
 
 
@@ -356,8 +360,8 @@ test('transformation : demande par plat, jetons a echanger, stock, plats compose
   E.validateTransfo(s, t.id);
   assert.equal(t.dishes.simple, 0); assert.equal(t.dishes.composed, 1);
   s.step = 3;
-  assert.throws(() => E.declareSales(s, t.id, { sup_composed: 2 }), /en stock/);
-  E.declareSales(s, t.id, { sup_composed: 1 });
+  assert.throws(() => E.declareSales(s, t.id, { sup_quiche: 2 }), /en stock/);
+  E.declareSales(s, t.id, { sup_quiche: 1 });
   E.settleSales(s, t.id);
   assert.equal(t.dishes.composed, 0); assert.equal(t.pantry.quiche, 0);
 });
@@ -595,4 +599,42 @@ test('achat : annulation dans le delai, refus ensuite', () => {
   assert.equal(t.bank, bank); assert.ok(!t.equipment.includes('chien'));
   E.buy(s, t.id, 'chien');
   assert.throws(() => E.undoBuy(s, t.id, Date.now() + 60000), /délai/);
+});
+
+test('marche : stock visible, produits absents refuses, gout du moment par produit et phrases de retour', () => {
+  const D = require('../lib/data');
+  const s = newGame();
+  toSeason(s);
+  s.season = 3; s.card = null; s.step = 3; // hiver : fromage recherche, confiture boudee
+  const t = s.teams[0];
+  t.pantry.fromage = 4; t.dishes.simple = 4; t.pantry.confiture = 4; t.dishes.simple += 4;
+  const own = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
+  assert.equal(own.stock.dishes.fromage, 4);
+  assert.ok(own.stock.raw.lait >= 0);
+  assert.throws(() => E.declareSales(s, t.id, { dir_saucisson: 1 }), /pas de saucisson en stock/);
+  E.declareSales(s, t.id, { dir_fromage: 4, dir_confiture: 4 });
+  const fixed = (frac) => () => (frac); // rand fixe : index = floor(r * 12)
+  E.spinWheel(s, t.id, () => 0.55); // case 6 : trois quarts (0,75)
+  const q = E.salesQuote(s, t, t.sales);
+  const f = q.lines.find((l) => l.id === 'fromage'), c = q.lines.find((l) => l.id === 'confiture');
+  assert.equal(f.frac, 1); assert.equal(c.frac, 0.5);
+  assert.equal(f.soldUnits, 4); assert.equal(c.soldUnits, 2);
+  assert.ok(/arrach/.test(q.report.find((l) => l.id === 'fromage').text));
+  assert.ok(/froid/.test(q.report.find((l) => l.id === 'fromage').text), 'la raison de la saison est donnée');
+  assert.equal(E.viewFor(s, 'display').teams.find((x) => x.id === t.id).marketNote !== null, true);
+  void fixed; void D;
+});
+
+test('marche : jetons bruts disponibles = quota de la saison moins les recettes', () => {
+  const s = newGame();
+  toSeason(s);
+  const t = s.teams[0]; // bergers : 2 chevreries (3 lait chacune au printemps)
+  s.step = 0;
+  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 0, 'rien avant la récolte');
+  s.step = 2;
+  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 6);
+  E.requestTransfo(s, t.id, { fromage: 1 }); // 2 laits
+  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 4);
+  s.step = 3;
+  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 5 }), /que 4 lait/);
 });

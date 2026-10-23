@@ -156,8 +156,8 @@
     if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par type de produit') + quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Fabriquez vos plats · échangez entre fermes') + menuBoard();
     if (id === 'marche') {
-      var spun = V.teams.map(function (t) { return '<div class="d-q" style="font-size:38px"><span>' + esc(t.name) + '</span>' + (t.paid ? '<span style="color:var(--mint);font-size:36px">✓ vendu</span>' : '') + '<span class="v" style="font-size:60px;margin-left:' + (t.paid ? '24px' : 'auto') + '">' + esc(t.wheel ? t.wheel.label : '…') + '</span></div>'; }).join('');
-      return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide') + '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px">' + spun + '</section>';
+      var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
+      return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
     }
     return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']);
   }

@@ -104,11 +104,21 @@ Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un
 - Plats composés (×5) : quiche (1 fromage + 1 œuf), gratin (1 fromage + 1 saucisson), tarte (1 confiture + 1 œuf). Ils consomment des plats déjà fabriqués.
 - Bourse : les fermes échangent librement entre elles pendant la minute ; tout accord conclu est définitif.
 
+## Stock
+Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et Achats) et l'animateur le voit dans la console, ferme par ferme :
+- **Jetons bruts** : le quota de la saison pour chaque type produit, après récolte, moins les jetons pris par les recettes. Les jetons non vendus ni transformés sont perdus en fin de saison ; l'animateur vérifie le compte physique avant de payer.
+- **Plats transformés** : ils restent en stock d'une saison à l'autre jusqu'à leur vente ou leur utilisation dans un plat composé.
+
 ## Marché
-Chaque ferme **place d'abord** ses produits, puis tourne la roue, une fois le placement déclaré (il est alors figé).
+Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits bruts, 9 plats), puis tourne la roue, une fois le placement déclaré (il est alors figé). Un produit absent du stock n'est pas vendable : sa case est grisée.
 
 - **Grande distribution** : 7 EB par produit brut, toujours payé, sans risque.
-- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (12 avec la camionnette), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
+- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (12 avec la camionnette, le seul achat qui agrandit l'étal), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
+- **Goût du moment** : chaque saison, certains produits sont recherchés (part vendue +25 points) et d'autres boudés (−25 points), en plus de la roue. Cela ne joue que sur l'étal, jamais au supermarché. Après la roue, chaque ferme lit un retour de marché par produit (« Vos fromages se sont arrachés : par ce froid, tout le monde veut du fromage… »).
+  - Printemps : œufs, fruits et légumes, omelette recherchés ; saucisson, gratin, lasagne boudés.
+  - Été : fruits et légumes, confiture, cake, tarte, lait recherchés ; gratin, lasagne, quiche boudés.
+  - Automne : viande, saucisson, omelette, lasagne, gratin recherchés ; fruits et légumes, confiture, cake boudés.
+  - Hiver : fromage, gratin, quiche, lasagne, viande recherchés ; confiture, tarte, cake, fruits et légumes boudés.
 - Un plat vaut son multiplicateur × le prix du produit brut (×3, ×4, ×5).
 - Cartes : touristes (au moins trois quarts vendus), grève et routes enneigées (étal fermé), hiver gourmand (+5 EB par plat).
 - Dé des activités (dès l'année 2) : gîte (transformés vendus tout de suite), magasin (une catégorie vendue d'office), ferme pédagogique (quota d'un type doublé), restaurant (invendus frais écoulés), ou toutes les activités.

@@ -161,8 +161,16 @@ function play(P, seed, strat) {
         for (const l of lots) { const k = Math.min(room, l.n); stallUnits += k; stallVal += k * l.u * 2; room -= k; supVal += (l.n - k) * l.u; }
         if (stallUnits < 6) { supVal += stallVal / 2; stallVal = 0; stallUnits = 0; }
         let gain = supVal;
+        // l'etal ne peut contenir que des produits reellement en stock (jetons de la saison)
+        const dec = {};
         if (stallUnits > 0) {
-          E.declareSales(s, t.id, { dir_raw: stallUnits });
+          const raw = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw;
+          let left = stallUnits;
+          for (const p of TYPES) { const k = Math.min(left, raw[p] || 0); if (k) { dec['dir_' + p] = k; left -= k; } }
+          if (left === stallUnits) { gain += stallVal / 2; stallUnits = 0; }
+        }
+        if (stallUnits > 0) {
+          E.declareSales(s, t.id, dec);
           let w = E.spinWheel(s, t.id, r);
           if (w.frac < 0.5 && !t.freeSpin && t.bocal <= 5 && r() < 0.6) w = E.spinWheel(s, t.id, r);
           if (t.freeSpin && w.frac < 0.5) w = E.spinWheel(s, t.id, r);

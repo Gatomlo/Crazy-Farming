@@ -133,6 +133,9 @@ body.display { overflow: hidden; }
 .d-village b { font-size: 34px; color: var(--fg); }
 .d-village i { flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .d-village u { display: block; height: 100%; background: var(--pc); text-decoration: none; }
+.d-note { font-size: 26px; font-weight: 600; color: var(--sand); padding: 2px 0 0 0; line-height: 1.2; }
+.d-mk { border-top: 2px solid var(--line); padding-top: 10px; }
+.d-mk-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 36px; }
 .d-parade { font-size: 52px; font-weight: 700; padding: 18px 36px; border-radius: 28px; background: var(--surface); align-self: flex-start; }
 .d-parade b { color: var(--sand); }
 @keyframes pop { 0% { opacity: 0; transform: scale(.94) translateY(24px); } 100% { opacity: 1; transform: none; } }
