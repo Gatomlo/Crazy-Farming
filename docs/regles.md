@@ -15,7 +15,7 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 
 ## La ferme
 - Profils de départ : Bergers (2 chèvreries, 1 poulailler), Maraîchers (2 potagers-vergers, 1 poulailler), Éleveurs (2 porcheries, 1 chèvrerie), Gourmets (1 porcherie, 1 potager-verger, 1 atelier).
-- Quatre produits : lait, œufs, viande, fruits et légumes. Chaque tuile rapporte un quota de jetons par saison (le quota dépend de la saison).
+- Quatre produits : lait, œufs, viande, fruits et légumes. Chaque tuile permet de rapporter **un jeton** par saison ; chaque jeton rapporté vaut **1 à 3 ressources** selon la saison, le produit et l'aléa (la grille « valeur d'un jeton »).
 - Une nouvelle tuile doit toucher le bâtiment principal ou une tuile du même type.
 - **Agrandissements** (tuiles, atelier, activité complémentaire) : achetables seulement à l'installation et au réaménagement de fin d'année.
 - Prix des tuiles de production : 35 EB si la ferme possède déjà ce type, 80 EB sinon. Atelier de transformation 90 EB, activité complémentaire 120 EB.
@@ -95,7 +95,9 @@ Exemples avec 4 fermes (l'objectif s'adapte au nombre de fermes) :
 **Sanction et récompense : le stress uniquement.** Objectif atteint : **−1 boule** pour chaque ferme. Objectif manqué : **+1 boule** pour chaque ferme.
 
 ## Récolte en relais
-Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule) permet de dépasser le rythme : l'équipe l'enregistre sur mobile.
+Un coureur par type de produit, un jeton par voyage, au plus un jeton par tuile de ce type. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule, une fois par saison) permet de rapporter un jeton de plus par type produit : l'équipe l'enregistre sur mobile.
+
+**Encodage :** à la fin de l'étape, chaque ferme encode sur mobile le nombre de jetons réellement rapportés pour chaque produit. Ressources obtenues = jetons rapportés × valeur du jeton. L'animateur peut corriger. Les matières brutes qui ne sont ni transformées ni vendues sont **perdues en fin de saison**.
 
 ## Transformation et bourse
 - Les fermes **déclarent sur l'app** les plats à fabriquer. L'app calcule les jetons à apporter à l'animateur et ceux qu'il rend. L'animateur fait l'échange physique, puis valide (« Jetons échangés »).
@@ -107,7 +109,7 @@ Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un
 
 ## Stock
 Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et Achats) et l'animateur le voit dans la console, ferme par ferme :
-- **Jetons bruts** : le quota de la saison pour chaque type produit, après récolte, moins les jetons pris par les recettes. Les jetons non vendus ni transformés sont perdus en fin de saison ; l'animateur vérifie le compte physique avant de payer.
+- **Jetons bruts** : les jetons encodés à la fin de la récolte × leur valeur, moins les jetons pris par les recettes. Les jetons non vendus ni transformés sont perdus en fin de saison ; l'animateur vérifie le compte physique avant de payer.
 - **Plats transformés** : ils restent en stock d'une saison à l'autre jusqu'à leur vente ou leur utilisation dans un plat composé.
 
 ## Marché

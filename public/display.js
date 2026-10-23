@@ -69,7 +69,7 @@
     var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
     var stop = mods.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(mods.stopEarlySec * 1000) + ' du chrono</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (valeur de base) : ' + esc(safe.join(', ')) + '</div>' : '';
-    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">À rapporter par tuile <span style="font-weight:500;color:var(--muted);font-size:26px">· jetons = tuiles × valeur</span></div>' + rows +
+    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Valeur d\'un jeton rapporté <span style="font-weight:500;color:var(--muted);font-size:26px">· un jeton par tuile au maximum</span></div>' + rows +
       '' + banner + stop + prot + '</section>';
   }
 
@@ -165,10 +165,10 @@
         (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }
     if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par type de produit') + quotas();
-    if (id === 'bourse') return clockBlock('Bourse du village', 'Fabriquez vos plats · échangez entre fermes') + menuBoard();
+    if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
     if (id === 'marche') {
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
-      return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
+      return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide · Matières ni vendues ni transformées : perdues') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
     }
     return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']);
   }

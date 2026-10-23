@@ -143,17 +143,23 @@
   }
 
   // Jetons a rapporter : tuiles x valeur de la grille (modifiee par la carte aleas, sauf si la ferme est protegee).
+  // Recolte : on encode a la fin de l'etape le nombre de jetons reellement rapportes ; chaque jeton vaut 1 a 3 ressources.
   function harvestPanel() {
     if (V.phase !== 'season' || !me.harvest || !me.harvest.length) return '';
+    var open = V.step <= 2 && !me.transfo;
+    var declared = me.harvest.every(function (h) { return h.brought !== null; });
     var rows = me.harvest.map(function (h) {
       var ch = h.perTile !== h.basePerTile;
-      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i>' + esc(h.name) + '</span>' +
-        '<span class="num">' + h.tiles + ' tuile' + (h.tiles > 1 ? 's' : '') + ' × ' + (ch ? '<s class="muted">' + h.basePerTile + '</s> ' : '') + '<b>' + h.perTile + '</b> = <b style="font-size:20px;color:' + (ch ? (h.perTile < h.basePerTile ? 'var(--bad)' : 'var(--good)') : 'inherit') + '">' + h.tokens + '</b></span></div>';
+      var input = open ? '<input id="hv-' + h.id + '" inputmode="numeric" max="' + h.maxTokens + '" style="width:56px" placeholder="0" value="' + (h.brought !== null ? h.brought : '') + '">' : '<b class="num">' + (h.brought || 0) + '</b>';
+      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><span><b>' + esc(h.name) + '</b><div class="muted" style="font-size:12px">max ' + h.maxTokens + ' jeton' + (h.maxTokens > 1 ? 's' : '') + ' · 1 jeton = <b style="color:' + (ch ? (h.perTile < h.basePerTile ? 'var(--bad)' : 'var(--good)') : 'inherit') + '">' + h.perTile + '</b> ressource' + (h.perTile > 1 ? 's' : '') + (ch ? ' <s>' + h.basePerTile + '</s>' : '') + '</div></span></span>' +
+        '<span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '<span class="muted num" style="min-width:64px;text-align:right">' + (h.brought !== null ? '= ' + h.value : '') + '</span></span></div>';
     }).join('');
-    var tot = me.harvest.reduce(function (n, h) { return n + h.tokens; }, 0);
+    var tot = me.harvest.reduce(function (n, h) { return n + (h.brought !== null ? h.value : 0); }, 0);
     var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : valeurs de base.</div>' : '';
     var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">Canicule : arrêtez de récolter à ' + FF.fmt(me.stopEarly * 1000) + ' du chrono.</div>' : '';
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:6px"><div class="row" style="justify-content:space-between"><b>Jetons à rapporter cette saison</b><b class="num">' + tot + '</b></div>' + rows + prot + early + '</section>';
+    var btn = open ? '<button class="btn primary" data-act="declareHarvest">' + (declared ? 'Modifier la récolte' : 'Encoder ma récolte') + '</button>' : '';
+    var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock. Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">À la fin de la récolte, encodez les jetons réellement rapportés pour chaque produit : ils alimentent votre stock.</div>';
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + prot + early + btn + hint + '</section>';
   }
 
   var TIER = { 1: 'simple', 2: 'mixte', 3: 'composé' };
@@ -212,7 +218,7 @@
       if (n > 0) chips.push('<span class="pill" style="font-size:14px">' + (x.kind === 'raw' ? (FF.ICON[x.id] || '') + ' ' : '') + esc(x.name) + ' <b>' + n + '</b></span>');
     });
     return '<section class="panel stack"><b>📦 Mon stock</b>' + (chips.length ? '<div class="row" style="gap:6px">' + chips.join('') + '</div>' : '<div class="muted" style="font-size:14px">Rien en stock pour le moment.</div>') +
-      '<div class="muted" style="font-size:12px">Jetons bruts : récolte de la saison moins les recettes. Les jetons non vendus ni transformés sont perdus en fin de saison.</div></section>';
+      '<div class="muted" style="font-size:12px">Jetons bruts : récolte encodée moins les recettes. Les matières non transformées ni vendues sont perdues en fin de saison.</div></section>';
   }
 
   // Marche : 1) placer les produits (supermarche garanti / etal risque) 2) roue 3) paiement par l'animateur.
@@ -248,9 +254,9 @@
   // ---------- Ecran "Ferme" : seul ce qui sert a l'etape en cours ----------
   var STEP_HINT = [
     'Une carte tombe sur le village. Choisissez comment réagir.',
-    'Un coureur par type de produit : rapportez les jetons de la grille.',
-    'Fabriquez vos plats avec l\'animateur.',
-    'Placez vos produits, puis tournez la roue de l\'étal.',
+    'Un coureur par type de produit : un jeton par tuile au maximum, chaque jeton vaut 1 à 3 ressources. Encodez ce que vous rapportez.',
+    'Encodez votre récolte, puis fabriquez vos plats avec l\'animateur. Les jetons non transformés ni vendus seront perdus.',
+    'Placez vos produits, puis tournez la roue de l\'étal. Ce qui n\'est ni transformé ni vendu est perdu.',
     'Vacances et matériel : détendez-vous et équipez la ferme.'
   ];
 
@@ -269,7 +275,7 @@
   }
 
   function collierPanel() {
-    return '<section class="panel stack"><b>🐎 Coup de collier</b><div class="muted" style="font-size:14px">Chaque voyageur supplémentaire rapporte 2 jetons de plus, au prix d\'une boule de stress.</div>' +
+    return '<section class="panel stack"><b>🐎 Coup de collier</b><div class="muted" style="font-size:14px">Un jeton de plus par type produit (au-delà d\'un par tuile), au prix d\'une boule de stress. Une fois par saison.</div>' +
       '<button class="btn" data-act="collier">Lancer le coup de collier (+1 boule)</button></section>';
   }
 
@@ -308,7 +314,7 @@
     if (me.stopped) return h + col + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
     if (st === 0) return h + alea() + bocalPanel() + readyCard() + farmCard();
     if (st === 1) return h + col + harvestPanel() + collierPanel() + readyCard() + farmCard();
-    if (st === 2) return h + col + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
+    if (st === 2) return h + col + harvestPanel() + stockPanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
     if (st === 3) return h + col + marketPanel() + readyCard() + farmCard();
     return h + col + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
   }
@@ -419,6 +425,11 @@
     if (a === 'choice') return conn.act('setChoice', { choice: b.dataset.choice });
     if (a === 'contribute') { var gn = parseInt(val('giveN'), 10); if (!(gn > 0)) return FF.toast('Indique une quantité.'); return conn.act('contribute', { n: gn }).then(function (r) { if (r && r.ok) FF.toast('Merci pour le village !'); }); }
     if (a === 'collier') return conn.act('collier');
+    if (a === 'declareHarvest') {
+      var hv = {};
+      me.harvest.forEach(function (h) { var n = parseInt(val('hv-' + h.id), 10); hv[h.id] = n > 0 ? n : 0; });
+      return conn.act('declareHarvest', { tokens: hv }).then(function (r) { if (r && r.ok) FF.toast('Récolte encodée.'); });
+    }
     if (a === 'vacation') return conn.act('vacation', { n: parseInt(val('vacN'), 10) });
     if (a === 'ready') return conn.act('setReady', { ready: !me.ready });
   });

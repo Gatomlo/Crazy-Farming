@@ -113,14 +113,18 @@ function play(P, seed, strat) {
         const extra = (type) => (t.equipment.includes('tracteur') ? 1 : 0) + t.equipment.filter((e) => e === 'charrette').length * 0.5;
         const me = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
         const early = me.stopEarly ? (D.SEASONS[season].harvestSec - me.stopEarly) / D.SEASONS[season].harvestSec : 1;
+        const enc = {};
         for (const h of me.harvest) {
           const type = h.id;
-          const q = h.tokens; if (!q) continue;
+          const q = h.tiles * h.perTile;
+          enc[type] = Math.min(h.maxTokens, Math.round(h.maxTokens * Math.min(1, clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1))));
+          if (!q) continue;
           let f = clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1) * early;
           f *= 1 + P.runnerBonus * extra(type) + P.brouetteBonus * Math.min(1, t.equipment.filter((e) => e === 'brouette').length / TYPES.filter((x) => t.tiles[x]).length * 2);
           if (a.collier) f *= 1 + P.collierBonus;
           a.stock[type] += Math.round(q * Math.min(f, 1.6));
         }
+        E.declareHarvest(s, t.id, enc, true);
       }
       E.nextStep(s, r);
       // 3. Transformation

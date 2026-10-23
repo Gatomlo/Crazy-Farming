@@ -75,9 +75,9 @@
   // Phrase a dire a chaque etape (mode pas a pas).
   var SAY = [
     '« Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter une boule. »',
-    '« Coureurs en place… Trois, deux, un, partez ! »',
-    '« Déclarez vos recettes sur l\'app, je prépare vos jetons. Négociez entre fermes pendant ce temps. »',
-    '« Placez vos produits, déclarez, puis tournez la roue. »',
+    '« Coureurs en place… Trois, deux, un, partez ! À la fin, chaque ferme encode les jetons réellement rapportés. »',
+    '« Encodez votre récolte, puis déclarez vos recettes : je prépare vos jetons. Rappel : les matières brutes que vous ne transformez pas ni ne vendez seront perdues en fin de saison. »',
+    '« Placez vos produits, déclarez, puis tournez la roue. Attention : tout ce qui n\'est ni vendu ni transformé est perdu ! »',
     '« Dernière minute : matériel et vacances. Regardez la météo de la saison suivante ! »'
   ];
 
@@ -142,6 +142,15 @@
       '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Quota de jetons par tuile · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
   }
 
+  // Recolte encodee par une ferme (jetons rapportes / maximum), avec correction -1 / +1.
+  function harvestLine(t) {
+    if (V.phase !== 'season' || V.step < 1 || !t.harvest || !t.harvest.length) return '';
+    var cells = t.harvest.map(function (h) {
+      return '<span style="white-space:nowrap">' + (FF.ICON[h.id] || '') + ' ' + (h.brought === null ? '<span class="muted">?</span>' : h.brought) + '/' + h.maxTokens + ' <button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="-1" aria-label="Retirer un jeton">−</button><button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="1" aria-label="Ajouter un jeton">+</button></span>';
+    }).join(' ');
+    return '<div style="font-size:13px;margin-top:4px">🧺 ' + cells + '</div>';
+  }
+
   // Stock d'une ferme : jetons bruts de la saison et plats transformes.
   function stockLine(t) {
     if (!t.stock) return '';
@@ -150,7 +159,7 @@
       var n = x.kind === 'raw' ? t.stock.raw[x.id] : t.stock.dishes[x.id];
       if (n > 0) parts.push((x.kind === 'raw' ? (FF.ICON[x.id] || '') + ' ' : '') + esc(x.name) + ' ' + n);
     });
-    return '<div style="font-size:13px;margin-top:4px">📦 ' + (parts.length ? parts.join(' · ') : '<span class="muted">stock vide</span>') + '</div>';
+    return harvestLine(t) + '<div style="font-size:13px;margin-top:4px">📦 ' + (parts.length ? parts.join(' · ') : '<span class="muted">stock vide</span>') + '</div>';
   }
 
   function teamsTable() {
@@ -377,6 +386,7 @@
       var keepEl = document.getElementById('timerKeep');
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
+    if (a === 'adjustHarvest') return conn.act('adjustHarvest', { teamId: t, product: b.dataset.product, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'adjustContribution') return conn.act('adjustContribution', { teamId: t, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'jumpTo') {
       var jy = parseInt(val('jumpYear'), 10), js = parseInt(val('jumpSeason'), 10);

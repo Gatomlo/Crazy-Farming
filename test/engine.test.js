@@ -13,6 +13,14 @@ function newGame(n = 4) {
   return s;
 }
 
+// Encode la recolte maximale (un jeton par tuile) : le stock de jetons bruts en depend.
+function fullHarvest(s, t) {
+  const h = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest;
+  const tokens = {};
+  for (const x of h) tokens[x.id] = x.maxTokens;
+  E.declareHarvest(s, t.id, tokens, true);
+}
+
 function toSeason(s) {
   E.startSetup(s);
   go(s);
@@ -136,6 +144,7 @@ test('roue : relance payante, relance gratuite, touristes', () => {
   const t = s.teams[0];
   assert.throws(() => E.spinWheel(s, t.id), /Placez d’abord/);
   s.step = 3;
+  fullHarvest(s, t); fullHarvest(s, s.teams[1]);
   E.declareSales(s, t.id, { dir_lait: 4 });
   E.spinWheel(s, t.id, () => 0.99); // case 12 : relance gratuite
   assert.equal(t.freeSpin, true);
@@ -302,6 +311,7 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   toSeason(s);
   s.step = 3;
   const t = s.teams[0];
+  fullHarvest(s, t); fullHarvest(s, s.teams[1]);
   t.dishes.simple = 1; t.pantry.fromage = 1; s.teams[1].dishes.composed = 1; s.teams[1].pantry.quiche = 1;
   assert.throws(() => E.settleSales(s, t.id), /Aucun produit/);
   assert.throws(() => E.declareSales(s, t.id, { dir_lait: 6, dir_oeuf: 3 }), /8 produits/);
@@ -625,18 +635,40 @@ test('marche : stock visible, produits absents refuses, gout du moment par produ
   void fixed; void D;
 });
 
-test('marche : jetons bruts disponibles = quota de la saison moins les recettes', () => {
+test('recolte : encodage des jetons rapportes, valeur du jeton, stock brut', () => {
   const s = newGame();
   toSeason(s);
-  const t = s.teams[0]; // bergers : 2 chevreries (3 lait chacune au printemps)
+  const t = s.teams[0]; // bergers : 2 chevreries (valeur 3 au printemps), 1 poulailler (valeur 3)
+  const stock = (k) => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw[k];
   s.step = 0;
-  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 0, 'rien avant la récolte');
+  assert.throws(() => E.declareHarvest(s, t.id, { lait: 1 }), /Récolte/, 'pas avant la récolte');
+  s.step = 1;
+  assert.equal(stock('lait'), 0, 'rien tant que la récolte n’est pas encodée');
+  assert.throws(() => E.declareHarvest(s, t.id, { lait: 3 }), /au plus 2/);
+  assert.throws(() => E.declareHarvest(s, t.id, { viande: 1 }), /ne produisez pas/);
+  assert.throws(() => E.declareHarvest(s, t.id, { lait: -1 }), /invalide/);
+  E.declareHarvest(s, t.id, { lait: 1, oeuf: 1 });
+  assert.equal(stock('lait'), 3); assert.equal(stock('oeuf'), 3); // 1 jeton x valeur 3
+  E.declareHarvest(s, t.id, { lait: 2 });
+  assert.equal(stock('lait'), 6); assert.equal(stock('oeuf'), 0);
+  // coup de collier : un jeton de plus par type produit, une fois par saison
+  E.coupDeCollier(s, t.id);
+  assert.throws(() => E.coupDeCollier(s, t.id), /déjà lancé/);
+  E.declareHarvest(s, t.id, { lait: 3, oeuf: 1 });
+  assert.equal(stock('lait'), 9);
+  // correction animateur
+  E.adjustHarvest(s, t.id, 'lait', -1);
+  assert.equal(stock('lait'), 6);
   s.step = 2;
-  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 6);
+  E.declareHarvest(s, t.id, { lait: 3, oeuf: 1 }); // encore possible au debut de Transformation
   E.requestTransfo(s, t.id, { fromage: 1 }); // 2 laits
-  assert.equal(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw.lait, 4);
+  assert.equal(stock('lait'), 7);
+  assert.throws(() => E.declareHarvest(s, t.id, { lait: 1 }), /déjà demandées/);
   s.step = 3;
-  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 5 }), /que 4 lait/);
+  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 8 }), /que 7 lait/);
+  // nouvelle saison : la recolte est a encoder de nouveau
+  s.step = 4; E.nextStep(s);
+  assert.equal(t.harvest, null); assert.equal(t.collier, false);
 });
 
 test('table de marche : etal de 10 produits, camionnette 12, les deux cumulees 14', () => {
@@ -645,6 +677,7 @@ test('table de marche : etal de 10 produits, camionnette 12, les deux cumulees 1
   s.step = 3;
   const t = s.teams[1]; // maraichers : fruits et legumes x2 (3 chacun) + oeuf
   t.tiles.fl = 5; // assez de jetons pour remplir un etal
+  fullHarvest(s, t);
   assert.ok(E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).shop.some((i) => i.id === 'table' && i.price === 40));
   assert.throws(() => E.declareSales(s, t.id, { dir_fl: 9 }), /8 produits/);
   t.equipment.push('table');
