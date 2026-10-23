@@ -9,7 +9,7 @@ const DEFAULTS = {
   rawPrice: 5, directPrice: 10, stallFee: 10, stallCap: 8, vanCap: 12,
   recipeRaw: 2, transMult: 3, mixedMult: 4, atelierRecipes: 4, handRecipes: 1,
   runnerBonus: 0.2, brouetteBonus: 0.15, collierBonus: 0.3,
-  s3mult: D.S3_MULT, pFeteLeniency: 0, pCollective: 0.6
+  s3mult: D.S3_MULT, pFeteLeniency: 0, coop: 0.8
 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -79,7 +79,24 @@ function play(P, seed, strat) {
       // 1. Alea
       const card = E.drawCard(s, undefined, r);
       E.rollDie(s, undefined, r);
-      if (card.collective) E.resolveCollective(s, r() < P.pCollective);
+      if (card.collective) {
+        // chaque ferme donne sa part avec la probabilite P.coop ; l'objectif est regle a l'echeance par le moteur
+        const g = card.goal;
+        for (const a of agents) {
+          const t = T(a);
+          if (r() > P.coop) continue;
+          const sumPot = () => Object.values(card.pot || {}).reduce((n, x) => n + x, 0);
+          const left = card.need - sumPot();
+          if (left <= 0) break;
+          const share = Math.min(left, Math.ceil(card.need / agents.length));
+          try {
+            if (g.kind === 'eb') { if (t.bank > share + 120) E.contribute(s, t.id, share); }
+            else if (g.kind === 'boule') { if (t.bocal <= 5) E.contribute(s, t.id, Math.min(left, 1)); }
+            else if (g.kind === 'dish') { t.pantry[g.dish] = (t.pantry[g.dish] || 0) + share; t.dishes.simple += share; E.contribute(s, t.id, share); }
+            else E.contribute(s, t.id, share);
+          } catch (e) { /* ferme dans l'incapacite de donner */ }
+        }
+      }
       for (const a of agents) {
         const t = T(a); if (t.stopped || card.collective) continue;
         const neg = card.tone === 'neg';

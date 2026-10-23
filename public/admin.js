@@ -92,7 +92,7 @@
     var items = V.meta.steps.map(function (s, i) {
       var cls = i === V.step ? 'active' : i < V.step ? 'done' : '';
       var dur = i === 1 ? V.harvestSec : [30, 0, 60, 60, 30][i];
-      var say = i === V.step ? '<div style="font-size:13px;margin-top:4px;color:var(--sand)">' + esc(i === 0 && V.card && V.card.collective ? '« Aléa collectif : tout le village relève le défi ensemble ! »' : SAY[i]) + '</div>' : '';
+      var say = i === V.step ? '<div style="font-size:13px;margin-top:4px;color:var(--sand)">' + esc(i === 0 && V.card && V.card.collective ? '« Aléa collectif : le village doit réunir l\'objectif ensemble avant la fin de l\'étape indiquée ! »' : SAY[i]) + '</div>' : '';
       return '<div class="step ' + cls + '"><b class="n">' + (i < V.step ? '✓' : i + 1) + '</b><div style="flex:1"><b>' + esc(s.name) + '</b><div class="muted" style="font-size:13px">' + esc(s.hint) + '</div>' + say + '</div><span class="muted num">' + FF.fmt(dur * 1000) + '</span></div>';
     }).join('');
     var last = V.step === 4;
@@ -102,16 +102,31 @@
       '<div class="row" style="margin-top:auto"><button class="btn" style="flex:1" data-act="prevStep"' + (V.step === 0 ? ' disabled' : '') + '>Précédente</button><button class="btn primary' + (allReady ? ' pulse' : '') + '" style="flex:1" data-act="nextStep">' + (allReady ? '✓ Toutes prêtes · ' : '') + nextLabel + '</button></div>' + jumpPanel() + '</section>';
   }
 
+  // Alea collectif : suivi de l'objectif commun et des dons de chaque ferme.
+  function collectiveAdmin(c) {
+    var tot = Object.keys(c.pot || {}).reduce(function (n, k) { return n + c.pot[k]; }, 0);
+    var done = c.resolved !== null && c.resolved !== undefined;
+    var due = (V.meta.steps.filter(function (x) { return x.id === c.due; })[0] || {}).name || '';
+    var raw = c.goal.kind === 'raw';
+    var rows = V.teams.map(function (t) {
+      return '<div class="row" style="justify-content:space-between"><span>' + esc(t.name) + '</span><span class="row" style="gap:6px"><b class="num">' + ((c.pot || {})[t.id] || 0) + '</b>' +
+        (raw && !done ? '<button class="btn small" data-act="adjustContribution" data-team="' + t.id + '" data-delta="-1" aria-label="Retirer un jeton à ' + esc(t.name) + '">−1</button><button class="btn small" data-act="adjustContribution" data-team="' + t.id + '" data-delta="1" aria-label="Ajouter un jeton à ' + esc(t.name) + '">+1</button>' : '') + '</span></div>';
+    }).join('');
+    return '<span class="pill warn" style="align-self:flex-start">Aléa collectif · tout le village</span><div style="font-size:28px;font-weight:800">' + esc(c.title) + '</div><div style="font-size:16px">' + esc(c.story) + '</div>' +
+      '<div><b>Objectif : ' + esc(c.goalText) + '</b> <span class="muted">· avant la fin de « ' + esc(due) + ' »</span></div>' +
+      '<div class="bar" style="height:12px"><i style="width:' + Math.min(100, Math.round(tot / c.need * 100)) + '%"></i></div><div class="num"><b>' + tot + ' / ' + c.need + '</b></div>' + rows +
+      (raw && !done ? '<div class="muted" style="font-size:13px">Les fermes déclarent leurs jetons sur mobile : vérifie la remise physique et corrige avec −1 / +1 si besoin.</div>' : '') +
+      (done ? '<div class="pill ' + (c.resolved ? 'ok' : 'bad') + '" style="align-self:flex-start">' + (c.resolved ? 'Objectif atteint' : 'Objectif manqué') + '</div><div>' + esc(c.resolved ? c.winText : c.loseText) + '</div>'
+        : '<div class="muted" style="font-size:13px">Réussite : ' + esc(c.winText) + '<br>Échec : ' + esc(c.loseText) + '<br>Réglé automatiquement à la fin de l\'étape.</div><button class="btn small" data-act="settleCollective">Clôturer maintenant</button>');
+  }
+
   function cardPanel() {
     var c = V.card;
     var q = V.quotaEff, prods = V.meta.products.map(function (p) {
       return '<span class="pill" style="display:inline-flex;gap:8px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:' + p.color + ';display:inline-block"></i>' + esc(p.name) + ' ' + q[p.id] + '</span>';
     }).join(' ');
     var cardHtml = c && c.collective
-      ? '<span class="pill warn" style="align-self:flex-start">Aléa collectif · tout le village</span><div style="font-size:28px;font-weight:800">' + esc(c.title) + '</div><div style="font-size:16px">' + esc(c.challenge) + '</div>' +
-        (c.resolved === null || c.resolved === undefined
-          ? '<div class="muted" style="font-size:13px">Si réussi : ' + esc(c.winText) + '<br>Si raté : ' + esc(c.loseText) + '</div><div class="row"><button class="btn good" data-act="resolveCollective" data-success="1">✅ Défi réussi</button><button class="btn" data-act="resolveCollective" data-success="0">❌ Défi raté</button></div>'
-          : '<div class="pill ' + (c.resolved ? 'ok' : 'bad') + '" style="align-self:flex-start">' + (c.resolved ? 'Défi réussi' : 'Défi raté') + '</div><div>' + esc(c.resolved ? c.winText : c.loseText) + '</div>')
+      ? collectiveAdmin(c)
       : c
       ? '<span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="align-self:flex-start">' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
         '<div style="font-size:28px;font-weight:800">' + esc(c.title) + '</div><div style="font-size:16px">' + esc(c.effect) + '</div>' +
@@ -351,7 +366,7 @@
       var keepEl = document.getElementById('timerKeep');
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
-    if (a === 'resolveCollective') return conn.act('resolveCollective', { success: b.dataset.success === '1' });
+    if (a === 'adjustContribution') return conn.act('adjustContribution', { teamId: t, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'jumpTo') {
       var jy = parseInt(val('jumpYear'), 10), js = parseInt(val('jumpSeason'), 10);
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Confirmer le saut'; return; }

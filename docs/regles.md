@@ -77,12 +77,18 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 - Hiver doux (+) : lait et œufs +1 jeton par tuile.
 
 ### Aléas collectifs
-Une fois par an, le système tire un **aléa collectif** parmi ceux de toutes les saisons : il **remplace la carte** de sa saison. Aucun choix individuel (pas de parade, pas de boule) : tout le village relève ensemble un **défi** que l'animateur arbitre (« Défi réussi » ou « Défi raté » dans la console). Les effets s'appliquent à toutes les fermes. Ils ne sont jamais annoncés par la météo.
+Une fois par an, le système tire un **aléa collectif** parmi ceux de toutes les saisons : il **remplace la carte** de sa saison. Aucun choix individuel (pas de parade, pas de boule d'évitement) : le village doit **réunir ensemble un objectif** avant la fin d'une étape donnée. Chaque ferme donne ce qu'elle veut, quand elle veut, depuis son mobile ; l'objectif est vérifié automatiquement à l'échéance. S'il est atteint, tout le village gagne ; sinon tout le village paie. Les aléas collectifs ne sont jamais annoncés par la météo.
 
-- **Printemps** : Inondation (chaîne de seaux, 10 jetons en 45 s ; réussi +10 EB, raté −1 jeton par tuile pour tous) ; Foire aux plants (présentations, accord unanime ; réussi +20 EB, raté rien).
-- **Été** : Feu de broussailles (chaîne d'eau, 40 s ; réussi +10 EB, raté +1 boule pour tous) ; Fête du village (slogan de six mots en 30 s ; réussi −1 boule pour tous, raté rien).
-- **Automne** : Maladie du bétail (gestes d'hygiène, trois tours ; raté : lait et viande −1 jeton par tuile) ; Récolte solidaire (répartir 8 jetons sans parler, chaque ferme en a un ; réussi +15 EB).
-- **Hiver** : Panne d'électricité (réciter les 5 étapes sans erreur ; raté +1 boule pour tous) ; Marché de Noël (décorer un stand à voix haute ; réussi +20 EB).
+L'objectif se compte par ferme (il grandit avec le nombre de fermes) et prend quatre formes :
+- **Argent** : les EB donnés sont déduits de la banque de la ferme.
+- **Plats** : les plats offerts sont déduits du stock de la ferme (il faut les avoir transformés).
+- **Jetons bruts** : la ferme remet les jetons à l'animateur puis les déclare sur mobile ; l'animateur peut corriger avec −1 / +1.
+- **Boules** : des volontaires prennent des boules de stress, chaque boule prise compte pour l'objectif.
+
+- **Printemps** : Inondation (15 EB par ferme, échéance fin d'Achats ; réussi −1 boule pour tous, raté +1 boule pour tous) ; Semences communes (2 jetons de fruits et légumes par ferme, échéance fin de Transformation ; réussi +15 EB pour tous, raté −10 EB).
+- **Été** : Feu de broussailles (la moitié des fermes prennent une boule, échéance fin de Transformation ; réussi +10 EB, raté +1 boule pour tous) ; Fête du village (fromages offerts, une ferme sur deux, échéance fin du Marché ; réussi −1 boule pour tous, raté −10 EB).
+- **Automne** : Maladie du bétail (20 EB par ferme, échéance fin d'Achats ; réussi −1 boule, raté +1 boule) ; Soupe solidaire (2 jetons d'œufs par ferme, échéance fin de Transformation ; réussi +15 EB, raté +1 boule).
+- **Hiver** : Panne d'électricité (20 EB par ferme, échéance fin d'Achats ; réussi +10 EB, raté +1 boule) ; Marché de Noël (confitures offertes, trois fermes sur quatre, échéance fin du Marché ; réussi +20 EB, raté −10 EB).
 
 ## Récolte en relais
 Un coureur par type de produit, un jeton par voyage, dans la limite du quota. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule) permet de dépasser le rythme : l'équipe l'enregistre sur mobile.

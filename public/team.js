@@ -101,16 +101,34 @@
       '<section class="panel"><b>Derniers mouvements</b><div style="margin-top:4px">' + mv + '</div></section>';
   }
 
+  // Alea collectif : le village reunit un objectif commun avant l'echeance (argent, plats, jetons bruts ou boules).
+  function dueName(c) { var st = V.meta.steps.filter(function (x) { return x.id === c.due; })[0]; return st ? st.name : ''; }
+  function potSum(c) { return Object.keys(c.pot || {}).reduce(function (n, k) { return n + c.pot[k]; }, 0); }
+  function collectivePanel(c) {
+    var tot = potSum(c), left = Math.max(0, c.need - tot), pct = Math.min(100, Math.round(tot / c.need * 100));
+    var bar = '<div class="bar" style="height:14px"><i style="width:' + pct + '%"></i></div><div class="row" style="justify-content:space-between"><b class="num">' + tot + ' / ' + c.need + '</b><span class="muted" style="font-size:13px">avant la fin de l\'étape « ' + esc(dueName(c)) + ' »</span></div>';
+    var who = V.teams.filter(function (t) { return (c.pot || {})[t.id]; }).map(function (t) { return esc(t.name) + ' ' + c.pot[t.id]; }).join(' · ');
+    var done = c.resolved !== null && c.resolved !== undefined;
+    var g = c.goal, form = '';
+    if (!done && left > 0 && !me.stopped) {
+      var max = g.kind === 'eb' ? Math.min(left, me.bank) : g.kind === 'dish' ? Math.min(left, me.pantry[g.dish] || 0) : left;
+      var label = g.kind === 'eb' ? 'Donner (EB)' : g.kind === 'dish' ? 'Offrir (plats)' : g.kind === 'raw' ? 'Je les ai remis à l\'animateur' : 'Je prends les boules';
+      var hint = g.kind === 'dish' ? 'En stock : ' + (me.pantry[g.dish] || 0) : g.kind === 'raw' ? 'Remettez d\'abord les jetons à l\'animateur, puis déclarez-les ici.' : g.kind === 'boule' ? 'Volontaires : chaque boule prise compte pour l\'objectif.' : 'Banque : ' + me.bank + ' EB';
+      form = '<div class="row"><input id="giveN" inputmode="numeric" placeholder="Quantité" style="width:110px"' + (max < 1 && g.kind !== 'raw' && g.kind !== 'boule' ? ' disabled' : '') + '><button class="btn primary" data-act="contribute">' + label + '</button></div><div class="muted" style="font-size:13px">' + hint + '</div>';
+    }
+    var res = !done ? '' : c.resolved ? '<div class="pill ok" style="align-self:flex-start">Objectif atteint</div><div>' + esc(c.winText) + '</div>' : '<div class="pill bad" style="align-self:flex-start">Objectif manqué</div><div>' + esc(c.loseText) + '</div>';
+    return '<section class="panel stack" style="border-color:var(--pb)"><div class="row" style="justify-content:space-between"><b>🤝 Aléa collectif</b><span class="pill warn">Tout le village</span></div>' +
+      '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.story) + '</div>' +
+      '<div><b>Objectif commun : ' + esc(c.goalText) + '</b></div>' + bar + (who ? '<div class="muted" style="font-size:13px">' + who + '</div>' : '') + form + res +
+      '<div class="muted" style="font-size:13px">Si le village y arrive : ' + esc(c.winText) + ' Sinon : ' + esc(c.loseText) + '</div></section>';
+  }
+
   function alea() {
     var die = V.die ? '<div class="row panel soft" style="padding:10px 14px;gap:10px"><div style="width:40px;height:40px;border-radius:10px;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:24px;font-weight:800">' + V.die + '</div><div><div class="muted" style="font-size:12px">Dé des activités</div><b>' + esc(V.dieLabel || '') + '</b></div></div>' : '';
     if (V.phase !== 'season' || !V.card) return '<section class="panel stack"><b>🎴 Carte aléa</b><p class="muted" style="margin:0">L\'animateur n\'a pas encore tiré la carte.</p></section>' + meteo() + die;
     var c = V.card, has = c.parade && me.equipment.indexOf(c.parade) >= 0;
     var par = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : null;
-    if (c.collective) {
-      var res = c.resolved === true ? '<div class="pill ok" style="align-self:flex-start">Défi réussi</div><div>' + esc(c.winText) + '</div>' : c.resolved === false ? '<div class="pill bad" style="align-self:flex-start">Défi raté</div><div>' + esc(c.loseText) + '</div>' : '<div class="muted" style="font-size:14px">Le village relève le défi ensemble : l\'animateur arbitre. Pas de choix individuel.</div>';
-      return '<section class="panel stack" style="border-color:var(--pb)"><div class="row" style="justify-content:space-between"><b>🤝 Aléa collectif</b><span class="pill warn">Tout le village</span></div>' +
-        '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.challenge) + '</div>' + res + '</section>' + die;
-    }
+    if (c.collective) return collectivePanel(c) + die;
     var neg = c.tone === 'neg';
     var btn = function (k, label, sub, dis) { return '<button class="btn ' + (me.choice === k ? 'primary' : '') + '" data-act="choice" data-choice="' + k + '"' + (dis ? ' disabled' : '') + '><span><b>' + (me.choice === k ? '✓ ' : '') + label + '</b><small>' + sub + '</small></span></button>'; };
     var choices = neg
@@ -377,6 +395,7 @@
     if (a === 'buy') return conn.act('buy', { itemId: b.dataset.item });
     if (a === 'undoBuy') return conn.act('undoBuy').then(function (r) { if (r && r.ok) FF.toast('Achat annulé.'); });
     if (a === 'choice') return conn.act('setChoice', { choice: b.dataset.choice });
+    if (a === 'contribute') { var gn = parseInt(val('giveN'), 10); if (!(gn > 0)) return FF.toast('Indique une quantité.'); return conn.act('contribute', { n: gn }).then(function (r) { if (r && r.ok) FF.toast('Merci pour le village !'); }); }
     if (a === 'collier') return conn.act('collier');
     if (a === 'vacation') return conn.act('vacation', { n: parseInt(val('vacN'), 10) });
     if (a === 'ready') return conn.act('setReady', { ready: !me.ready });

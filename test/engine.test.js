@@ -514,41 +514,75 @@ test('meteo : fidelite des previsions autour de FORECAST_RELIABLE', () => {
   assert.ok(Math.abs(p - D.FORECAST_RELIABLE) < 0.06, 'fidélité ' + p);
 });
 
-test('alea collectif : un par an, remplace la carte de sa saison, defi reussi ou rate', () => {
+test('alea collectif : un par an, remplace la carte de sa saison, objectif commun atteint a l echeance', () => {
   const D = require('../lib/data');
   const s = fresh2();
   E.startSetup(s);
-  const col = D.COLLECTIVE.find((c) => c.id === s.collective.id);
+  s.collective = { year: 1, id: 'inondation', season: 0, done: false }; // objectif : argent
   s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
   E.startYear(s);
-  for (let k = 0; k < col.season; k++) { for (let j = 0; j < 5; j++) E.nextStep(s); }
   const c = E.drawCard(s);
-  assert.equal(c.id, col.id); assert.equal(c.collective, true); assert.equal(c.tone, 'col');
+  assert.equal(c.id, 'inondation'); assert.equal(c.collective, true); assert.equal(c.tone, 'col');
+  assert.equal(c.need, 30); // 15 EB x 2 fermes
   assert.throws(() => E.setChoice(s, s.teams[0].id, 'subit'), /collectif/);
-  assert.equal(E.drawCard(s).id, col.id, 'pas de second tirage');
-  const before = s.teams.map((t) => [t.bank, t.bocal]);
-  E.resolveCollective(s, true);
-  assert.throws(() => E.resolveCollective(s, false), /déjà résolu/);
-  s.teams.forEach((t, i) => {
-    assert.equal(t.bank, before[i][0] + (col.win.bankAll || 0));
-    assert.equal(t.bocal, Math.max(0, before[i][1] + (col.win.bocalAll || 0)));
-  });
+  assert.equal(E.drawCard(s).id, 'inondation', 'pas de second tirage');
+  const [a, b] = s.teams;
+  const bankA = a.bank, bocalA = a.bocal;
+  E.contribute(s, a.id, 15);
+  assert.equal(a.bank, bankA - 15);
+  assert.throws(() => E.contribute(s, b.id, 16), /au plus 15/);
+  assert.throws(() => E.contribute(s, a.id, 99999), /au plus/);
+  E.contribute(s, b.id, 15);
+  assert.throws(() => E.contribute(s, a.id, 1), /déjà atteint/);
+  // echeance : fin de l'etape Achats
+  for (let i = 0; i < 4; i++) E.nextStep(s);
+  assert.equal(s.card.resolved, null);
+  E.nextStep(s);
+  // la saison suivante a remis la carte a zero ; l'effet a ete applique avant : -1 boule (min 0)
+  assert.equal(a.bocal, Math.max(0, bocalA - 1));
   assert.equal(s.collective.done, true);
 });
 
-test('alea collectif : defi rate applique les effets et les mods de recolte', () => {
+test('alea collectif : objectif manque applique la penalite a tout le village', () => {
   const s = fresh2();
   E.startSetup(s);
-  s.collective = { year: 1, id: 'inondation', season: 0, done: false };
+  s.collective = { year: 1, id: 'semences', season: 0, done: false }; // jetons de fruits et legumes, perte de 10 EB
   s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
   E.startYear(s);
   E.drawCard(s);
-  E.resolveCollective(s, false);
-  const v = E.viewFor(s, 'team', s.teams[0].id);
-  assert.ok(v.teams.length === 2);
-  const h = v.teams.find((t) => t.id === s.teams[0].id);
-  assert.ok(v.card.mods.quota.all.add === -1);
-  void h;
+  const banks = s.teams.map((t) => t.bank);
+  E.contribute(s, s.teams[0].id, 1);
+  E.settleCollective(s);
+  assert.equal(s.card.resolved, false);
+  s.teams.forEach((t, i) => assert.equal(t.bank, banks[i] - 10));
+  assert.throws(() => E.contribute(s, s.teams[0].id, 1), /déjà réglé/);
+});
+
+test('alea collectif : dons de plats (stock) et de boules', () => {
+  const s = fresh2();
+  E.startSetup(s);
+  s.collective = { year: 1, id: 'fete_village', season: 1, done: false }; // fromages
+  s.menu.items.forEach((i) => { i.team = s.teams[0].id; });
+  E.startYear(s);
+  for (let i = 0; i < 5; i++) E.nextStep(s);
+  E.drawCard(s);
+  const t = s.teams[0];
+  assert.throws(() => E.contribute(s, t.id, 1), /en stock/);
+  t.pantry.fromage = 2; t.dishes.simple = 2;
+  E.contribute(s, t.id, 1);
+  assert.equal(t.pantry.fromage, 1); assert.equal(t.dishes.simple, 1);
+  const s2 = fresh2();
+  E.startSetup(s2);
+  s2.collective = { year: 1, id: 'incendie', season: 1, done: false }; // boules
+  s2.menu.items.forEach((i) => { i.team = s2.teams[0].id; });
+  E.startYear(s2);
+  for (let i = 0; i < 5; i++) E.nextStep(s2);
+  E.drawCard(s2);
+  const t2 = s2.teams[0], before = t2.bocal;
+  E.contribute(s2, t2.id, 1);
+  assert.equal(t2.bocal, before + 1);
+  E.settleCollective(s2);
+  assert.equal(s2.card.resolved, true);
 });
 
 test('achat : annulation dans le delai, refus ensuite', () => {
