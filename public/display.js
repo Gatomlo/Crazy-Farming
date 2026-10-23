@@ -68,7 +68,7 @@
   }
 
   function clockBlock(title, sub) {
-    return '<section style="flex:1.5;display:flex;flex-direction:column;justify-content:center;gap:8px"><div class="d-big">' + esc(title) + '</div>' +
+    return '<section style="flex:1.5;display:flex;flex-direction:column;justify-content:center;gap:14px"><div class="d-big">' + esc(title) + '</div>' +
       (sub ? '<div style="font-size:40px;color:var(--muted)">' + esc(sub) + '</div>' : '') +
       '<div class="d-clock" data-clock>0:00</div><div class="bar" style="height:24px"><i data-bar style="width:100%;background:' + (V.phase === 'season' ? V.seasonColor : 'var(--amber)') + '"></i></div></section>';
   }
@@ -79,13 +79,13 @@
     var rows = V.meta.products.map(function (p) {
       var base = V.quota[p.id], eff = V.quotaEff[p.id], ch = eff !== base;
       var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + base + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + eff + '</span>' : String(base);
-      return '<div class="d-q sm" style="padding:6px 24px;font-size:38px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:64px">' + val + '</span></div>';
+      return '<div class="d-q sm" style="padding:10px 28px;font-size:38px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:64px">' + val + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(c.effect) + '</span></div>' : '';
     var stop = mods.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(mods.stopEarlySec * 1000) + ' du chrono</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (valeur de base) : ' + esc(safe.join(', ')) + '</div>' : '';
-    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px"><div style="font-size:30px;font-weight:700;color:var(--muted)">À rapporter par tuile <span style="font-weight:500;color:var(--muted);font-size:26px">· jetons = tuiles × valeur</span></div>' + rows +
+    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">À rapporter par tuile <span style="font-weight:500;color:var(--muted);font-size:26px">· jetons = tuiles × valeur</span></div>' + rows +
       '' + banner + stop + prot + '</section>';
   }
 
@@ -106,10 +106,10 @@
     var rows = M.items.map(function (i) {
       var who = i.team ? '<span class="pill" style="font-size:' + (big ? 24 : 30) + 'px;background:var(--panel);border:2px solid var(--mint);color:var(--text)">' + esc(i.teamName) + '</span>' : '<span class="pill" style="font-size:' + (big ? 24 : 30) + 'px;background:var(--amber);color:var(--ink)">À prendre</span>';
       var done = V.phase === 'closing' && V.closedYear ? (i.delivered ? '<b style="color:var(--mint)">✓</b>' : '<b style="color:var(--flame)">✗</b>') : '';
-      return '<div class="d-q sm" style="padding:' + (big ? 6 : 8) + 'px 16px;gap:10px;font-size:' + (big ? 28 : 38) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 22 : 26) + 'px;font-weight:500;color:var(--muted)">' + esc(TIER[i.tier]) + ' · ' + esc(i.needs) + '</span></span>' + done + who + '</div>';
+      return '<div class="d-q sm" style="padding:' + (big ? 8 : 10) + 'px 20px;gap:12px;font-size:' + (big ? 28 : 38) + 'px"><span style="flex:1;min-width:0"><b>' + esc(i.name) + '</b><span style="display:block;font-size:' + (big ? 22 : 26) + 'px;font-weight:500;color:var(--muted)">' + esc(TIER[i.tier]) + ' · ' + esc(i.needs) + '</span></span>' + done + who + '</div>';
     }).join('');
-    return '<section style="flex:1.6;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Menu de la Fête du Phoenix · année ' + V.year + ' <span style="font-weight:500;color:var(--muted);font-size:26px">· chaque ferme prend ' + M.perFarm + ' plat' + (M.perFarm > 1 ? 's' : '') + '</span></div>' +
-      '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:10px">' + rows + '</div></section>';
+    return '<section style="flex:1.6;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:16px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Menu de la Fête du Phoenix · année ' + V.year + ' <span style="font-weight:500;color:var(--muted);font-size:26px">· chaque ferme prend ' + M.perFarm + ' plat' + (M.perFarm > 1 ? 's' : '') + '</span></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:14px">' + rows + '</div></section>';
   }
 
   // Rappel de la carte aleas pendant les etapes qu'elle concerne (bourse, marche).
