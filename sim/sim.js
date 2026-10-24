@@ -8,7 +8,7 @@ const DEFAULTS = {
   teams: 4, skillMean: 0.85, skillSd: 0.12, noiseSd: 0.10,
   rawPrice: 5, directPrice: 10, stallFee: 10, stallCap: 8, vanCap: 12,
   recipeRaw: 2, transMult: 3, mixedMult: 4, atelierRecipes: 4, handRecipes: 1,
-  tripSec: 30, staff: 99, // staff = coureurs disponibles par ferme (une tuile sans coureur ne rapporte rien)
+  tripSec: 30, skillRef: 0.85, staff: 99, // staff = coureurs disponibles par ferme (une tuile sans coureur ne rapporte rien)
   s3mult: D.S3_MULT, pFeteLeniency: 0, coop: 0.8
 };
 
@@ -20,7 +20,7 @@ const TYPES = ['lait', 'oeuf', 'viande', 'fl'];
 function play(P, seed, strat) {
   const r = rng(seed);
   const s = E.createSession('SIM');
-  s.tripSec = P.setTrip === false ? D.REF_TRIP_SEC : P.tripSec; // l'animateur regle le parcours sur la duree reelle d'un aller-retour
+  s.tripSec = P.tripSec; // l'animateur regle le parcours sur la duree reelle d'un aller-retour : la recolte dure 2 allers-retours
   const profs = Object.keys(D.PROFILES);
   const agents = [];
   for (let i = 0; i < P.teams; i++) {
@@ -113,7 +113,7 @@ function play(P, seed, strat) {
         a.collier = false;
         if (t.bocal <= 3 && r() < 0.5 + 0.3 * a.invest) { a.collier = true; E.coupDeCollier(s, t.id); }
         const me = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
-        const secs = Math.max(0, D.SEASONS[season].harvestSec - (me.stopEarly || 0)) + me.bonusSec;
+        const secs = Math.max(0, E.viewFor(s, 'team', t.id).harvestSec - (me.stopEarly || 0)) + me.bonusSec;
         const nBrouette = t.equipment.filter((e) => e === 'brouette').length;
         const typesOwned = me.harvest.filter((h) => h.runners > 0).sort((x, y) => y.runners - x.runners);
         const enc = {};
@@ -123,7 +123,7 @@ function play(P, seed, strat) {
           let tokens = 0;
           const crew = Math.min(h.runners, staffLeft); staffLeft -= crew;
           for (let k = 0; k < crew; k++) {
-            const trip = P.tripSec / clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1);
+            const trip = P.tripSec * P.skillRef / clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1); // skillRef : habilete du joueur qui a chronometre l'essai
             tokens += Math.floor(secs / trip) * (k === 0 && i < nBrouette ? 2 : 1);
           }
           enc[h.id] = tokens;

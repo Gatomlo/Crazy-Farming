@@ -63,17 +63,10 @@
       (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + '</section>';
   }
 
-  // Parcours long : il faut au moins ~1,5 aller-retour dans le chrono de recolte, sinon trop peu de trajets pour que la partie soit equilibree.
-  function tripWarn() {
-    var harvest = V.phase === 'season' && V.step === 1 ? Math.round(V.timer.durationMs / 1000) : V.meta.seasons[V.phase === 'season' ? V.season : 0].harvestSec;
-    if (V.tripSec * 1.5 <= harvest) return '';
-    return '<div style="flex-basis:100%;color:var(--bad);font-weight:700;font-size:13px">⚠️ Chrono de récolte trop court pour ce parcours : prévoyez au moins ' + Math.ceil(V.tripSec * 1.5) + ' s (« Régler le chrono » à l\'étape Récolte, avec « Garder cette durée »).</div>';
-  }
-
-  // Duree d'un aller-retour sur le parcours : met a l'echelle la valeur d'un jeton (grille calibree pour V.meta.refTripSec).
+  // Duree d'un aller-retour sur le parcours : fixe la duree de la recolte (deux allers-retours) et les bonus de temps.
   function tripBlock() {
     var opts = V.meta.tripChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.tripSec ? ' selected' : '') + '>' + n + ' s</option>'; }).join('');
-    return '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label for="tripSec" class="muted">🏃 Aller-retour d\'un coureur</label><select id="tripSec" data-trip="1" aria-label="Durée d\'un aller-retour">' + opts + '</select><span class="muted" style="font-size:12px">Chronométrez un essai : plus le parcours est court, moins un jeton rapporte.</span>' + tripWarn() + '</div>';
+    return '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label for="tripSec" class="muted">🏃 Aller-retour d\'un coureur</label><select id="tripSec" data-trip="1" aria-label="Durée d\'un aller-retour">' + opts + '</select><span class="muted" style="font-size:12px">Chronométrez un essai : le chrono de récolte vaut deux allers-retours (' + V.harvestSec + ' s cette saison), coup de collier +' + V.meta.collierSec + ' s, tracteur +' + V.meta.tracteurSec + ' s.</span>'</div>';
   }
 
   // Saut libre a une saison (accelerer la partie). Deux clics : les charges, la fete et les achats des annees sautees ne sont pas rejoues.

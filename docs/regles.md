@@ -10,7 +10,7 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 
 ## Déroulé
 - Installation (10 min) : les fermes posent leurs tuiles et dépensent leur budget de 500 EB. La commande de la fête de l'année est tirée et répartie avant les achats.
-- 3 années de 4 saisons. Chaque saison compte 5 étapes : **Aléa** (30 s), **Récolte en relais** (1 min 30, hiver 1 min 15), **Transformation et bourse** (1 min), **Marché** (1 min), **Achats et vacances** (30 s).
+- 3 années de 4 saisons. Chaque saison compte 5 étapes : **Aléa** (30 s), **Récolte en relais** (deux allers-retours du parcours), **Transformation et bourse** (1 min), **Marché** (1 min), **Achats et vacances** (30 s).
 - Fin d'hiver : clôture (charges), Fête du Phoenix, puis réaménagement (5 min) avant l'année suivante. Pas de réaménagement après l'année 3.
 
 ## La ferme
@@ -24,7 +24,7 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 
 ## Matériel (boutique, étapes Achats ou à l'installation)
 - Brouette 40 EB : l'un de vos coureurs ramène 2 jetons par trajet (cumulable, une brouette par coureur).
-- Tracteur 100 EB : tous vos coureurs courent 15 secondes de plus à chaque récolte, après la fin du chrono.
+- Tracteur 100 EB : tous vos coureurs courent un demi aller-retour de plus à chaque récolte, après la fin du chrono.
 - Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
 - Table de marché 40 EB : l'étal passe à 10 produits (8 au départ). Elle se cumule avec la camionnette : 14 produits avec les deux.
 - Hamac 80 EB : −1 boule à la fin de chaque saison.
@@ -54,7 +54,7 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 - Printemps doux (+) : fruits et légumes, rendement doublé.
 
 **Été**
-- Canicule (−) : récolte raccourcie de 30 s. Parade : arrosage.
+- Canicule (−) : récolte raccourcie d'un tiers. Parade : arrosage.
 - Sécheresse (−) : lait et fruits et légumes, rendement divisé par deux. Parade : arrosage.
 - Touristes (+) : la roue ne descend pas sous « trois quarts vendus ».
 - Pâturages gras (+) : lait et viande, rendement augmenté de moitié.
@@ -71,7 +71,7 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 **Hiver**
 - Grève des transporteurs (−) : pas de vente directe. Parade : camionnette.
 - Routes enneigées (−) : pas de vente directe. Parade : camionnette.
-- Tempête de neige (−) : récolte raccourcie de 30 s. Parade : lampe-tempête.
+- Tempête de neige (−) : récolte raccourcie d'un tiers. Parade : lampe-tempête.
 - Canalisations gelées (−) : lait et viande, rendement divisé par deux. Parade : arrosage.
 - Hiver gourmand (+) : produits transformés +5 EB l'unité.
 - Hiver doux (+) : lait et œufs, rendement augmenté de moitié.
@@ -96,9 +96,11 @@ Exemples avec 4 fermes (l'objectif s'adapte au nombre de fermes) :
 ## Récolte en relais
 Un coureur par tuile, sur le type de produit de cette tuile. Pendant la durée de l'étape, chaque coureur fait **autant d'allers-retours qu'il peut**, avec **un jeton par trajet** (deux avec une brouette). Il n'y a pas de plafond : tout dépend de la vitesse de l'équipe. Une ferme sans assez de joueurs ne peut pas faire courir toutes ses tuiles : agrandir ne sert alors à rien. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois.
 
-**Temps bonus.** Un **coup de collier** (+1 boule, une fois par saison) donne **20 secondes de course** après la fin du chrono. Le **tracteur** en ajoute 15 à chaque saison. Les deux se cumulent : les autres fermes se sont déjà arrêtées pendant que l’équipe concernée continue de courir.
+**Durée de l'étape.** L'animateur chronomètre un aller-retour sur le parcours (de 10 s à 2 min) et le renseigne dans la console : la récolte dure alors **deux allers-retours** (hiver un peu moins), donc un joueur moyen fait en moyenne deux trajets. Plus le parcours est long, plus la récolte l'est aussi : la valeur d'un jeton, elle, ne change jamais.
 
-**Valeur d'un jeton.** Le rendement est une fraction de ressource (« 1 jeton = 1,25 ressource », « 1 jeton = 0,5 ressource »…) ; l'application arrondit le total de chaque produit. Il dépend de la saison, du produit et de la carte aléa. La grille est calibrée pour un aller-retour d'environ **30 secondes** ; l'animateur règle la durée réelle sur la console (de 10 s à 2 min) et la valeur d'un jeton s'adapte : plus le parcours est court, moins un jeton rapporte.
+**Temps bonus.** Un **coup de collier** (+1 boule, une fois par saison) donne **deux tiers d'aller-retour** de course après la fin du chrono (20 s pour un parcours de 30 s). Le **tracteur** ajoute **un demi aller-retour** (15 s) à chaque saison. Les deux se cumulent : les autres fermes se sont déjà arrêtées pendant que l'équipe concernée continue de courir. Canicule et tempête de neige raccourcissent la récolte d'un tiers.
+
+**Valeur d'un jeton.** Le rendement est une fraction de ressource (« 1 jeton = 1,25 ressource », « 1 jeton = 0,5 ressource »…) ; l'application arrondit le total de chaque produit. Il dépend de la saison, du produit et de la carte aléa.
 
 **Encodage :** à la fin de l'étape, chaque ferme encode sur mobile le nombre de jetons réellement rapportés pour chaque produit. Ressources obtenues = jetons rapportés × valeur du jeton (arrondi par produit). L'animateur peut corriger. Les matières brutes qui ne sont ni transformées ni vendues sont **perdues en fin de saison**.
 

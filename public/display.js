@@ -67,7 +67,7 @@
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
-    var stop = mods.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(mods.stopEarlySec * 1000) + ' du chrono</div>' : '';
+    var stop = V.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(V.stopEarlySec * 1000) + ' du chrono</div>' : '';
     var runners = V.teams.filter(function (t) { return t.bonusSec > 0; }).map(function (t) { return esc(t.name) + ' +' + t.bonusSec + ' s'; });
     var bonus = runners.length ? '<div style="font-size:28px;color:var(--mint);font-weight:700">⏱️ Temps bonus après le chrono : ' + runners.join(' · ') + '</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (valeur de base) : ' + esc(safe.join(', ')) + '</div>' : '';

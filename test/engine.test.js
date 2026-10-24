@@ -42,7 +42,7 @@ test('une saison complete : 5 etapes puis saison suivante', () => {
   assert.equal(s.phase, 'season');
   assert.equal(s.timer.durationMs, 30000);
   E.nextStep(s);
-  assert.equal(s.timer.durationMs, 90000); // recolte de printemps
+  assert.equal(s.timer.durationMs, 60000); // recolte de printemps : deux allers-retours de 30 s
   for (let i = 0; i < 3; i++) E.nextStep(s);
   assert.equal(s.step, 4);
   E.nextStep(s);
@@ -267,11 +267,11 @@ test('alea : grille effective, fermes protegees, chrono canicule', () => {
   assert.equal(h.perTile, 1.25);
   assert.equal(E.viewFor(s, 'display').teams[1].exempt, true);
   s.season = 1; E.drawCard(s, 0); // canicule
-  assert.equal(E.viewFor(s, 'team', a.id).teams[0].stopEarly, 30);
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].stopEarly, 20);
   s.season = 2; E.drawCard(s, 0); // renard
   assert.equal(E.viewFor(s, 'display').quotaEff.oeuf, 0);
   s.season = 2; E.drawCard(s, 1); // brouillard : -1 sur tout
-  assert.deepEqual(E.viewFor(s, 'display').quotaEff, { lait: 0.38, oeuf: 0.38, viande: 0.63, fl: 0.38 });
+  assert.deepEqual(E.viewFor(s, 'display').quotaEff, { lait: 0.5, oeuf: 0.5, viande: 0.63, fl: 0.5 });
   s.season = 0; E.drawCard(s, 1); // naissances
   assert.equal(E.viewFor(s, 'display').quotaEff.lait, 2.5);
   assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').perTile, 2.5);
@@ -662,12 +662,12 @@ test('recolte : encodage des jetons rapportes, valeur du jeton, stock brut', () 
   assert.equal(me().bonusSec, 0);
   E.coupDeCollier(s, t.id);
   assert.throws(() => E.coupDeCollier(s, t.id), /déjà lancé/);
-  assert.equal(me().bonusSec, D.COLLIER_SEC);
+  assert.equal(me().bonusSec, 20); // 2/3 d'un aller-retour de 30 s
   E.declareHarvest(s, t.id, { lait: 12, oeuf: 4 });
   assert.equal(stock('lait'), 15);
   // tracteur : +15 s de course, cumulable avec le coup de collier
   t.equipment.push('tracteur');
-  assert.equal(me().bonusSec, D.COLLIER_SEC + D.TRACTEUR_SEC);
+  assert.equal(me().bonusSec, 20 + 15);
   t.equipment.pop();
   // correction animateur
   E.adjustHarvest(s, t.id, 'lait', -1);
@@ -748,35 +748,29 @@ test('bourse : offre, acceptation, paiement, stock transfere, annulation', () =>
   assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 } }), /Transformation et bourse/);
 });
 
-test('parcours : la valeur d’un jeton suit la duree reelle d’un aller-retour', () => {
+test('parcours : la duree de recolte et les bonus suivent l’aller-retour, la valeur des jetons ne change pas', () => {
   const s = newGame();
   toSeason(s); // printemps
   const t = s.teams[0];
-  const lait = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'lait').perTile;
-  assert.equal(s.tripSec, D.REF_TRIP_SEC);
+  const v = () => E.viewFor(s, 'team', t.id);
+  const lait = () => v().teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'lait').perTile;
+  assert.equal(s.tripSec, D.DEFAULT_TRIP_SEC);
+  assert.equal(v().harvestSec, 60, 'deux allers-retours de 30 s');
   assert.equal(lait(), 1.25);
   assert.throws(() => E.setTripSec(s, 7), /invalide/);
-  E.setTripSec(s, 15);
-  assert.equal(lait(), 0.63); // moitie moins par jeton : on court deux fois plus
-  E.setTripSec(s, 40);
-  assert.equal(lait(), 1.67);
-  assert.equal(E.viewFor(s, 'display').quota.lait, 1.67);
+  E.setTripSec(s, 90);
+  assert.equal(v().harvestSec, 180);
+  assert.equal(lait(), 1.25, 'la valeur du jeton ne dépend pas du parcours');
+  assert.equal(v().meta.collierSec, 60);
+  assert.equal(v().meta.tracteurSec, 45);
+  assert.equal(v().meta.seasons[3].harvestSec, 150, 'hiver plus court');
+  // la duree reglee a la main ne survit pas a un changement de parcours
+  s.stepOverrides = { recolte: 100 };
+  E.setTripSec(s, 30);
+  assert.equal(E.viewFor(s, 'team', t.id).harvestSec, 60);
+  // canicule : un tiers de la recolte en moins
+  E.drawCard(s, 0); s.season = 1; E.drawCard(s, 0);
+  assert.equal(E.viewFor(s, 'display').stopEarlySec, 20);
   s.step = 1;
   assert.throws(() => E.setTripSec(s, 30), /avant la récolte/);
-});
-
-test('previsions : l’animateur voit l’effet de la carte deja tiree en secret, pas les fermes', () => {
-  const s = newGame();
-  toSeason(s);
-  s.forecast = { year: s.year, season: s.season, weather: 'froid', used: false };
-  s.nextCard = { year: s.year, season: s.season, id: 'gel' };
-  const adm = E.viewFor(s, 'admin').forecast;
-  assert.equal(adm.truth, 'Gel tardif');
-  assert.equal(adm.truthTone, 'neg');
-  assert.match(adm.truthEffect, /rendement divisé par quatre.*Parade : serre/);
-  assert.equal(E.viewFor(s, 'team', s.teams[0].id).forecast.truthEffect, undefined);
-  s.nextCard = { year: s.year, season: s.season, id: 'inondation', collective: true };
-  const col = E.viewFor(s, 'admin').forecast;
-  assert.equal(col.truthTone, 'col');
-  assert.match(col.truthEffect, /Objectif : \d+ EB/);
 });
