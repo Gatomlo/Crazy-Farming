@@ -21,6 +21,34 @@
     return v.timer.running ? Math.max(0, v.timer.remainingMs - (Date.now() - v._rcv)) : v.timer.remainingMs;
   }
 
+  // Temps restant sans plancher a zero : negatif apres la fin du chrono tant qu'il tourne.
+  function rawRemaining(v) {
+    if (!v.timer.running) return v.timer.remainingMs;
+    return (v.timer.rawMs !== undefined ? v.timer.rawMs : v.timer.remainingMs) - (Date.now() - v._rcv);
+  }
+  // Temps ecoule depuis le depart du chrono (continue apres zero tant que le chrono tourne : bonus de temps, produits les plus longs).
+  function elapsed(v) {
+    if (!v) return 0;
+    return v.timer.durationMs - rawRemaining(v);
+  }
+  // Decompte d'un produit : el porte data-run (secondes de course). Etats : idle (avant le depart), go, low (10 dernieres secondes), stop.
+  function paintProd(el, v, vibrate) {
+    var run = parseInt(el.getAttribute('data-run'), 10) * 1000;
+    if (!run) { el.textContent = '—'; el.className = el.className.replace(/ ?pc-\w+/g, '') + ' pc-idle'; return; }
+    var rem = rawRemaining(v);
+    var state, left = run - elapsed(v);
+    if (!v.timer.running && rem >= v.timer.durationMs) { state = 'idle'; left = run; }
+    else if (left > 0) state = left <= 10000 ? 'low' : 'go';
+    else state = 'stop';
+    el.textContent = state === 'stop' ? '✋ STOP' : fmt(left);
+    el.className = el.className.replace(/ ?pc-\w+/g, '') + ' pc-' + state;
+    var row = el.closest('[data-prow]');
+    if (row) row.classList.toggle('pc-row-stop', state === 'stop');
+    var key = v.code + '.' + v.year + '.' + v.season + '.' + el.getAttribute('data-pid'), seen = paintProd.seen = paintProd.seen || {};
+    if (state === 'stop' && !seen[key]) { seen[key] = true; if (vibrate) { try { navigator.vibrate([400, 150, 400]); } catch (e) { /* pas de vibration */ } } }
+    if (state !== 'stop') seen[key] = false;
+  }
+
   var toastTimer = null;
   function toast(msg) {
     var el = document.getElementById('toast');
@@ -108,5 +136,5 @@
     }
   };
 
-  window.FF = { ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
+  window.FF = { elapsed: elapsed, paintProd: paintProd, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
 })();

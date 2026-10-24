@@ -789,6 +789,7 @@ test('parcours : la course de chaque produit et les bonus suivent l’aller-reto
 test('tirer une autre carte : change toujours de carte, la carte préparée en secret ne sert qu’au premier tirage', () => {
   const s = newGame();
   toSeason(s);
+  s.collective = { year: s.year, id: 'noel', season: 3, done: false }; // l'aléa collectif de l'année tombe en hiver : pas de collectif au printemps
   s.forecast = { year: s.year, season: s.season, weather: 'froid', used: false };
   s.nextCard = { year: s.year, season: s.season, id: 'gel' };
   assert.equal(E.drawCard(s).id, 'gel', 'premier tirage : la carte annoncée à l’animateur');
@@ -799,4 +800,17 @@ test('tirer une autre carte : change toujours de carte, la carte préparée en s
     assert.equal(s.card.id, c.id);
     prev = c.id;
   }
+});
+
+test('chrono : le temps restant brut devient négatif après la fin tant que le chrono tourne (produits plus longs, bonus)', () => {
+  const s = newGame();
+  toSeason(s);
+  s.step = 1; E.setTimerSeconds(s, 75);
+  const t0 = Date.now();
+  E.startTimer(s, t0);
+  const at = (ms) => E.viewFor(s, 'display', null, t0 + ms).timer;
+  assert.equal(at(25000).remainingMs, 50000);
+  assert.equal(at(25000).rawMs, 50000);
+  assert.equal(at(95000).remainingMs, 0);
+  assert.equal(at(95000).rawMs, -20000);
 });

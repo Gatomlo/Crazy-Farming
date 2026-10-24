@@ -80,7 +80,7 @@
       var txt = function (n) { return n ? FF.fmt(n * 1000) : '—'; };
       var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + txt(base) + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + txt(eff) + '</span>' : txt(base);
       var tag = per > 1 ? '<span style="font-size:26px;color:var(--mint);font-weight:700;margin-right:18px">' + per + ' jetons par trajet</span>' : '';
-      return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span>' + tag + '<span class="v" style="font-size:52px">' + val + '</span></div>';
+      return '<div class="d-q sm" data-prow style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span>' + tag + '<span class="v" style="font-size:44px">' + val + '</span><span class="pclock pc-idle" data-pclock data-pid="' + p.id + '" data-run="' + eff + '">' + txt(eff) + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
@@ -242,6 +242,7 @@
   function tick() {
     if (!V) return;
     var ms = FF.remaining(V);
+    stage.querySelectorAll('[data-pclock]').forEach(function (el) { FF.paintProd(el, V, false); });
     var clock = stage.querySelector('[data-clock]');
     if (clock) { clock.textContent = FF.fmt(ms); clock.classList.toggle('low', V.timer.running && ms <= 10000); }
     var alert = !!(clock && V.timer.running && ms <= 10000);

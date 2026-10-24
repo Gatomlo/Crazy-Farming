@@ -258,3 +258,13 @@ body.team .btn { white-space: normal; padding-top: 8px; padding-bottom: 8px; lin
 @keyframes dBob2 { 50% { transform: translateY(-6px) rotate(8deg); } }
 @media (prefers-reduced-motion: reduce) { .d-icon, .d-meteo .ic { animation: none; } }
 .d-card .d-icon ~ * { max-width: 1280px; }
+
+/* Decompte par produit (mobile des fermes et projecteur) */
+.pclock { font: 800 30px/1 var(--f-body); min-width: 104px; text-align: center; padding: 10px 14px; border-radius: 16px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.pclock.pc-idle { color: var(--muted); }
+.pclock.pc-go { color: var(--mint); }
+.pclock.pc-low { color: var(--ink); background: var(--amber); }
+.pclock.pc-stop { color: #fff; background: var(--bad, #d6453b); animation: pulse 1s infinite; }
+[data-prow].pc-row-stop { outline: 3px solid var(--bad, #d6453b); border-radius: 18px; background: rgba(214, 69, 59, .12); }
+.display .pclock { font-size: 44px; min-width: 170px; margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .pclock.pc-stop { animation: none; } }

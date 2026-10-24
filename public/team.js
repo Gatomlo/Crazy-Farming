@@ -156,8 +156,9 @@
     var declared = me.harvest.every(function (h) { return h.brought !== null; });
     var rows = me.harvest.map(function (h) {
       var input = open ? '<input id="hv-' + h.id + '" inputmode="numeric" style="width:56px" placeholder="0" value="' + (h.brought !== null ? h.brought : '') + '">' : '<b class="num">' + (h.brought || 0) + '</b>';
-      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><span><b>' + esc(h.name) + '</b><div class="muted" style="font-size:12px">' + runInfo(h) + '</div></span></span>' +
-        '<span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '</span></div>';
+      var clock = V.step === 1 ? '<span class="pclock pc-idle" data-pclock data-pid="' + h.id + '" data-run="' + h.runSec + '" aria-live="off">' + (h.runSec ? FF.fmt(h.runSec * 1000) : '—') + '</span>' : '';
+      return '<div data-prow style="display:flex;flex-direction:column;gap:6px;padding:8px;margin:0 -8px"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:14px;height:14px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><b style="font-size:18px">' + esc(h.name) + '</b></span>' + clock + '</div>' +
+        '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-end"><span class="muted" style="font-size:12px">' + runInfo(h) + '</span><span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '</span></div></div>';
     }).join('');
     var tot = me.harvest.reduce(function (n, h) { return n + (h.brought !== null ? h.value : 0); }, 0);
     var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : course normale.</div>' : '';
@@ -420,7 +421,7 @@
     root.innerHTML = '<div class="t-wrap">' + topBar() + body + '</div><nav class="t-nav" aria-label="Navigation de l\'équipe">' + navBtn('ferme', '🏡', 'Ferme') + navBtn('boutique', '🛍️', 'Boutique') + navBtn('banque', '🏦', 'Banque') + '</nav>';
   }
 
-  function tick() { if (!V) return; var u = root.querySelector('[data-undo]'); if (u && Date.now() > parseInt(u.getAttribute('data-undo'), 10)) u.remove(); var el = root.querySelector('[data-clock]'); if (el) { var ms = FF.remaining(V); el.textContent = FF.fmt(ms); var box = root.querySelector('[data-chrono]'); if (box) box.classList.toggle('low', V.timer.running && ms <= 10000); } }
+  function tick() { if (!V) return; root.querySelectorAll('[data-pclock]').forEach(function (el) { FF.paintProd(el, V, true); }); var u = root.querySelector('[data-undo]'); if (u && Date.now() > parseInt(u.getAttribute('data-undo'), 10)) u.remove(); var el = root.querySelector('[data-clock]'); if (el) { var ms = FF.remaining(V); el.textContent = FF.fmt(ms); var box = root.querySelector('[data-chrono]'); if (box) box.classList.toggle('low', V.timer.running && ms <= 10000); } }
   setInterval(tick, 250);
   root.addEventListener('change', function (e) { if (e.target.id === 'trTo') { var rs = document.getElementById('trReason'); if (rs) rs.innerHTML = ''; FF.keepInputs(root, render); } });
 
