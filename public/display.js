@@ -72,21 +72,23 @@
       '<div class="d-clock" data-clock>0:00</div><div class="bar" style="height:24px"><i data-bar style="width:100%;background:' + (V.phase === 'season' ? V.seasonColor : 'var(--amber)') + '"></i></div></section>';
   }
 
-  // Grille "a rapporter par tuile" : la carte aleas modifie les valeurs, les fermes protegees gardent la valeur de base.
+  // Duree de course de chaque produit : la saison et la carte aleas la modifient, les fermes protegees gardent la duree de base.
   function quotas() {
     var c = V.card, mods = (c && c.mods) || {};
     var rows = V.meta.products.map(function (p) {
-      var base = V.quota[p.id], eff = V.quotaEff[p.id], ch = eff !== base;
-      var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + FF.yld(base) + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + FF.yld(eff) + '</span>' : FF.yld(base);
-      return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:52px">' + val + '</span></div>';
+      var base = V.runBase[p.id], eff = V.runEff[p.id], ch = eff !== base, per = V.perTripEff[p.id];
+      var txt = function (n) { return n ? FF.fmt(n * 1000) : '—'; };
+      var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + txt(base) + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + txt(eff) + '</span>' : txt(base);
+      var tag = per > 1 ? '<span style="font-size:26px;color:var(--mint);font-weight:700;margin-right:18px">' + per + ' jetons par trajet</span>' : '';
+      return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span>' + tag + '<span class="v" style="font-size:52px">' + val + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
-    var stop = V.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(V.stopEarlySec * 1000) + ' du chrono</div>' : '';
+    var stop = V.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(V.stopEarlySec * 1000) + ' de la fin du chrono</div>' : '';
     var runners = V.teams.filter(function (t) { return t.bonusSec > 0; }).map(function (t) { return esc(t.name) + ' +' + t.bonusSec + ' s'; });
     var bonus = runners.length ? '<div style="font-size:28px;color:var(--mint);font-weight:700">⏱️ Temps bonus après le chrono : ' + runners.join(' · ') + '</div>' : '';
-    var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (valeur de base) : ' + esc(safe.join(', ')) + '</div>' : '';
-    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Valeur d\'un jeton rapporté <span style="font-weight:500;color:var(--muted);font-size:26px">· en ressources</span></div>' + rows +
+    var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (course normale) : ' + esc(safe.join(', ')) + '</div>' : '';
+    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Temps de course par produit <span style="font-weight:500;color:var(--muted);font-size:26px">· un jeton par trajet = une ressource</span></div>' + rows +
       '' + banner + stop + bonus + prot + '</section>';
   }
 
@@ -181,7 +183,7 @@
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
         (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }
-    if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par tuile · un jeton par trajet') + quotas();
+    if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par tuile · un jeton par trajet · chaque produit a son temps') + quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
     if (id === 'marche') {
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');

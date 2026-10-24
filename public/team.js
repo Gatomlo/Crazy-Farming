@@ -142,24 +142,29 @@
       '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.effect) + '</div>' + choices + '</section>' + die;
   }
 
-  // Jetons a rapporter : autant que les coureurs (un par tuile) en rapportent, sans plafond. Le rendement d un jeton vient de la grille de la saison (modifiee par la carte aleas, sauf si la ferme est protegee).
-  // Recolte : on encode a la fin de l'etape le nombre de jetons reellement rapportes ; chaque jeton vaut une fraction de ressource (rendement de la saison, mis a l'echelle du parcours).
+  // Course : chaque produit a sa duree selon la saison et la carte aleas ; un jeton rapporte = une ressource.
+  // On encode a la fin de l'etape le nombre de jetons reellement rapportes pour chaque produit.
+  function runInfo(h) {
+    if (!h.runSec) return '<b style="color:var(--bad)">Rien à récolter cette saison</b>';
+    var changed = h.runSec !== h.baseRunSec, col = changed ? (h.runSec < h.baseRunSec ? 'var(--bad)' : 'var(--good)') : 'inherit';
+    var when = h.overSec ? 'jusqu\'à ' + FF.fmt(h.overSec * 1000) + ' après la fin du chrono' : h.stopAt ? 'stop quand le chrono affiche ' + FF.fmt(h.stopAt * 1000) : 'jusqu\'à la fin du chrono';
+    return h.runners + ' coureur' + (h.runners > 1 ? 's' : '') + ' · <b style="color:' + col + '">' + FF.fmt(h.runSec * 1000) + '</b>' + (changed ? ' <s>' + FF.fmt(h.baseRunSec * 1000) + '</s>' : '') + ' · ' + when + (h.perTrip > 1 ? ' · <b style="color:var(--good)">' + h.perTrip + ' jetons par trajet</b>' : '');
+  }
   function harvestPanel() {
     if (V.phase !== 'season' || !me.harvest || !me.harvest.length) return '';
     var open = V.step <= 2 && !me.transfo;
     var declared = me.harvest.every(function (h) { return h.brought !== null; });
     var rows = me.harvest.map(function (h) {
-      var ch = h.perTile !== h.basePerTile;
       var input = open ? '<input id="hv-' + h.id + '" inputmode="numeric" style="width:56px" placeholder="0" value="' + (h.brought !== null ? h.brought : '') + '">' : '<b class="num">' + (h.brought || 0) + '</b>';
-      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><span><b>' + esc(h.name) + '</b><div class="muted" style="font-size:12px">max ' + h.maxTokens + ' jeton' + (h.maxTokens > 1 ? 's' : '') + ' · 1 jeton = <b style="color:' + (ch ? (h.perTile < h.basePerTile ? 'var(--bad)' : 'var(--good)') : 'inherit') + '">' + FF.yld(h.perTile) + '</b> ressource' + (h.perTile > 1 ? 's' : '') + (ch ? ' <s>' + FF.yld(h.basePerTile) + '</s>' : '') + '</div></span></span>' +
-        '<span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '<span class="muted num" style="min-width:64px;text-align:right">' + (h.brought !== null ? '= ' + h.value : '') + '</span></span></div>';
+      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><span><b>' + esc(h.name) + '</b><div class="muted" style="font-size:12px">' + runInfo(h) + '</div></span></span>' +
+        '<span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '</span></div>';
     }).join('');
     var tot = me.harvest.reduce(function (n, h) { return n + (h.brought !== null ? h.value : 0); }, 0);
-    var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : valeurs de base.</div>' : '';
-    var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">Arrêtez de récolter à ' + FF.fmt(me.stopEarly * 1000) + ' du chrono.</div>' : '';
-    var bonus = me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Vous courez ' + me.bonusSec + ' s de plus après la fin du chrono.</div>' : '';
+    var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : course normale.</div>' : '';
+    var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">' + esc(V.card.title) + ' : la récolte s\'arrête ' + me.stopEarly + ' s avant la fin du chrono.</div>' : '';
+    var bonus = me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Bonus : vos coureurs courent ' + me.bonusSec + ' s de plus.</div>' : '';
     var btn = open ? '<button class="btn primary" data-act="declareHarvest">' + (declared ? 'Modifier la récolte' : 'Encoder ma récolte') + '</button>' : '';
-    var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock. Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">À la fin de la récolte, encodez les jetons réellement rapportés pour chaque produit : ils alimentent votre stock.</div>';
+    var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock. Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">À la fin de la récolte, encodez les jetons réellement rapportés pour chaque produit : un jeton = une ressource en stock.</div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + prot + early + bonus + btn + hint + '</section>';
   }
 
@@ -281,7 +286,7 @@
   // ---------- Ecran "Ferme" : seul ce qui sert a l'etape en cours ----------
   var STEP_HINT = [
     'Une carte tombe sur le village. Choisissez comment réagir.',
-    'Un coureur par tuile : autant d\'allers-retours que vous pouvez, un jeton par trajet. Encodez ce que vous rapportez.',
+    'Un coureur par tuile, un jeton par trajet : chaque produit a sa durée de course. Encodez ce que vous rapportez.',
     'Encodez votre récolte, puis fabriquez vos plats avec l\'animateur. Les jetons non transformés ni vendus seront perdus.',
     'Placez vos produits, puis tournez la roue de l\'étal. Ce qui n\'est ni transformé ni vendu est perdu.',
     'Vacances et matériel : détendez-vous et équipez la ferme.'

@@ -108,7 +108,5 @@
     }
   };
 
-  // Rendement d'un jeton : decimale a la francaise (0,75), sans zeros inutiles.
-  function yld(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }
-  window.FF = { yld: yld, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
+  window.FF = { ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
 })();

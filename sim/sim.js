@@ -113,22 +113,22 @@ function play(P, seed, strat) {
         a.collier = false;
         if (t.bocal <= 3 && r() < 0.5 + 0.3 * a.invest) { a.collier = true; E.coupDeCollier(s, t.id); }
         const me = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
-        const secs = Math.max(0, E.viewFor(s, 'team', t.id).harvestSec - (me.stopEarly || 0)) + me.bonusSec;
         const nBrouette = t.equipment.filter((e) => e === 'brouette').length;
         const typesOwned = me.harvest.filter((h) => h.runners > 0).sort((x, y) => y.runners - x.runners);
         const enc = {};
         let staffLeft = P.staff;
         typesOwned.forEach((h, i) => {
-          // un coureur par tuile ; chaque trajet dure tripSec / habilete (bruite) ; la brouette double le jeton par trajet d'un coureur (le premier des types les mieux dotes)
+          // un coureur par tuile ; chaque produit court h.runSec (saison, aleas, bonus de temps) ; un trajet dure tripSec / habilete (bruite) ;
+          // la brouette ajoute un jeton par trajet a un coureur (le premier des types les mieux dotes), un aleas positif a tous les coureurs du produit
           let tokens = 0;
           const crew = Math.min(h.runners, staffLeft); staffLeft -= crew;
           for (let k = 0; k < crew; k++) {
             const trip = P.tripSec * P.skillRef / clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1); // skillRef : habilete du joueur qui a chronometre l'essai
-            tokens += Math.floor(secs / trip) * (k === 0 && i < nBrouette ? 2 : 1);
+            tokens += Math.floor(h.runSec / trip) * (h.perTrip + (k === 0 && i < nBrouette ? 1 : 0));
           }
           enc[h.id] = tokens;
-          a.stock[h.id] += Math.round(tokens * h.perTile);
-          a.tokens = (a.tokens || 0) + tokens; a.res = (a.res || 0) + tokens * h.perTile; a.tilesSeen = (a.tilesSeen || 0) + h.runners;
+          a.stock[h.id] += tokens;
+          a.tokens = (a.tokens || 0) + tokens; a.res = (a.res || 0) + tokens; a.tilesSeen = (a.tilesSeen || 0) + h.runners;
         });
         E.declareHarvest(s, t.id, enc, true);
       }
