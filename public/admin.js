@@ -40,7 +40,11 @@
       return '<div class="row panel" style="padding:12px 16px"><b style="flex:1">' + esc(t.name) + '</b><span class="muted">' + esc(tilesText(t)) + '</span>' +
         '<button class="btn small" data-act="removeTeam" data-team="' + t.id + '">Retirer</button></div>';
     }).join('');
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Les fermes</h2>' +
+    var sizes = V.meta.teamSizes.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.size ? ' selected' : '') + '>' + n + ' joueurs par ferme</option>'; }).join('');
+    var yrs = V.meta.yearChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.years ? ' selected' : '') + '>' + (n === 3 ? '3 ans · partie normale' : n + ' ans · partie courte') + '</option>'; }).join('');
+    var mode = '<div class="panel row" style="gap:12px;align-items:center"><b>Mode de jeu</b><select id="modeSize" data-mode="1" aria-label="Taille des équipes">' + sizes + '</select><select id="modeYears" data-mode="1" aria-label="Durée de la partie">' + yrs + '</select>' +
+      '<span class="muted" style="font-size:13px;flex-basis:100%">La taille des équipes adapte les tuiles de départ, les objectifs communs et la cagnotte à atteindre ; la partie courte (8 saisons) resserre le bocal de stress et la cagnotte, et la fête de la 2e année est la finale complète.</span></div>';
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Les fermes</h2>' + mode +
       '<form class="row" data-form="addTeam"><label class="muted" for="newName">Nom</label><input id="newName" maxlength="40" placeholder="Nom de la ferme (facultatif)">' +
       '<label class="muted" for="newProfile">Profil</label><select id="newProfile">' + opts + '</select><button class="btn primary">Ajouter</button></form>' +
       (list || '<p class="muted" style="margin:0">Aucune ferme pour le moment.</p>') +
@@ -72,7 +76,7 @@
   // Saut libre a une saison (accelerer la partie). Deux clics : les charges, la fete et les achats des annees sautees ne sont pas rejoues.
   function jumpPanel() {
     if (['setup', 'season', 'closing', 'rearrange'].indexOf(V.phase) < 0) return '';
-    var yo = [1, 2, 3].map(function (y) { return '<option value="' + y + '"' + (y === V.year ? ' selected' : '') + '>Année ' + y + '</option>'; }).join('');
+    var yo = Array.from({ length: V.years }, function (_, i) { return i + 1; }).map(function (y) { return '<option value="' + y + '"' + (y === V.year ? ' selected' : '') + '>Année ' + y + '</option>'; }).join('');
     var so = ['Printemps', 'Été', 'Automne', 'Hiver'].map(function (n, i) { return '<option value="' + i + '"' + (V.phase === 'season' && i === V.season ? ' selected' : '') + '>' + n + '</option>'; }).join('');
     return '<div class="row" style="gap:8px;border-top:1px solid var(--line,var(--line));padding-top:10px"><select id="jumpYear" aria-label="Année">' + yo + '</select><select id="jumpSeason" aria-label="Saison">' + so + '</select><button class="btn small" data-act="jumpTo">Aller à</button></div>' +
       '<div class="muted" id="jumpNote" style="font-size:12px">Saut direct au début de la saison : les charges et la fête des années sautées ne sont pas jouées.</div>';
@@ -305,7 +309,7 @@
     var buttons;
     if (!V.closedYear) buttons = '<button class="btn primary" data-act="closeYear">Appliquer les charges</button>';
     else if (!V.feteDone) buttons = '<button class="btn primary" data-act="fete">Jouer la fête (résultat selon les plats livrés)</button><details id="feteForce"><summary>Forcer le résultat</summary><div class="row" style="margin-top:6px"><button class="btn small good" data-act="fete" data-success="1">Réussie (−2 boules)</button><button class="btn small danger" data-act="fete" data-success="0">Ratée (+1 boule)</button></div></details>';
-    else buttons = V.year < 3 ? '<button class="btn primary" data-act="nextYear">Année suivante (réaménagement 5 min)</button>' : '<button class="btn primary" data-act="finish">Terminer la partie</button>';
+    else buttons = V.year < V.years ? '<button class="btn primary" data-act="nextYear">Année suivante (réaménagement 5 min)</button>' : '<button class="btn primary" data-act="finish">Terminer la partie</button>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Clôture de l\'année ' + V.year + '</h2>' +
       '<div class="tbl"><table style="min-width:640px"><thead><tr><th>Ferme</th><th>Taxes</th><th>Eau</th><th>Nourriture</th><th>Électricité</th><th>Total</th><th>Résultat</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       (V.feteDone ? '<span class="pill lv-Zen" style="align-self:flex-start">Fête jouée</span>' : '') +
@@ -317,8 +321,8 @@
     var s = V.stars;
     var star = function (ok, label) { return '<div class="step ' + (ok ? 'won' : '') + '"><b class="n">' + (ok ? '★' : '☆') + '</b><span>' + label + '</span></div>'; };
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:24px">Fin de partie : ' + s.count + ' étoile(s) sur 3</h2>' +
-      star(s.s1, 'Aucun burn-out et aucune ferme au-dessus de 5 boules (pic : ' + s.peak + ')') +
-      star(s.s2, 'Les trois fêtes du Phoenix réussies') +
+      star(s.s1, 'Aucun burn-out et aucune ferme au-dessus de ' + s.peakMax + ' boules (pic : ' + s.peak + ')') +
+      star(s.s2, s.years === 2 ? 'Les deux fêtes du Phoenix réussies' : 'Les trois fêtes du Phoenix réussies') +
       star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB sur ' + s.target + ' EB attendus') +
       '<div>Ferme la plus riche : <b>' + esc(s.richest.join(', ')) + '</b></div><div>Trophée du Sage : <b>' + esc(s.sage.join(', ')) + '</b></div></section>';
   }
@@ -348,6 +352,7 @@
     var k = e.target && e.target.dataset && e.target.dataset.assign;
     if (k) conn.act('assignDish', { key: k, teamId: e.target.value });
     if (e.target && e.target.dataset && e.target.dataset.trip) conn.act('setTripSec', { sec: parseInt(e.target.value, 10) });
+    if (e.target && e.target.dataset && e.target.dataset.mode) conn.act('setMode', { size: parseInt(val('modeSize'), 10), years: parseInt(val('modeYears'), 10) });
   });
 
   // ---------- Chrono local ----------

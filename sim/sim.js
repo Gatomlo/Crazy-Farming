@@ -8,8 +8,8 @@ const DEFAULTS = {
   teams: 4, skillMean: 0.85, skillSd: 0.12, noiseSd: 0.10,
   rawPrice: 5, directPrice: 10, stallFee: 10, stallCap: 8, vanCap: 12,
   recipeRaw: 2, transMult: 3, mixedMult: 4, atelierRecipes: 4, handRecipes: 1,
-  tripSec: 30, skillRef: 0.85, staff: 99, // staff = coureurs disponibles par ferme (une tuile sans coureur ne rapporte rien)
-  s3mult: D.S3_MULT, pFeteLeniency: 0, coop: 0.8
+  tripSec: 30, skillRef: 0.85, size: 5, years: 3, // size = joueurs par ferme = coureurs disponibles (une tuile sans coureur ne rapporte rien, les equipes n'achetent pas plus de tuiles que de coureurs)
+  pFeteLeniency: 0, coop: 0.8
 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -20,6 +20,8 @@ const TYPES = ['lait', 'oeuf', 'viande', 'fl'];
 function play(P, seed, strat) {
   const r = rng(seed);
   const s = E.createSession('SIM');
+  E.setMode(s, { size: P.size, years: P.years });
+  const staff = P.staff || P.size;
   s.tripSec = P.tripSec; // l'animateur regle le parcours sur la duree reelle d'un aller-retour : la recolte dure 2 allers-retours
   const profs = Object.keys(D.PROFILES);
   const agents = [];
@@ -36,7 +38,7 @@ function play(P, seed, strat) {
     const tryBuy = (id) => { try { E.buy(s, t.id, id); return true; } catch (e) { return false; } };
     const price = (id) => E.priceOf(t, D.CATALOGUE.find((i) => i.id === id));
     const can = (id) => { const p = price(id); return p != null && t.bank - p >= reserve; };
-    const yearsLeft = 3 - s.year;
+    const yearsLeft = P.years - s.year;
     // vacances si bocal haut
     if (s.phase === 'season' && t.bocal >= 6) {
       const n = Math.min(t.bocal - 3, Math.floor((t.bank - reserve) / D.VACATION_COST), 4);
@@ -46,6 +48,7 @@ function play(P, seed, strat) {
       // tuile : type possede le moins cher d'abord ; atelier si absent
       if ((t.tiles.atelier || 0) === 0 && can('tile_atelier') && yearsLeft >= 1) { if (tryBuy('tile_atelier')) a.boughtTiles++; }
       for (let k = 0; k < 2; k++) {
+        if (TYPES.reduce((n, x) => n + (t.tiles[x] || 0), 0) >= staff) break; // pas plus de tuiles que de coureurs
         const owned = TYPES.filter((x) => (t.tiles[x] || 0) > 0);
         if (!owned.length) break;
         const id = 'tile_' + owned.sort((x, y) => (t.tiles[x] || 0) - (t.tiles[y] || 0))[0];
@@ -74,8 +77,9 @@ function play(P, seed, strat) {
   for (const a of agents) shop(a, 150);
   E.autoAssign(s); E.startYear(s);
   let bonusFete = 0;
+  const colStats = [];
 
-  for (let year = 1; year <= 3; year++) {
+  for (let year = 1; year <= P.years; year++) {
     for (const a of agents) { a.trans = { simple: 0, mixed: 0 }; }
     for (let season = 0; season < 4; season++) {
       // 1. Alea
@@ -116,7 +120,7 @@ function play(P, seed, strat) {
         const nBrouette = t.equipment.filter((e) => e === 'brouette').length;
         const typesOwned = me.harvest.filter((h) => h.runners > 0).sort((x, y) => y.runners - x.runners);
         const enc = {};
-        let staffLeft = P.staff;
+        let staffLeft = staff;
         typesOwned.forEach((h, i) => {
           // un coureur par tuile ; chaque produit court h.runSec (saison, aleas, bonus de temps) ; un trajet dure tripSec / habilete (bruite) ;
           // la brouette ajoute un jeton par trajet a un coureur (le premier des types les mieux dotes), un aleas positif a tous les coureurs du produit
@@ -157,7 +161,7 @@ function play(P, seed, strat) {
         const lots = [];
         const raw = sum(a.stock);
         if (raw > 0) { lots.push({ u: MM.raw * D.MARKET.superPrice, n: raw }); for (const k of TYPES) a.stock[k] = 0; }
-        const need = D.FETE[year - 1];
+        const need = E.feteCfg(s, year);
         if (!(season < 3 && (a.trans.simple + a.trans.mixed) <= need.perFarm)) {
           const ss = Math.max(0, Math.min(a.trans.simple, a.trans.simple + a.trans.mixed - need.perFarm));
           const sm = Math.max(0, Math.min(a.trans.mixed - need.mixed, a.trans.simple + a.trans.mixed - need.perFarm - ss));
@@ -201,10 +205,11 @@ function play(P, seed, strat) {
         if (!t.stopped) shop(a, reserve);
       }
       E.nextStep(s, r);
+      if (card.collective) colStats.push(card.resolved === true);
     }
     // cloture
     E.closeYear(s);
-    const need = D.FETE[year - 1];
+    const need = E.feteCfg(s, year);
     let ok = true;
     for (const a of agents) {
       const total = a.trans.simple + a.trans.mixed;
@@ -212,7 +217,7 @@ function play(P, seed, strat) {
     }
     if (!ok && r() < P.pFeteLeniency) ok = true;
     E.fete(s, ok);
-    if (year < 3) {
+    if (year < P.years) {
       E.nextYear(s, r);
       for (const a of agents) shop(a, Math.round(E.estimateCharges(T(a)).total * 0.5));
       E.autoAssign(s); E.startYear(s);
@@ -222,7 +227,7 @@ function play(P, seed, strat) {
   // seuil 3e etoile parametrable
   E.finish(s);
   const totalBank = s.teams.reduce((n, t) => n + t.bank, 0);
-  const target = P.s3mult * D.START_BANK * s.teams.length;
+  const target = P.s3mult ? P.s3mult * D.START_BANK * s.teams.length : E.s3Target(s);
   const stars = [s.stars.s1, s.stars.s2, totalBank >= target];
   return {
     stars, count: stars.filter(Boolean).length,
@@ -232,7 +237,7 @@ function play(P, seed, strat) {
     tiles: s.teams.map((t) => Object.values(t.tiles).reduce((x, y) => x + y, 0)),
     perTile: agents.reduce((n, a) => n + (a.res || 0), 0) / Math.max(1, agents.reduce((n, a) => n + (a.tilesSeen || 0), 0)),
     tokPerRunner: agents.reduce((n, a) => n + (a.tokens || 0), 0) / Math.max(1, agents.reduce((n, a) => n + (a.tilesSeen || 0), 0)),
-    fetes: s.fetes.map((f) => f.success), debtBoules: 0
+    fetes: s.fetes.map((f) => f.success), debtBoules: 0, colWins: colStats.filter(Boolean).length, colTotal: colStats.length
   };
 }
 
@@ -252,6 +257,7 @@ function batch(P0, n = 200, strat = 'mix', seed0 = 1000) {
     boulesAjoutees: adds.reduce((x, y) => x + y, 0) / adds.length,
     fete1: mean((g) => +g.fetes[0]), fete2: mean((g) => +g.fetes[1]), fete3: mean((g) => +g.fetes[2]),
     tiles: mean((g) => g.tiles.reduce((x, y) => x + y, 0) / g.tiles.length),
+    colWin: res.reduce((n, g) => n + g.colWins, 0) / Math.max(1, res.reduce((n, g) => n + g.colTotal, 0)),
     perTile: mean((g) => g.perTile), tokPerRunner: mean((g) => g.tokPerRunner)
   };
 }

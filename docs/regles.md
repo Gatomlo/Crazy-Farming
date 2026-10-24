@@ -1,12 +1,17 @@
 # Règles de Farming's Folies
 
 ## But du jeu
-Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensemble : le village obtient jusqu'à 3 étoiles.
+Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an), ou 2 ans en partie courte. On gagne ensemble : le village obtient jusqu'à 3 étoiles.
 
 - **Étoile 1** : aucune ferme n'a dépassé 5 boules dans son bocal.
 - **Étoile 2** : les trois Fêtes du Phoenix sont réussies.
 - **Étoile 3** : la caisse du village (somme des banques) atteint au moins 2,3 fois le capital de départ.
 - Trophées : **ferme la plus riche** et **Trophée du Sage** (la ferme qui a le moins rempli son bocal).
+
+## Modes de partie
+Réglés par l'animateur dans la salle d'attente, avant de lancer l'installation.
+- **Taille des équipes** : 3 à 6 joueurs par ferme (5 = valeurs de référence). Elle adapte la composition de départ (3 joueurs : une tuile de production en moins ; 6 joueurs : une en plus), la valeur des **objectifs communs** (aléas collectifs, de ×0,9 à ×1,1) et la cagnotte du village à atteindre pour la 3ᵉ étoile (de 1,7 à 2,7 fois le capital de départ en 3 ans). Plus les équipes sont petites, moins une ferme peut faire courir de tuiles : agrandir ne sert à rien sans coureurs.
+- **Partie courte** : 2 ans (8 saisons) au lieu de 3. La 3ᵉ étoile demande une cagnotte de 1,3 à 1,8 fois le capital (selon la taille des équipes), le burn-out se déclenche à **8 boules** (la ferme repart avec 2) et les niveaux Zen / Agité / Stressé se resserrent. Il n'y a que **deux fêtes** : la première comme d'habitude (2 plats simples par ferme), la seconde est la finale de la partie normale (1 simple, 1 mixte, 1 composé).
 
 ## Déroulé
 - Installation (10 min) : les fermes posent leurs tuiles et dépensent leur budget de 500 EB. La commande de la fête de l'année est tirée et répartie avant les achats.

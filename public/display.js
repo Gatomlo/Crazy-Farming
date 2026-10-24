@@ -47,7 +47,7 @@
     var steps = inSeason ? '<div class="d-steps"><b>' + esc(V.meta.steps[V.step].name.split(' ')[0]) + '</b>' + V.meta.steps.map(function (s, i) {
       return '<i class="' + (i === V.step ? 'on' : i < V.step ? 'done' : '') + '"></i>';
     }).join('') + '</div>' : '';
-    var yr = V.phase === 'lobby' ? '' : '<span class="d-year">Année ' + V.year + ' sur 3</span>';
+    var yr = V.phase === 'lobby' ? '' : '<span class="d-year">Année ' + V.year + ' sur ' + V.years + '</span>';
     var f = V.forecast;
     var meteo = f ? '<div class="d-meteo"><span class="ic">' + f.icon + '</span><span><small>Météo · ' + esc(f.seasonName.toLowerCase()) + (f.year !== V.year ? ' · année ' + f.year : '') + '</small>' + esc(f.text) + '</span></div>' : '';
     return '<div class="d-head"><div style="display:flex;align-items:center;gap:28px">' + badge + yr + '</div>' + (meteo || steps) + '</div>';
@@ -171,7 +171,7 @@
       var s = V.stars;
       var star = function (ok, label) { return '<div class="d-q" style="font-size:44px;opacity:' + (ok ? 1 : .55) + '"><span style="font-size:64px;color:var(--amber)">' + (ok ? '★' : '☆') + '</span><span>' + esc(label) + '</span></div>'; };
       return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px"><div class="d-big">Le village a gagné ' + s.count + ' étoile' + (s.count > 1 ? 's' : '') + '</div>' +
-        star(s.s1, 'Aucune ferme au-dessus de 5 boules') + star(s.s2, 'Les trois fêtes du Phoenix réussies') + star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB') +
+        star(s.s1, 'Aucune ferme au-dessus de ' + s.peakMax + ' boules') + star(s.s2, s.years === 2 ? 'Les deux fêtes du Phoenix réussies' : 'Les trois fêtes du Phoenix réussies') + star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB') +
         '<div style="font-size:44px">Ferme la plus riche : <b>' + esc(s.richest.join(', ')) + '</b> · Trophée du Sage : <b>' + esc(s.sage.join(', ')) + '</b></div></section>';
     }
     // saison

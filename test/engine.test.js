@@ -872,3 +872,57 @@ test('serre : en hiver, les fruits et légumes courent 1,25 aller-retour au lieu
   s.season = 0; // pas d'effet hors hiver
   assert.equal(fl().runSec, 60);
 });
+
+test('mode de jeu : taille des équipes, composition de départ et objectifs communs', () => {
+  const s = E.createSession('MODE');
+  E.addTeam(s, { name: 'A', profile: 'bergers' });
+  E.addTeam(s, { name: 'B', profile: 'gourmets' });
+  assert.deepEqual(s.teams[0].tiles, { lait: 2, oeuf: 1 }, 'référence : 5 joueurs');
+  assert.throws(() => E.setMode(s, { size: 2, years: 3 }), /invalide/);
+  assert.throws(() => E.setMode(s, { size: 4, years: 5 }), /invalide/);
+  E.setMode(s, { size: 3, years: 3 });
+  assert.deepEqual(s.teams[0].tiles, { lait: 1, oeuf: 1 });
+  E.setMode(s, { size: 6, years: 3 });
+  assert.deepEqual(s.teams[0].tiles, { lait: 2, oeuf: 2 });
+  assert.deepEqual(s.teams[1].tiles, { viande: 1, fl: 1, lait: 1, atelier: 1 });
+  E.addTeam(s, { name: 'C', profile: 'eleveurs' });
+  assert.deepEqual(s.teams[2].tiles, { viande: 2, lait: 2 }, 'une ferme ajoutée suit le mode');
+  // objectifs communs : valeur par ferme x echelle de la taille d'equipe
+  const goal = { perFarm: 20 };
+  E.setMode(s, { size: 5, years: 3 });
+  s.mode = { size: 3, years: 3 };
+  const need = (size) => { s.mode = { size, years: 3 }; return Math.ceil(goal.perFarm * D.COLLECTIVE_SCALE[size] * s.teams.length); };
+  assert.ok(need(3) < need(5) && need(5) < need(6));
+  s.mode = { size: 5, years: 3 };
+  E.startSetup(s);
+  assert.throws(() => E.setMode(s, { size: 4, years: 3 }), /avant le début/);
+});
+
+test('partie courte : 2 ans, finale complète, cagnotte et bocal de stress resserrés', () => {
+  const s = E.createSession('COURT');
+  for (let i = 0; i < 3; i++) E.addTeam(s, { name: '', profile: ['bergers', 'maraichers', 'eleveurs'][i] });
+  E.setMode(s, { size: 5, years: 2 });
+  assert.equal(E.yearsOf(s), 2);
+  assert.equal(E.s3Target(s), 1.6 * D.START_BANK * 3);
+  assert.deepEqual(E.feteCfg(s, 1).tiers, [1, 1]);
+  assert.deepEqual(E.feteCfg(s, 2).tiers, [1, 2, 3], 'la deuxième fête est la finale de la partie normale');
+  E.startSetup(s); E.autoAssign(s); E.startYear(s);
+  assert.equal(E.viewFor(s, 'display').years, 2);
+  assert.equal(E.viewFor(s, 'display').meta.bocalMax, 8);
+  assert.equal(E.viewFor(s, 'display').teams[0].level, 'Zen');
+  assert.throws(() => E.jumpTo(s, 3, 0), /Année invalide/);
+  // niveaux du bocal proportionnels au maximum
+  assert.equal(E.levelOf(3, 8), 'Zen'); assert.equal(E.levelOf(4, 8), 'Agité'); assert.equal(E.levelOf(6, 8), 'Stressé');
+  assert.equal(E.levelOf(3), 'Zen'); assert.equal(E.levelOf(4), 'Agité'); assert.equal(E.levelOf(7), 'Stressé');
+  // burn-out a 8 boules, la ferme repart avec 2
+  const t = s.teams[0];
+  E.addBocal(s, t.id, 8, 'test');
+  assert.equal(t.burnouts, 1); assert.equal(t.bocal, 2);
+  // fin de la 2e annee : plus d'annee suivante, 2 fetes pour la 2e etoile
+  s.phase = 'closing'; s.year = 2; s.closedYear = true; s.feteDone = true;
+  assert.throws(() => E.nextYear(s), /dernière année/);
+  s.fetes = [{ year: 1, success: true }, { year: 2, success: true }];
+  E.finish(s);
+  assert.equal(s.stars.s2, true);
+  assert.equal(s.stars.years, 2);
+});

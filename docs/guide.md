@@ -66,3 +66,7 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - **Un téléphone ou le réseau lâche** : le comptable note sur papier, tu corriges ensuite. Le joueur peut revenir par le même lien et choisir « Reprendre ma ferme ».
 - **Pluie ou terrain glissant** : tire la carte Brouillard et réduis la distance des stations.
 - **Mot de passe perdu** : supprime `data/settings.json` sur le serveur ; la création du mot de passe sera redemandée.
+
+## Modes de partie
+- Dans la **salle d'attente**, choisis la taille des équipes (3 à 6 joueurs par ferme) et la durée (3 ans ou partie courte de 2 ans) avant de lancer l'installation : le réglage change la composition de départ des fermes, les objectifs communs, la cagnotte à atteindre et, en partie courte, le bocal de stress.
+- Avec moins de 5 joueurs par ferme, rappelle qu'une tuile de plus n'est utile que s'il y a un joueur pour courir.
