@@ -785,3 +785,18 @@ test('parcours : la course de chaque produit et les bonus suivent l’aller-reto
   s.step = 1;
   assert.throws(() => E.setTripSec(s, 30), /avant la récolte/);
 });
+
+test('tirer une autre carte : change toujours de carte, la carte préparée en secret ne sert qu’au premier tirage', () => {
+  const s = newGame();
+  toSeason(s);
+  s.forecast = { year: s.year, season: s.season, weather: 'froid', used: false };
+  s.nextCard = { year: s.year, season: s.season, id: 'gel' };
+  assert.equal(E.drawCard(s).id, 'gel', 'premier tirage : la carte annoncée à l’animateur');
+  let prev = 'gel';
+  for (let i = 0; i < 30; i++) {
+    const c = E.drawCard(s);
+    assert.notEqual(c.id, prev, 'nouveau tirage : une autre carte');
+    assert.equal(s.card.id, c.id);
+    prev = c.id;
+  }
+});

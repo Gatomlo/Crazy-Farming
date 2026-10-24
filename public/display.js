@@ -22,17 +22,17 @@
     onFatal: function (m) { stage.innerHTML = '<div class="d-big">' + esc(m) + '</div><a href="./" style="font-size:40px">Accueil</a>'; }
   });
 
-  // Effets de carte : tirage anime quand la carte apparait en cours de partie ; ambiance (meteo, feu, fete...) pendant l'alea et la recolte.
+  // Effets de carte : tirage anime quand la carte apparait (ou change, nouveau tirage) en cours de partie ; ambiance (meteo, feu, fete...) pendant l'alea et la recolte.
   var fxKey;
   function syncFx() {
     if (!window.FFX) return;
     var c = V && V.phase === 'season' && V.step <= 1 && V.card ? V.card : null;
     var key = c ? V.year + '-' + V.season + '-' + c.id : null;
     if (key === fxKey) return;
-    var firstState = fxKey === undefined, hadCard = !!fxKey;
+    var firstState = fxKey === undefined;
     fxKey = key;
     if (!c) { FFX.set(null); return; }
-    if (firstState || hadCard || V.step !== 0) { FFX.set(c.fx || null); return; }
+    if (firstState || V.step !== 0) { FFX.set(c.fx || null); return; }
     stage.style.visibility = 'hidden';
     FFX.reveal(c, { seasonName: V.seasonName, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
   }
