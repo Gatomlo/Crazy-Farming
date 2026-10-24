@@ -764,3 +764,19 @@ test('parcours : la valeur d’un jeton suit la duree reelle d’un aller-retour
   s.step = 1;
   assert.throws(() => E.setTripSec(s, 30), /avant la récolte/);
 });
+
+test('previsions : l’animateur voit l’effet de la carte deja tiree en secret, pas les fermes', () => {
+  const s = newGame();
+  toSeason(s);
+  s.forecast = { year: s.year, season: s.season, weather: 'froid', used: false };
+  s.nextCard = { year: s.year, season: s.season, id: 'gel' };
+  const adm = E.viewFor(s, 'admin').forecast;
+  assert.equal(adm.truth, 'Gel tardif');
+  assert.equal(adm.truthTone, 'neg');
+  assert.match(adm.truthEffect, /rendement divisé par quatre.*Parade : serre/);
+  assert.equal(E.viewFor(s, 'team', s.teams[0].id).forecast.truthEffect, undefined);
+  s.nextCard = { year: s.year, season: s.season, id: 'inondation', collective: true };
+  const col = E.viewFor(s, 'admin').forecast;
+  assert.equal(col.truthTone, 'col');
+  assert.match(col.truthEffect, /Objectif : \d+ EB/);
+});

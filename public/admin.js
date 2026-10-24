@@ -91,7 +91,7 @@
     var f = V.forecast;
     if (!f) return '';
     return '<section class="panel row" style="gap:14px;flex-wrap:nowrap"><div style="font-size:36px;line-height:1" aria-hidden="true">' + f.icon + '</div><div style="flex:1;min-width:0"><div class="muted" style="font-size:13px">Prévision météo affichée aux joueurs · ' + esc(f.seasonName.toLowerCase()) + ', année ' + f.year + '</div><div style="font-weight:800">' + esc(f.text) + '</div></div>' +
-      (f.truth ? '<div class="muted" style="font-size:13px;text-align:right">Carte déjà tirée en secret :<br><b style="color:var(--fg)">' + esc(f.truth) + '</b></div>' : '') + '</section>';
+      (f.truth ? '<div class="muted" style="font-size:13px;text-align:right;max-width:340px">Carte déjà tirée en secret :<br><b style="color:' + (f.truthTone === 'neg' ? 'var(--bad)' : f.truthTone === 'pos' ? 'var(--good)' : 'var(--fg)') + '">' + esc(f.truth) + '</b>' + (f.truthEffect ? '<br><span style="color:var(--fg)">' + esc(f.truthEffect) + '</span>' : '') + '</div>' : '') + '</section>';
   }
 
   function stepsPanel() {
