@@ -249,3 +249,12 @@ body.team .btn { white-space: normal; padding-top: 8px; padding-bottom: 8px; lin
   .t-top .dot { width: 11px; height: 11px; }
   .t-top .pill { padding: 3px 9px; }
 }
+
+/* Illustration de la carte aleas sur le projecteur */
+.d-card { position: relative; }
+.d-icon { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 380px; line-height: 1; filter: drop-shadow(0 18px 30px rgba(0,0,0,.35)); animation: dBob 3.4s ease-in-out infinite; pointer-events: none; }
+@keyframes dBob { 0%, 100% { transform: translateY(-50%) rotate(-3deg); } 50% { transform: translateY(calc(-50% - 22px)) rotate(4deg); } }
+.d-meteo .ic { display: inline-block; animation: dBob2 3s ease-in-out infinite; }
+@keyframes dBob2 { 50% { transform: translateY(-6px) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .d-icon, .d-meteo .ic { animation: none; } }
+.d-card .d-icon ~ * { max-width: 1280px; }

@@ -18,9 +18,24 @@
 
   FF.connect({
     role: 'display', code: code,
-    onState: function (v) { V = v; render(); tick(); },
+    onState: function (v) { V = v; render(); tick(); syncFx(); },
     onFatal: function (m) { stage.innerHTML = '<div class="d-big">' + esc(m) + '</div><a href="./" style="font-size:40px">Accueil</a>'; }
   });
+
+  // Effets de carte : tirage anime quand la carte apparait en cours de partie ; ambiance (meteo, feu, fete...) pendant l'alea et la recolte.
+  var fxKey;
+  function syncFx() {
+    if (!window.FFX) return;
+    var c = V && V.phase === 'season' && V.step <= 1 && V.card ? V.card : null;
+    var key = c ? V.year + '-' + V.season + '-' + c.id : null;
+    if (key === fxKey) return;
+    var firstState = fxKey === undefined, hadCard = !!fxKey;
+    fxKey = key;
+    if (!c) { FFX.set(null); return; }
+    if (firstState || hadCard || V.step !== 0) { FFX.set(c.fx || null); return; }
+    stage.style.visibility = 'hidden';
+    FFX.reveal(c, { seasonName: V.seasonName, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
+  }
 
   var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 boule' };
 
@@ -120,7 +135,7 @@
     var who = V.teams.map(function (t) { var n = (c.pot || {})[t.id] || 0; return '<span class="d-tag' + (n ? ' ok' : '') + '">' + esc(t.name) + ' · ' + n + '</span>'; }).join('');
     var res = done ? '<div style="font-size:50px;font-weight:800;color:' + (c.resolved ? 'var(--mint)' : 'var(--flame)') + '">' + (c.resolved ? '✓ Objectif atteint · ' + esc(c.winText) : '✗ Objectif manqué · ' + esc(c.loseText)) + '</div>' :
       '<div style="font-size:34px;color:var(--muted)">Si le village y arrive : ' + esc(c.winText) + '<br>Sinon : ' + esc(c.loseText) + '</div>';
-    return '<section class="d-card pop"><span class="pill" style="font-size:36px;align-self:flex-start;padding:8px 32px;background:var(--amber);color:var(--ink)">🤝 Aléa collectif · tout le village</span>' +
+    return '<section class="d-card pop">' + (c.icon ? '<div class="d-icon" aria-hidden="true">' + c.icon + '</div>' : '') + '<span class="pill" style="font-size:36px;align-self:flex-start;padding:8px 32px;background:var(--amber);color:var(--ink)">🤝 Aléa collectif · tout le village</span>' +
       '<div style="font-size:110px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:44px;font-weight:600;line-height:1.15">' + esc(c.story) + '</div>' +
       '<div style="font-size:52px;font-weight:800">Objectif : ' + esc(c.goalText) + ' <span style="font-size:32px;font-weight:600;color:var(--muted)">avant la fin de « ' + esc(due) + ' »</span></div>' +
       '<div class="bar" style="height:28px;flex:none"><i style="width:' + pct + '%;background:var(--pc)"></i></div><div style="font-size:48px;font-weight:800">' + tot + ' / ' + c.need + '</div><div style="display:flex;gap:16px;flex-wrap:wrap">' + who + '</div>' + res + '</section>';
@@ -162,7 +177,7 @@
       if (!c) return '<section class="d-card"><div class="d-big">Aléa du ' + esc(V.seasonName.toLowerCase()) + '</div><div style="font-size:48px;color:var(--muted)">Le maire tire une carte…</div>' + die + '</section>';
       if (c.collective) return collectiveScreen(c) ;
       var parName = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : '';
-      return '<section class="d-card pop"><span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
+      return '<section class="d-card pop">' + (c.icon ? '<div class="d-icon" aria-hidden="true">' + c.icon + '</div>' : '') + '<span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
         (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }

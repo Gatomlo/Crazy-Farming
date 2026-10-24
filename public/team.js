@@ -122,7 +122,7 @@
     }
     var res = !done ? '' : c.resolved ? '<div class="pill ok" style="align-self:flex-start">Objectif atteint</div><div>' + esc(c.winText) + '</div>' : '<div class="pill bad" style="align-self:flex-start">Objectif manqué</div><div>' + esc(c.loseText) + '</div>';
     return '<section class="panel stack" style="border-color:var(--pb)"><div class="row" style="justify-content:space-between"><b>🤝 Aléa collectif</b><span class="pill warn">Tout le village</span></div>' +
-      '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.story) + '</div>' +
+      '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + (c.icon ? '<span aria-hidden="true" style="margin-right:8px">' + c.icon + '</span>' : '') + esc(c.title) + '</div><div>' + esc(c.story) + '</div>' +
       '<div><b>Objectif commun : ' + esc(c.goalText) + '</b></div>' + bar + (who ? '<div class="muted" style="font-size:13px">' + who + '</div>' : '') + form + res +
       '<div class="muted" style="font-size:13px">Si le village y arrive : ' + esc(c.winText) + ' Sinon : ' + esc(c.loseText) + '</div></section>';
   }
