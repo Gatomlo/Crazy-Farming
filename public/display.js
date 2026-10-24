@@ -37,6 +37,15 @@
     FFX.reveal(c, { seasonName: V.seasonName, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
   }
 
+  // Touche F : coupe ou remet les effets visuels.
+  window.addEventListener('keydown', function (e) {
+    if (e.key !== 'f' && e.key !== 'F') return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !window.FFX) return;
+    var on = FFX.toggle();
+    fxKey = undefined; syncFx();
+    FF.toast(on ? 'Effets visuels activés' : 'Effets visuels coupés (touche F pour les remettre)');
+  });
+
   var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 boule' };
 
   function head() {

@@ -926,3 +926,50 @@ test('partie courte : 2 ans, finale complète, cagnotte et bocal de stress resse
   assert.equal(s.stars.s2, true);
   assert.equal(s.stars.years, 2);
 });
+
+test('migration : une carte tirée avant la mise à jour reprend le format actuel', () => {
+  const s = newGame();
+  toSeason(s);
+  s.card = { id: 'gel', title: 'Gel tardif', tone: 'neg', season: 0, mods: { quota: { fl: { mult: 0.25 } } }, parade: 'serre' }; // ancien format
+  E.migrate(s);
+  assert.deepEqual(s.card.mods, { run: { fl: { dur: 0.25 } } });
+  assert.equal(s.card.icon, '🧊');
+  assert.equal(s.card.season, 0);
+  assert.doesNotThrow(() => E.viewFor(s, 'admin'));
+  // un aléa collectif garde son état de jeu
+  s.card = { id: 'inondation', collective: true, season: 0, tone: 'col', mods: {}, resolved: null, pot: { t1: 20 }, need: 60, goalText: '60 EB' };
+  E.migrate(s);
+  assert.equal(s.card.collective, true); assert.deepEqual(s.card.pot, { t1: 20 }); assert.equal(s.card.need, 60);
+  assert.equal(s.card.icon, '🌊');
+  s.card = null; s.tripSec = undefined; s.mode = undefined;
+  E.migrate(s);
+  assert.equal(s.tripSec, D.DEFAULT_TRIP_SEC); assert.deepEqual(s.mode, D.MODE_DEFAULT);
+});
+
+test('annulation : une correction de l’animateur s’annule tant qu’aucune ferme n’a joué', () => {
+  const { dispatch } = require('../lib/actions');
+  const s = newGame(2);
+  toSeason(s);
+  const [a, b] = s.teams;
+  const admin = { role: 'admin' };
+  assert.equal(E.viewFor(s, 'admin').undo, null);
+  dispatch(s, admin, { type: 'bank', teamId: a.id, amount: 50, label: 'Test' });
+  assert.equal(a.bank, 550);
+  assert.equal(E.viewFor(s, 'admin').undo.label, 'correction de banque');
+  assert.equal(E.viewFor(s, 'team', a.id).undo, null, 'les fermes ne voient pas l’annulation');
+  s.timer.running = false; s.timer.remainingMs = 12345;
+  dispatch(s, admin, { type: 'undo' });
+  assert.equal(s.teams[0].bank, 500);
+  assert.equal(s.timer.remainingMs, 12345, 'le chrono n’est jamais remis en arrière');
+  assert.equal(E.viewFor(s, 'admin').undo, null);
+  assert.throws(() => dispatch(s, admin, { type: 'undo' }), /Rien à annuler/);
+  // une action refusée ne crée pas d'annulation
+  assert.throws(() => dispatch(s, admin, { type: 'buy', teamId: s.teams[0].id, itemId: 'inconnu' }));
+  assert.equal(E.viewFor(s, 'admin').undo, null);
+  // une ferme joue : plus d'annulation possible
+  dispatch(s, admin, { type: 'bank', teamId: b.id, amount: 10 });
+  assert.ok(E.viewFor(s, 'admin').undo);
+  dispatch(s, { role: 'team', teamId: a.id }, { type: 'setReady', ready: true });
+  assert.equal(E.viewFor(s, 'admin').undo, null);
+  assert.throws(() => dispatch(s, admin, { type: 'undo' }), /impossible d’annuler/);
+});

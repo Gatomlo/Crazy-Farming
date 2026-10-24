@@ -70,3 +70,9 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 ## Modes de partie
 - Dans la **salle d'attente**, choisis la taille des équipes (3 à 6 joueurs par ferme) et la durée (3 ans ou partie courte de 2 ans) avant de lancer l'installation : le réglage change la composition de départ des fermes, les objectifs communs, la cagnotte à atteindre et, en partie courte, le bocal de stress.
 - Avec moins de 5 joueurs par ferme, rappelle qu'une tuile de plus n'est utile que s'il y a un joueur pour courir.
+
+## Outils de l'animateur
+- **Annuler** : après une correction (banque, bocal, récolte, achat, tirage de carte, etc.), le bouton « ↶ Annuler » apparaît en haut de la console. Il n'est plus possible dès qu'une ferme a joué après ta correction, et le chrono n'est jamais remis en arrière.
+- **Mesurer un aller-retour** : dans le bloc chrono, « ⏱ Mesurer un aller-retour » (Départ puis Arrivée) propose la durée la plus proche à régler.
+- **Récolte** : la console indique pour chaque ferme « ✓ encodé » ou « en attente » ; un ⚠ signale un total de jetons invraisemblable à vérifier. Sur le mobile, les fermes comptent leurs jetons avec + et − pendant la course puis appuient sur « Encoder ma récolte ».
+- **Projecteur** : la touche **F** coupe ou remet les effets visuels (tirage de carte, météo animée).

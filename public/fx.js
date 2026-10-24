@@ -134,7 +134,10 @@
   var spec = null;
 
   // Lance (ou remplace) l'ambiance : null pour l'arreter.
+  var off = false;
+  try { off = localStorage.getItem('ff_fx_off') === '1'; } catch (e) { /* stockage indisponible */ }
   function set(name) {
+    if (off) name = null;
     if (name === kind) return;
     kind = name;
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
@@ -172,7 +175,7 @@
   // opts : { seasonName, tone('neg'|'pos'|'col'), onFlip, onDone } ; card : { icon, title, effect/story, parade }
   function reveal(card, opts) {
     opts = opts || {};
-    if (reduce) { if (opts.onFlip) opts.onFlip(); if (opts.onDone) opts.onDone(); return; }
+    if (reduce || off) { if (opts.onFlip) opts.onFlip(); if (opts.onDone) opts.onDone(); return; }
     if (!styled) { var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st); styled = true; }
     var bg = card.collective ? 'linear-gradient(160deg,#ffd36e,#f2b63d)' : card.tone === 'neg' ? 'linear-gradient(160deg,#ff9a6b,#e0701f)' : 'linear-gradient(160deg,#b7f0c8,#5fd08c)';
     var tag = card.collective ? '🤝 Aléa collectif' : card.tone === 'neg' ? 'Carte aléa · Négatif' : 'Carte aléa · Positif';
@@ -197,5 +200,12 @@
     el.addEventListener('click', finish);
   }
 
-  window.FFX = { set: set, reveal: reveal, kinds: Object.keys(ALIAS) };
+  // Touche F de l'ecran projecteur : coupe ou remet les effets (projecteur peu puissant, ambiance qui gene la lecture).
+  function toggle() {
+    off = !off;
+    try { localStorage.setItem('ff_fx_off', off ? '1' : '0'); } catch (e) { /* stockage indisponible */ }
+    if (off) set(null);
+    return !off;
+  }
+  window.FFX = { set: set, reveal: reveal, toggle: toggle, enabled: function () { return !off; }, kinds: Object.keys(ALIAS) };
 })();

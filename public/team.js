@@ -155,7 +155,7 @@
     var open = V.step <= 2 && !me.transfo;
     var declared = me.harvest.every(function (h) { return h.brought !== null; });
     var rows = me.harvest.map(function (h) {
-      var input = open ? '<input id="hv-' + h.id + '" inputmode="numeric" style="width:56px" placeholder="0" value="' + (h.brought !== null ? h.brought : '') + '">' : '<b class="num">' + (h.brought || 0) + '</b>';
+      var input = open ? '<span class="stepper"><button class="btn" data-act="hvStep" data-product="' + h.id + '" data-delta="-1" aria-label="Un jeton de moins ' + esc(h.name) + '">−</button><input id="hv-' + h.id + '" inputmode="numeric" placeholder="0" value="' + (h.brought !== null ? h.brought : '') + '"><button class="btn" data-act="hvStep" data-product="' + h.id + '" data-delta="1" aria-label="Un jeton de plus ' + esc(h.name) + '">+</button></span>' : '<b class="num">' + (h.brought || 0) + '</b>';
       var clock = V.step === 1 ? '<span class="pclock pc-idle" data-pclock data-pid="' + h.id + '" data-run="' + h.runSec + '" aria-live="off">' + (h.runSec ? FF.fmt(h.runSec * 1000) : '—') + '</span>' : '';
       return '<div data-prow style="display:flex;flex-direction:column;gap:6px;padding:8px;margin:0 -8px"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span style="display:flex;align-items:center;gap:8px"><i style="width:14px;height:14px;border-radius:50%;background:' + h.color + ';border:1px solid var(--line2);display:inline-block"></i><b style="font-size:18px">' + esc(h.name) + '</b></span>' + clock + '</div>' +
         '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-end"><span class="muted" style="font-size:12px">' + runInfo(h) + '</span><span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '</span></div></div>';
@@ -165,7 +165,7 @@
     var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">' + esc(V.card.title) + ' : la récolte s\'arrête ' + me.stopEarly + ' s avant la fin du chrono.</div>' : '';
     var bonus = me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Bonus : vos coureurs courent ' + me.bonusSec + ' s de plus.</div>' : '';
     var btn = open ? '<button class="btn primary" data-act="declareHarvest">' + (declared ? 'Modifier la récolte' : 'Encoder ma récolte') + '</button>' : '';
-    var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock. Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">À la fin de la récolte, encodez les jetons réellement rapportés pour chaque produit : un jeton = une ressource en stock.</div>';
+    var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock. Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">Comptez les jetons au fil de la course avec + et −, puis appuyez sur « Encoder ma récolte » : un jeton = une ressource en stock.</div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + prot + early + bonus + btn + hint + '</section>';
   }
 
@@ -466,6 +466,12 @@
     if (a === 'respondTrade') return conn.act('respondTrade', { tradeId: b.dataset.trade, accept: !!b.dataset.accept });
     if (a === 'cancelTrade') return conn.act('cancelTrade', { tradeId: b.dataset.trade });
     if (a === 'collier') return conn.act('collier');
+    if (a === 'hvStep') { // compteur : on compte les jetons au fil de la course, puis on encode
+      var hv = document.getElementById('hv-' + b.dataset.product);
+      if (hv) hv.value = Math.max(0, (parseInt(hv.value, 10) || 0) + parseInt(b.dataset.delta, 10));
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) { /* pas de vibration */ } }
+      return;
+    }
     if (a === 'declareHarvest') {
       var hv = {};
       me.harvest.forEach(function (h) { var n = parseInt(val('hv-' + h.id), 10); hv[h.id] = n > 0 ? n : 0; });

@@ -31,7 +31,7 @@
     return '<header class="row" style="justify-content:space-between">' +
       '<div class="brand"><div class="logo" aria-hidden="true">🚜</div><div><h1 style="font-size:44px">Farming\'s Folies</h1><div class="muted">Console de l\'animateur · partie <b class="num" style="color:var(--fg);letter-spacing:.15em">' + esc(V.code) + '</b></div></div></div>' +
       '<div class="row"><span class="pill" style="background:' + (V.phase === 'season' ? V.seasonColor : 'var(--panel2)') + ';color:' + (V.phase === 'season' ? 'var(--ink)' : 'var(--text)') + '">' + esc(title) + '</span>' +
-      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button><button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
+      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' + (V.undo ? '<button class="btn small" data-act="undo" title="Annule la dernière correction (impossible dès qu\'une ferme a joué)">↶ Annuler : ' + esc(V.undo.label) + '</button>' : '') + '<button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
   }
 
   function lobby() {
@@ -67,10 +67,19 @@
       (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + '</section>';
   }
 
+  // Chronometre de mesure d'un aller-retour : Depart puis Arrivee, propose la duree la plus proche.
+  var tw = { start: 0, ms: 0 };
+  function nearestTrip(sec) { return V.meta.tripChoices.reduce(function (b, n) { return Math.abs(n - sec) < Math.abs(b - sec) ? n : b; }); }
+  function stopwatch() {
+    if (tw.start) return '<button class="btn small" data-act="twStop">■ Arrivée · <b class="num" data-tw>' + Math.round((Date.now() - tw.start) / 1000) + ' s</b></button>';
+    if (tw.ms) { var sec = Math.round(tw.ms / 1000), n = nearestTrip(sec); return '<span class="muted">Mesure : ' + sec + ' s</span><button class="btn small primary" data-act="twUse" data-sec="' + n + '">Régler à ' + n + ' s</button><button class="btn small" data-act="twStart">↺ Recommencer</button>'; }
+    return '<button class="btn small" data-act="twStart">⏱ Mesurer un aller-retour</button>';
+  }
+
   // Duree d'un aller-retour sur le parcours : fixe la duree de course de chaque produit, le chrono de recolte et les bonus de temps.
   function tripBlock() {
     var opts = V.meta.tripChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.tripSec ? ' selected' : '') + '>' + n + ' s</option>'; }).join('');
-    return '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label for="tripSec" class="muted">🏃 Aller-retour d\'un coureur</label><select id="tripSec" data-trip="1" aria-label="Durée d\'un aller-retour">' + opts + '</select><span class="muted" style="font-size:12px">Chronométrez un essai : chaque produit court un nombre d\'allers-retours propre à la saison, le chrono dure le plus long (' + V.harvestSec + ' s cette saison), coup de collier +' + V.meta.collierSec + ' s, tracteur +' + V.meta.tracteurSec + ' s.</span></div>';
+    return '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label for="tripSec" class="muted">🏃 Aller-retour d\'un coureur</label><select id="tripSec" data-trip="1" aria-label="Durée d\'un aller-retour">' + opts + '</select>'+ stopwatch() +'<span class="muted" style="font-size:12px">Chronométrez un essai : chaque produit court un nombre d\'allers-retours propre à la saison, le chrono dure le plus long (' + V.harvestSec + ' s cette saison), coup de collier +' + V.meta.collierSec + ' s, tracteur +' + V.meta.tracteurSec + ' s.</span></div>';
   }
 
   // Saut libre a une saison (accelerer la partie). Deux clics : les charges, la fete et les achats des annees sautees ne sont pas rejoues.
@@ -171,10 +180,15 @@
   // Recolte encodee par une ferme (jetons rapportes / maximum), avec correction -1 / +1.
   function harvestLine(t) {
     if (V.phase !== 'season' || V.step < 1 || !t.harvest || !t.harvest.length) return '';
+    var done = t.harvest.every(function (h) { return h.brought !== null; });
     var cells = t.harvest.map(function (h) {
-      return '<span style="white-space:nowrap">' + (FF.ICON[h.id] || '') + ' ' + (h.brought === null ? '<span class="muted">?</span>' : h.brought) + ' <button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="-1" aria-label="Retirer un jeton">−</button><button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="1" aria-label="Ajouter un jeton">+</button></span>';
+      // total invraisemblable : plus de jetons que ses coureurs n'ont pu en rapporter (un aller-retour d'au moins la moitie du temps mesure)
+      var max = h.runners * Math.floor(h.runSec / Math.max(5, V.tripSec * 0.5)) * (h.perTrip + 1);
+      var odd = h.brought !== null && h.brought > max;
+      return '<span style="white-space:nowrap">' + (FF.ICON[h.id] || '') + ' ' + (h.brought === null ? '<span class="muted">?</span>' : h.brought) + (odd ? ' <b title="Plus de ' + max + ' jetons paraît impossible : à vérifier" style="color:var(--bad)">⚠</b>' : '') + ' <button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="-1" aria-label="Retirer un jeton">−</button><button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="1" aria-label="Ajouter un jeton">+</button></span>';
     }).join(' ');
-    return '<div style="font-size:13px;margin-top:4px">🧺 ' + cells + '</div>';
+    var status = V.step === 1 ? (done ? ' <span class="pill ok" style="font-size:12px">✓ encodé</span>' : ' <span class="pill" style="font-size:12px">en attente</span>') : '';
+    return '<div style="font-size:13px;margin-top:4px">🧺 ' + cells + status + '</div>';
   }
 
   // Stock d'une ferme : jetons bruts de la saison et plats transformes.
@@ -358,6 +372,7 @@
   // ---------- Chrono local ----------
   function tick() {
     if (!V) return;
+    var twEl = root.querySelector('[data-tw]'); if (twEl && tw.start) twEl.textContent = Math.round((Date.now() - tw.start) / 1000) + ' s';
     var ms = FF.remaining(V);
     document.querySelectorAll('[data-clock]').forEach(function (el) {
       el.textContent = FF.fmt(ms);
@@ -415,6 +430,9 @@
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
     if (a === 'cancelTrade' || a === 'revertTrade') return conn.act(a, { tradeId: b.dataset.trade });
+    if (a === 'twStart') { tw.start = Date.now(); tw.ms = 0; return render(); }
+    if (a === 'twStop') { tw.ms = Date.now() - tw.start; tw.start = 0; return render(); }
+    if (a === 'twUse') { tw.ms = 0; return conn.act('setTripSec', { sec: parseInt(b.dataset.sec, 10) }); }
     if (a === 'adjustHarvest') return conn.act('adjustHarvest', { teamId: t, product: b.dataset.product, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'adjustContribution') return conn.act('adjustContribution', { teamId: t, delta: parseInt(b.dataset.delta, 10) });
     if (a === 'jumpTo') {
