@@ -408,7 +408,7 @@
       ? '<span class="t-season" style="background:' + V.seasonColor + '">' + FF.ICON.seasons[V.season] + ' ' + esc(V.seasonName) + ' · an ' + V.year + '</span>'
       : '<span class="t-season" style="background:var(--surface-2);color:var(--fg);border:1px solid var(--line)">' + esc(context()) + '</span>';
     var steps = inSeason ? '<div class="t-steps" aria-label="Étape ' + (V.step + 1) + ' sur 5">' + [0, 1, 2, 3, 4].map(function (i) { return '<i class="' + (i < V.step ? 'done' : i === V.step ? 'now' : '') + '"></i>'; }).join('') + '</div>' : '';
-    var showClock = inSeason || V.phase === 'setup' || V.phase === 'rearrange';
+    var showClock = (inSeason && V.step !== 1) || V.phase === 'setup' || V.phase === 'rearrange'; // a la recolte, chaque produit a son propre decompte
     return '<header class="t-top"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start;gap:10px"><div style="min-width:0"><h1 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(me.name) + '</h1>' + badge + '</div>' +
       (showClock ? '<div class="t-chrono" data-chrono><div class="l">Chrono</div><div class="v" data-clock>0:00</div></div>' : '') + '</div>' + steps +
       '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="pill num">💰 ' + me.bank + ' EB</span><span class="row" style="gap:8px;flex-wrap:nowrap">' + FF.dots(me.bocal, V.meta.bocalMax).replace('class="dots"', 'class="dots" style="gap:3px"') + '<span class="pill lv-' + me.level + '">' + FF.ICON.level[me.level] + '</span></span></div></header>';

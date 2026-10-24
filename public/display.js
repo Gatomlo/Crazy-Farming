@@ -72,23 +72,26 @@
       '<div class="d-clock" data-clock>0:00</div><div class="bar" style="height:24px"><i data-bar style="width:100%;background:' + (V.phase === 'season' ? V.seasonColor : 'var(--amber)') + '"></i></div></section>';
   }
 
-  // Duree de course de chaque produit : la saison et la carte aleas la modifient, les fermes protegees gardent la duree de base.
+  // Recolte : pas de chrono general, un decompte par produit (seulement ceux que au moins une ferme produit).
+  // La saison et la carte aleas modifient la duree ; les fermes protegees gardent la duree de base.
   function quotas() {
-    var c = V.card, mods = (c && c.mods) || {};
-    var rows = V.meta.products.map(function (p) {
+    var c = V.card;
+    var owned = V.meta.products.filter(function (p) { return V.ownedProducts.indexOf(p.id) >= 0; });
+    var txt = function (n) { return n ? FF.fmt(n * 1000) : '—'; };
+    var rows = owned.map(function (p) {
       var base = V.runBase[p.id], eff = V.runEff[p.id], ch = eff !== base, per = V.perTripEff[p.id];
-      var txt = function (n) { return n ? FF.fmt(n * 1000) : '—'; };
-      var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + txt(base) + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + txt(eff) + '</span>' : txt(base);
-      var tag = per > 1 ? '<span style="font-size:26px;color:var(--mint);font-weight:700;margin-right:18px">' + per + ' jetons par trajet</span>' : '';
-      return '<div class="d-q sm" data-prow style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span>' + tag + '<span class="v" style="font-size:44px">' + val + '</span><span class="pclock pc-idle" data-pclock data-pid="' + p.id + '" data-run="' + eff + '">' + txt(eff) + '</span></div>';
+      var was = ch ? '<s style="font-size:30px;opacity:.5;margin-right:12px">' + txt(base) + '</s>' : '';
+      var tag = per > 1 ? '<span style="font-size:28px;color:var(--mint);font-weight:700">' + per + ' jetons par trajet</span>' : '';
+      var none = !eff ? '<span style="font-size:28px;color:var(--flame);font-weight:700">Rien à récolter</span>' : '';
+      return '<div class="d-q" data-prow style="padding:8px 28px;gap:24px"><i style="background:' + p.color + ';width:30px;height:30px"></i><span style="font-size:46px;font-weight:800;flex:1">' + esc(p.name) + '</span>' + was + tag + none + '<span class="pclock pc-idle" data-pclock data-pid="' + p.id + '" data-run="' + eff + '">' + txt(eff) + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
     var banner = c ? '<div class="d-q sm" style="background:' + (c.collective ? 'var(--amber)' : c.tone === 'neg' ? 'var(--flame)' : 'var(--mint)') + ';color:var(--ink);font-size:30px;padding:8px 24px;flex-direction:column;align-items:flex-start;gap:2px"><b>Aléa : ' + esc(c.title) + '</b><span style="font-weight:600;font-size:26px">' + esc(cardText(c)) + '</span></div>' : '';
-    var stop = V.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop à ' + FF.fmt(V.stopEarlySec * 1000) + ' de la fin du chrono</div>' : '';
+    var stop = V.stopEarlySec ? '<div style="font-size:28px;color:var(--flame);font-weight:700">Fermes touchées : stop ' + FF.fmt(V.stopEarlySec * 1000) + ' avant la fin de leur course</div>' : '';
     var runners = V.teams.filter(function (t) { return t.bonusSec > 0; }).map(function (t) { return esc(t.name) + ' +' + t.bonusSec + ' s'; });
-    var bonus = runners.length ? '<div style="font-size:28px;color:var(--mint);font-weight:700">⏱️ Temps bonus après le chrono : ' + runners.join(' · ') + '</div>' : '';
+    var bonus = runners.length ? '<div style="font-size:28px;color:var(--mint);font-weight:700">⏱️ Temps bonus : ' + runners.join(' · ') + '</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (course normale) : ' + esc(safe.join(', ')) + '</div>' : '';
-    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:30px;font-weight:700;color:var(--muted)">Temps de course par produit <span style="font-weight:500;color:var(--muted);font-size:26px">· un jeton par trajet = une ressource</span></div>' + rows +
+    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px"><div class="d-big" style="font-size:56px">Récolte en relais</div><div style="font-size:28px;color:var(--muted)">Un coureur par tuile · un jeton par trajet · chaque produit s\'arrête à son STOP</div>' + rows +
       '' + banner + stop + bonus + prot + '</section>';
   }
 
@@ -183,7 +186,7 @@
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
         (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }
-    if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par tuile · un jeton par trajet · chaque produit a son temps') + quotas();
+    if (id === 'recolte') return quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
     if (id === 'marche') {
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
@@ -239,10 +242,15 @@
   }
   ['click', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) { /* ignore */ } }); });
 
+  var stopBeeped = {};
   function tick() {
     if (!V) return;
     var ms = FF.remaining(V);
-    stage.querySelectorAll('[data-pclock]').forEach(function (el) { FF.paintProd(el, V, false); });
+    stage.querySelectorAll('[data-pclock]').forEach(function (el) {
+      FF.paintProd(el, V, false);
+      var key = V.year + '.' + V.season + '.' + el.getAttribute('data-pid');
+      if (/pc-stop/.test(el.className)) { if (!stopBeeped[key]) { stopBeeped[key] = true; beep(520, 0.6); } } else stopBeeped[key] = false;
+    });
     var clock = stage.querySelector('[data-clock]');
     if (clock) { clock.textContent = FF.fmt(ms); clock.classList.toggle('low', V.timer.running && ms <= 10000); }
     var alert = !!(clock && V.timer.running && ms <= 10000);
