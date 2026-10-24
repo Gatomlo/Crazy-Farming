@@ -13,11 +13,12 @@ function newGame(n = 4) {
   return s;
 }
 
-// Encode la recolte maximale (un jeton par tuile) : le stock de jetons bruts en depend.
+// Encode une recolte de reference : tuiles x ressources de la grille d'origine (3/3/1/3 au printemps...), quel que soit le rendement du jeton.
+const REF = [{ lait: 3, oeuf: 3, viande: 1, fl: 3 }, { lait: 2, oeuf: 2, viande: 2, fl: 3 }, { lait: 2, oeuf: 2, viande: 3, fl: 2 }, { lait: 2, oeuf: 1, viande: 2, fl: 0 }];
 function fullHarvest(s, t) {
   const h = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest;
   const tokens = {};
-  for (const x of h) tokens[x.id] = x.maxTokens;
+  for (const x of h) tokens[x.id] = x.perTile ? Math.round(x.runners * REF[s.season][x.id] / x.perTile) : 0;
   E.declareHarvest(s, t.id, tokens, true);
 }
 
@@ -99,8 +100,9 @@ test('boutique : prix, stock, etape achats', () => {
   assert.throws(() => E.buy(s, t.id, 'chien'), /Déjà acheté/);
   E.buy(s, t.id, 'brouette');
   E.buy(s, t.id, 'brouette'); // multi
-  t.bank = 100;
+  t.bank = 90;
   assert.throws(() => E.buy(s, t.id, 'tracteur'), /Solde insuffisant/);
+  assert.throws(() => E.buy(s, t.id, 'charrette'), /introuvable|inconnu|Article/i, 'la charrette n’existe plus');
   go(s);
   assert.throws(() => E.buy(s, t.id, 'lampe'), /étape Achats/);
   s.step = 4;
@@ -255,24 +257,24 @@ test('alea : grille effective, fermes protegees, chrono canicule', () => {
   toSeason(s); // printemps
   const [a, b] = s.teams;
   E.drawCard(s, 0); // gel tardif
-  assert.equal(E.viewFor(s, 'display').quotaEff.fl, 1);
-  assert.equal(E.viewFor(s, 'display').quota.fl, 3);
+  assert.equal(E.viewFor(s, 'display').quotaEff.fl, 0.31);
+  assert.equal(E.viewFor(s, 'display').quota.fl, 1.25);
   b.tiles.fl = 2;
-  assert.equal(E.viewFor(s, 'team', b.id).teams[1].harvest.find((h) => h.id === 'fl').tokens, 2);
+  assert.equal(E.viewFor(s, 'team', b.id).teams[1].harvest.find((h) => h.id === 'fl').perTile, 0.31);
   b.equipment.push('serre');
   E.setChoice(s, b.id, 'parade');
   const h = E.viewFor(s, 'team', b.id).teams[1].harvest.find((x) => x.id === 'fl');
-  assert.equal(h.tokens, 6);
+  assert.equal(h.perTile, 1.25);
   assert.equal(E.viewFor(s, 'display').teams[1].exempt, true);
   s.season = 1; E.drawCard(s, 0); // canicule
   assert.equal(E.viewFor(s, 'team', a.id).teams[0].stopEarly, 30);
   s.season = 2; E.drawCard(s, 0); // renard
   assert.equal(E.viewFor(s, 'display').quotaEff.oeuf, 0);
   s.season = 2; E.drawCard(s, 1); // brouillard : -1 sur tout
-  assert.deepEqual(E.viewFor(s, 'display').quotaEff, { lait: 1, oeuf: 1, viande: 2, fl: 1 });
+  assert.deepEqual(E.viewFor(s, 'display').quotaEff, { lait: 0.38, oeuf: 0.38, viande: 0.63, fl: 0.38 });
   s.season = 0; E.drawCard(s, 1); // naissances
-  assert.equal(E.viewFor(s, 'display').quotaEff.lait, 5);
-  assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').tokens, 10);
+  assert.equal(E.viewFor(s, 'display').quotaEff.lait, 2.5);
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').perTile, 2.5);
 });
 
 test('menu de la fete : tirage, repartition, livraison, responsabilite', () => {
@@ -638,34 +640,45 @@ test('marche : stock visible, produits absents refuses, gout du moment par produ
 test('recolte : encodage des jetons rapportes, valeur du jeton, stock brut', () => {
   const s = newGame();
   toSeason(s);
-  const t = s.teams[0]; // bergers : 2 chevreries (valeur 3 au printemps), 1 poulailler (valeur 3)
+  const t = s.teams[0]; // bergers : 2 chevreries, 1 poulailler (rendement 1,25 au printemps)
   const stock = (k) => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).stock.raw[k];
   s.step = 0;
   assert.throws(() => E.declareHarvest(s, t.id, { lait: 1 }), /Récolte/, 'pas avant la récolte');
   s.step = 1;
   assert.equal(stock('lait'), 0, 'rien tant que la récolte n’est pas encodée');
-  assert.throws(() => E.declareHarvest(s, t.id, { lait: 3 }), /au plus 2/);
+  assert.throws(() => E.declareHarvest(s, t.id, { lait: 100 }), /au plus 99/);
   assert.throws(() => E.declareHarvest(s, t.id, { viande: 1 }), /ne produisez pas/);
   assert.throws(() => E.declareHarvest(s, t.id, { lait: -1 }), /invalide/);
-  E.declareHarvest(s, t.id, { lait: 1, oeuf: 1 });
-  assert.equal(stock('lait'), 3); assert.equal(stock('oeuf'), 3); // 1 jeton x valeur 3
-  E.declareHarvest(s, t.id, { lait: 2 });
-  assert.equal(stock('lait'), 6); assert.equal(stock('oeuf'), 0);
-  // coup de collier : un jeton de plus par type produit, une fois par saison
+  E.declareHarvest(s, t.id, { lait: 4, oeuf: 4 });
+  assert.equal(stock('lait'), 5); assert.equal(stock('oeuf'), 5); // 4 jetons x rendement 1,25
+  E.declareHarvest(s, t.id, { lait: 8 });
+  assert.equal(stock('lait'), 10); assert.equal(stock('oeuf'), 0);
+  // pas de plafond par tuile : autant de trajets que les coureurs en font
+  E.declareHarvest(s, t.id, { lait: 28, oeuf: 16 });
+  assert.equal(stock('lait'), 35); assert.equal(stock('oeuf'), 20);
+  const me = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
+  assert.equal(me().harvest.find((h) => h.id === 'lait').runners, 2, 'une tuile = un coureur');
+  // coup de collier : secondes de course en plus, une fois par saison, au prix d'une boule
+  assert.equal(me().bonusSec, 0);
   E.coupDeCollier(s, t.id);
   assert.throws(() => E.coupDeCollier(s, t.id), /déjà lancé/);
-  E.declareHarvest(s, t.id, { lait: 3, oeuf: 1 });
-  assert.equal(stock('lait'), 9);
+  assert.equal(me().bonusSec, D.COLLIER_SEC);
+  E.declareHarvest(s, t.id, { lait: 12, oeuf: 4 });
+  assert.equal(stock('lait'), 15);
+  // tracteur : +15 s de course, cumulable avec le coup de collier
+  t.equipment.push('tracteur');
+  assert.equal(me().bonusSec, D.COLLIER_SEC + D.TRACTEUR_SEC);
+  t.equipment.pop();
   // correction animateur
   E.adjustHarvest(s, t.id, 'lait', -1);
-  assert.equal(stock('lait'), 6);
+  assert.equal(stock('lait'), 14); // 11 jetons x 1,25 = 13,75
   s.step = 2;
-  E.declareHarvest(s, t.id, { lait: 3, oeuf: 1 }); // encore possible au debut de Transformation
+  E.declareHarvest(s, t.id, { lait: 12, oeuf: 4 }); // encore possible au debut de Transformation
   E.requestTransfo(s, t.id, { fromage: 1 }); // 2 laits
-  assert.equal(stock('lait'), 7);
+  assert.equal(stock('lait'), 13);
   assert.throws(() => E.declareHarvest(s, t.id, { lait: 1 }), /déjà demandées/);
   s.step = 3;
-  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 8 }), /que 7 lait/);
+  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 14 }), /que 13 lait/);
   // nouvelle saison : la recolte est a encoder de nouveau
   s.step = 4; E.nextStep(s);
   assert.equal(t.harvest, null); assert.equal(t.collier, false);
@@ -733,4 +746,21 @@ test('bourse : offre, acceptation, paiement, stock transfere, annulation', () =>
   assert.deepEqual(E.viewFor(s, 'team', b.id).trades.map((x) => x.id).sort(), ['e1', 'e2', 'e3']);
   s.step = 3;
   assert.throws(() => E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 } }), /Transformation et bourse/);
+});
+
+test('parcours : la valeur d’un jeton suit la duree reelle d’un aller-retour', () => {
+  const s = newGame();
+  toSeason(s); // printemps
+  const t = s.teams[0];
+  const lait = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'lait').perTile;
+  assert.equal(s.tripSec, D.REF_TRIP_SEC);
+  assert.equal(lait(), 1.25);
+  assert.throws(() => E.setTripSec(s, 7), /invalide/);
+  E.setTripSec(s, 15);
+  assert.equal(lait(), 0.63); // moitie moins par jeton : on court deux fois plus
+  E.setTripSec(s, 40);
+  assert.equal(lait(), 1.67);
+  assert.equal(E.viewFor(s, 'display').quota.lait, 1.67);
+  s.step = 1;
+  assert.throws(() => E.setTripSec(s, 30), /avant la récolte/);
 });

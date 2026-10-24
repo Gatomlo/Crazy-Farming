@@ -62,7 +62,7 @@
     var c = V.card, mods = (c && c.mods) || {};
     var rows = V.meta.products.map(function (p) {
       var base = V.quota[p.id], eff = V.quotaEff[p.id], ch = eff !== base;
-      var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + base + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + eff + '</span>' : String(base);
+      var val = ch ? '<s style="font-size:40px;opacity:.5;margin-right:14px">' + FF.yld(base) + '</s><span style="color:' + (eff < base ? 'var(--flame)' : 'var(--mint)') + '">' + FF.yld(eff) + '</span>' : FF.yld(base);
       return '<div class="d-q sm" style="padding:8px 24px;font-size:32px"><i style="background:' + p.color + '"></i><span>' + esc(p.name) + '</span><span class="v" style="font-size:52px">' + val + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });
@@ -164,7 +164,7 @@
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
         (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
     }
-    if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par type de produit') + quotas();
+    if (id === 'recolte') return clockBlock('Récolte en relais', 'Un coureur par tuile · un jeton par trajet') + quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
     if (id === 'marche') {
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');

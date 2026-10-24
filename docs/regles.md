@@ -15,7 +15,7 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 
 ## La ferme
 - Profils de départ : Bergers (2 chèvreries, 1 poulailler), Maraîchers (2 potagers-vergers, 1 poulailler), Éleveurs (2 porcheries, 1 chèvrerie), Gourmets (1 porcherie, 1 potager-verger, 1 atelier).
-- Quatre produits : lait, œufs, viande, fruits et légumes. Chaque tuile permet de rapporter **un jeton** par saison ; chaque jeton rapporté vaut **1 à 3 ressources** selon la saison, le produit et l'aléa (la grille « valeur d'un jeton »).
+- Quatre produits : lait, œufs, viande, fruits et légumes. **Chaque tuile de production = un coureur** autorisé sur ce produit : sans joueur pour courir, une tuile de plus ne sert à rien. Chaque jeton rapporté vaut une **fraction de ressource** (par exemple 1,25 ou 0,5) selon la saison, le produit et l'aléa (la grille « valeur d'un jeton »).
 - Une nouvelle tuile doit toucher le bâtiment principal ou une tuile du même type.
 - **Agrandissements** (tuiles, atelier, activité complémentaire) : achetables seulement à l'installation et au réaménagement de fin d'année.
 - Prix des tuiles de production : 35 EB si la ferme possède déjà ce type, 80 EB sinon. Atelier de transformation 90 EB, activité complémentaire 120 EB.
@@ -23,9 +23,8 @@ Chaque équipe dirige une ferme pendant 3 ans (4 saisons par an). On gagne ensem
 - **Rôles** : fermier en chef, comptable, négociateur, gardien du bocal, chef de relais, éclaireur (7 badges maximum). Les badges se décalent d'un cran chaque année.
 
 ## Matériel (boutique, étapes Achats ou à l'installation)
-- Brouette 40 EB : un type de produit, son coureur ramène 2 jetons par voyage.
-- Charrette 70 EB : un coureur supplémentaire sur un type.
-- Tracteur 150 EB : un coureur supplémentaire sur chaque type.
+- Brouette 40 EB : l'un de vos coureurs ramène 2 jetons par trajet (cumulable, une brouette par coureur).
+- Tracteur 100 EB : tous vos coureurs courent 15 secondes de plus à chaque récolte, après la fin du chrono.
 - Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
 - Table de marché 40 EB : l'étal passe à 10 produits (8 au départ). Elle se cumule avec la camionnette : 14 produits avec les deux.
 - Hamac 80 EB : −1 boule à la fin de chaque saison.
@@ -49,33 +48,33 @@ La carte est tirée au hasard dans le paquet de la saison. Les chances dépenden
 Plusieurs cartes négatives partagent la même parade : un seul achat protège contre toutes. Chaque saison revient trois fois dans la partie : les cartes peuvent donc se répéter d'une année à l'autre.
 
 **Printemps**
-- Gel tardif (−) : fruits et légumes −2 jetons par tuile. Parade : serre.
-- Grêle (−) : œufs et fruits et légumes −1 jeton par tuile. Parade : serre.
-- Naissances (+) : lait +2 jetons par tuile.
-- Printemps doux (+) : fruits et légumes +2 jetons par tuile.
+- Gel tardif (−) : fruits et légumes, rendement divisé par quatre. Parade : serre.
+- Grêle (−) : œufs et fruits et légumes, rendement divisé par deux. Parade : serre.
+- Naissances (+) : lait, rendement doublé.
+- Printemps doux (+) : fruits et légumes, rendement doublé.
 
 **Été**
 - Canicule (−) : récolte raccourcie de 30 s. Parade : arrosage.
-- Sécheresse (−) : lait et fruits et légumes −1 jeton par tuile. Parade : arrosage.
+- Sécheresse (−) : lait et fruits et légumes, rendement divisé par deux. Parade : arrosage.
 - Touristes (+) : la roue ne descend pas sous « trois quarts vendus ».
-- Pâturages gras (+) : lait et viande +1 jeton par tuile.
-- Potager généreux (+) : fruits et légumes +2 jetons par tuile.
+- Pâturages gras (+) : lait et viande, rendement augmenté de moitié.
+- Potager généreux (+) : fruits et légumes, rendement doublé.
 
 **Automne**
 - Renard au poulailler (−) : plus aucun œuf à rapporter. Parade : chien de berger.
-- Loup rôdeur (−) : viande −2 jetons par tuile. Parade : chien de berger.
-- Brouillard (−) : −1 jeton par tuile sur tous les produits. Parade : lampe-tempête.
-- Belles vendanges (+) : fruits et légumes +2 jetons par tuile.
-- Année des glands (+) : viande +2 jetons par tuile.
-- Bonne ponte (+) : œufs +2 jetons par tuile.
+- Loup rôdeur (−) : viande, rendement divisé par quatre. Parade : chien de berger.
+- Brouillard (−) : rendement divisé par deux sur tous les produits. Parade : lampe-tempête.
+- Belles vendanges (+) : fruits et légumes, rendement doublé.
+- Année des glands (+) : viande, rendement doublé.
+- Bonne ponte (+) : œufs, rendement doublé.
 
 **Hiver**
 - Grève des transporteurs (−) : pas de vente directe. Parade : camionnette.
 - Routes enneigées (−) : pas de vente directe. Parade : camionnette.
 - Tempête de neige (−) : récolte raccourcie de 30 s. Parade : lampe-tempête.
-- Canalisations gelées (−) : lait et viande −1 jeton par tuile. Parade : arrosage.
+- Canalisations gelées (−) : lait et viande, rendement divisé par deux. Parade : arrosage.
 - Hiver gourmand (+) : produits transformés +5 EB l'unité.
-- Hiver doux (+) : lait et œufs +1 jeton par tuile.
+- Hiver doux (+) : lait et œufs, rendement augmenté de moitié.
 
 ### Aléas collectifs
 Une fois par an, le système tire un **aléa collectif** parmi ceux de toutes les saisons : il **remplace la carte** de sa saison. Aucun choix individuel (pas de parade, pas de boule d'évitement) : le village doit **réunir ensemble un objectif** avant la fin d'une étape donnée. Chaque ferme donne ce qu'elle veut, quand elle veut, depuis son mobile ; l'objectif est vérifié automatiquement à l'échéance. S'il est atteint, tout le village souffle ; sinon tout le village stresse. Les aléas collectifs ne sont jamais annoncés par la météo.
@@ -95,9 +94,13 @@ Exemples avec 4 fermes (l'objectif s'adapte au nombre de fermes) :
 **Sanction et récompense : le stress uniquement.** Objectif atteint : **−1 boule** pour chaque ferme. Objectif manqué : **+1 boule** pour chaque ferme.
 
 ## Récolte en relais
-Un coureur par type de produit, un jeton par voyage, au plus un jeton par tuile de ce type. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois. Un **coup de collier** (+1 boule, une fois par saison) permet de rapporter un jeton de plus par type produit : l'équipe l'enregistre sur mobile.
+Un coureur par tuile, sur le type de produit de cette tuile. Pendant la durée de l'étape, chaque coureur fait **autant d'allers-retours qu'il peut**, avec **un jeton par trajet** (deux avec une brouette). Il n'y a pas de plafond : tout dépend de la vitesse de l'équipe. Une ferme sans assez de joueurs ne peut pas faire courir toutes ses tuiles : agrandir ne sert alors à rien. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois.
 
-**Encodage :** à la fin de l'étape, chaque ferme encode sur mobile le nombre de jetons réellement rapportés pour chaque produit. Ressources obtenues = jetons rapportés × valeur du jeton. L'animateur peut corriger. Les matières brutes qui ne sont ni transformées ni vendues sont **perdues en fin de saison**.
+**Temps bonus.** Un **coup de collier** (+1 boule, une fois par saison) donne **20 secondes de course** après la fin du chrono. Le **tracteur** en ajoute 15 à chaque saison. Les deux se cumulent : les autres fermes se sont déjà arrêtées pendant que l’équipe concernée continue de courir.
+
+**Valeur d'un jeton.** Le rendement est une fraction de ressource (« 1 jeton = 1,25 ressource », « 1 jeton = 0,5 ressource »…) ; l'application arrondit le total de chaque produit. Il dépend de la saison, du produit et de la carte aléa. La grille est calibrée pour un aller-retour d'environ **30 secondes** ; l'animateur règle la durée réelle sur la console (de 10 à 40 s) et la valeur d'un jeton s'adapte : plus le parcours est court, moins un jeton rapporte.
+
+**Encodage :** à la fin de l'étape, chaque ferme encode sur mobile le nombre de jetons réellement rapportés pour chaque produit. Ressources obtenues = jetons rapportés × valeur du jeton (arrondi par produit). L'animateur peut corriger. Les matières brutes qui ne sont ni transformées ni vendues sont **perdues en fin de saison**.
 
 ## Transformation et bourse
 - Les fermes **déclarent sur l'app** les plats à fabriquer. L'app calcule les jetons à apporter à l'animateur et ceux qu'il rend. L'animateur fait l'échange physique, puis valide (« Jetons échangés »).

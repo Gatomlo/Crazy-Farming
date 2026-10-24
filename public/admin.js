@@ -60,7 +60,13 @@
       '<button class="btn" style="min-height:52px" data-act="timerReset">↺ Remettre à zéro</button></div>' +
       '<details id="timerAdj"><summary>⏱ Régler le chrono</summary><div class="stack" style="margin-top:8px"><div class="tools">' + adj + '</div>' +
       '<div class="row"><label for="timerSec" class="muted">Durée (secondes)</label><input id="timerSec" inputmode="numeric" placeholder="ex. 90" style="width:100px"><button class="btn small" data-act="timerSet">Fixer</button></div>' +
-      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details></section>';
+      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + '</section>';
+  }
+
+  // Duree d'un aller-retour sur le parcours : met a l'echelle la valeur d'un jeton (grille calibree pour V.meta.refTripSec).
+  function tripBlock() {
+    var opts = V.meta.tripChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.tripSec ? ' selected' : '') + '>' + n + ' s</option>'; }).join('');
+    return '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label for="tripSec" class="muted">🏃 Aller-retour d\'un coureur</label><select id="tripSec" data-trip="1" aria-label="Durée d\'un aller-retour">' + opts + '</select><span class="muted" style="font-size:12px">Chronométrez un essai : plus le parcours est court, moins un jeton rapporte.</span></div>';
   }
 
   // Saut libre a une saison (accelerer la partie). Deux clics : les charges, la fete et les achats des annees sautees ne sont pas rejoues.
@@ -161,7 +167,7 @@
   function harvestLine(t) {
     if (V.phase !== 'season' || V.step < 1 || !t.harvest || !t.harvest.length) return '';
     var cells = t.harvest.map(function (h) {
-      return '<span style="white-space:nowrap">' + (FF.ICON[h.id] || '') + ' ' + (h.brought === null ? '<span class="muted">?</span>' : h.brought) + '/' + h.maxTokens + ' <button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="-1" aria-label="Retirer un jeton">−</button><button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="1" aria-label="Ajouter un jeton">+</button></span>';
+      return '<span style="white-space:nowrap">' + (FF.ICON[h.id] || '') + ' ' + (h.brought === null ? '<span class="muted">?</span>' : h.brought) + ' <button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="-1" aria-label="Retirer un jeton">−</button><button class="btn small" style="min-height:26px;padding:0 8px" data-act="adjustHarvest" data-team="' + t.id + '" data-product="' + h.id + '" data-delta="1" aria-label="Ajouter un jeton">+</button></span>';
     }).join(' ');
     return '<div style="font-size:13px;margin-top:4px">🧺 ' + cells + '</div>';
   }
@@ -340,6 +346,7 @@
   root.addEventListener('change', function (e) {
     var k = e.target && e.target.dataset && e.target.dataset.assign;
     if (k) conn.act('assignDish', { key: k, teamId: e.target.value });
+    if (e.target && e.target.dataset && e.target.dataset.trip) conn.act('setTripSec', { sec: parseInt(e.target.value, 10) });
   });
 
   // ---------- Chrono local ----------

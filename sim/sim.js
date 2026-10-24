@@ -8,7 +8,7 @@ const DEFAULTS = {
   teams: 4, skillMean: 0.85, skillSd: 0.12, noiseSd: 0.10,
   rawPrice: 5, directPrice: 10, stallFee: 10, stallCap: 8, vanCap: 12,
   recipeRaw: 2, transMult: 3, mixedMult: 4, atelierRecipes: 4, handRecipes: 1,
-  runnerBonus: 0.2, brouetteBonus: 0.15, collierBonus: 0.3,
+  tripSec: 30, staff: 99, // staff = coureurs disponibles par ferme (une tuile sans coureur ne rapporte rien)
   s3mult: D.S3_MULT, pFeteLeniency: 0, coop: 0.8
 };
 
@@ -20,6 +20,7 @@ const TYPES = ['lait', 'oeuf', 'viande', 'fl'];
 function play(P, seed, strat) {
   const r = rng(seed);
   const s = E.createSession('SIM');
+  s.tripSec = P.setTrip === false ? D.REF_TRIP_SEC : P.tripSec; // l'animateur regle le parcours sur la duree reelle d'un aller-retour
   const profs = Object.keys(D.PROFILES);
   const agents = [];
   for (let i = 0; i < P.teams; i++) {
@@ -51,9 +52,10 @@ function play(P, seed, strat) {
         if (a.invest * 100 > 25 * (3 - yearsLeft) && can(id) && t.bank > 120 + reserve && (yearsLeft >= 1)) { if (tryBuy(id)) a.boughtTiles++; }
       }
     }
+    for (let k = t.equipment.filter((e) => e === 'brouette').length; k < (P.forceBrouette || 0); k++) if (can('brouette')) tryBuy('brouette');
     if (a.invest > 0.5 && yearsLeft >= 1) {
-      if (!t.equipment.includes('tracteur') && can('tracteur') && t.bank > 300 && s.year === 1) tryBuy('tracteur');
-      if (can('brouette') && t.equipment.filter((e) => e === 'brouette').length < 2 && t.bank > 200) tryBuy('brouette');
+      if (!P.noTracteur && !t.equipment.includes('tracteur') && can('tracteur') && t.bank > 250 && s.year === 1) tryBuy('tracteur');
+      if (!P.noBrouette && can('brouette') && t.equipment.filter((e) => e === 'brouette').length < (P.maxBrouette || 2) && t.bank > 200) tryBuy('brouette');
       if (!t.equipment.includes('camionnette') && can('camionnette') && t.bank > 250) tryBuy('camionnette');
     }
     // Parades : 'meteo' = achat guide par la prevision de la saison suivante (le risque sans meteo n'est pas couvert).
@@ -110,20 +112,24 @@ function play(P, seed, strat) {
         const t = T(a); if (t.stopped) continue;
         a.collier = false;
         if (t.bocal <= 3 && r() < 0.5 + 0.3 * a.invest) { a.collier = true; E.coupDeCollier(s, t.id); }
-        const extra = (type) => (t.equipment.includes('tracteur') ? 1 : 0) + t.equipment.filter((e) => e === 'charrette').length * 0.5;
         const me = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
-        const early = me.stopEarly ? (D.SEASONS[season].harvestSec - me.stopEarly) / D.SEASONS[season].harvestSec : 1;
+        const secs = Math.max(0, D.SEASONS[season].harvestSec - (me.stopEarly || 0)) + me.bonusSec;
+        const nBrouette = t.equipment.filter((e) => e === 'brouette').length;
+        const typesOwned = me.harvest.filter((h) => h.runners > 0).sort((x, y) => y.runners - x.runners);
         const enc = {};
-        for (const h of me.harvest) {
-          const type = h.id;
-          const q = h.tiles * h.perTile;
-          enc[type] = Math.min(h.maxTokens, Math.round(h.maxTokens * Math.min(1, clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1))));
-          if (!q) continue;
-          let f = clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1) * early;
-          f *= 1 + P.runnerBonus * extra(type) + P.brouetteBonus * Math.min(1, t.equipment.filter((e) => e === 'brouette').length / TYPES.filter((x) => t.tiles[x]).length * 2);
-          if (a.collier) f *= 1 + P.collierBonus;
-          a.stock[type] += Math.round(q * Math.min(f, 1.6));
-        }
+        let staffLeft = P.staff;
+        typesOwned.forEach((h, i) => {
+          // un coureur par tuile ; chaque trajet dure tripSec / habilete (bruite) ; la brouette double le jeton par trajet d'un coureur (le premier des types les mieux dotes)
+          let tokens = 0;
+          const crew = Math.min(h.runners, staffLeft); staffLeft -= crew;
+          for (let k = 0; k < crew; k++) {
+            const trip = P.tripSec / clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1);
+            tokens += Math.floor(secs / trip) * (k === 0 && i < nBrouette ? 2 : 1);
+          }
+          enc[h.id] = tokens;
+          a.stock[h.id] += Math.round(tokens * h.perTile);
+          a.tokens = (a.tokens || 0) + tokens; a.res = (a.res || 0) + tokens * h.perTile; a.tilesSeen = (a.tilesSeen || 0) + h.runners;
+        });
         E.declareHarvest(s, t.id, enc, true);
       }
       E.nextStep(s, r);
@@ -224,6 +230,8 @@ function play(P, seed, strat) {
     banks: s.teams.map((t) => t.bank), totalBank, avgBank: totalBank / s.teams.length,
     bocalMax: Math.max(...s.teams.map((t) => t.bocal)), added: s.teams.map((t) => t.bocalAdded),
     tiles: s.teams.map((t) => Object.values(t.tiles).reduce((x, y) => x + y, 0)),
+    perTile: agents.reduce((n, a) => n + (a.res || 0), 0) / Math.max(1, agents.reduce((n, a) => n + (a.tilesSeen || 0), 0)),
+    tokPerRunner: agents.reduce((n, a) => n + (a.tokens || 0), 0) / Math.max(1, agents.reduce((n, a) => n + (a.tilesSeen || 0), 0)),
     fetes: s.fetes.map((f) => f.success), debtBoules: 0
   };
 }
@@ -243,7 +251,8 @@ function batch(P0, n = 200, strat = 'mix', seed0 = 1000) {
     bankP10: q(0.1), bankMed: q(0.5), bankP90: q(0.9), bankMean: mean((g) => g.avgBank),
     boulesAjoutees: adds.reduce((x, y) => x + y, 0) / adds.length,
     fete1: mean((g) => +g.fetes[0]), fete2: mean((g) => +g.fetes[1]), fete3: mean((g) => +g.fetes[2]),
-    tiles: mean((g) => g.tiles.reduce((x, y) => x + y, 0) / g.tiles.length)
+    tiles: mean((g) => g.tiles.reduce((x, y) => x + y, 0) / g.tiles.length),
+    perTile: mean((g) => g.perTile), tokPerRunner: mean((g) => g.tokPerRunner)
   };
 }
 
