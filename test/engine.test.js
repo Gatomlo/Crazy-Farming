@@ -254,10 +254,10 @@ test('virements : animateur, autre ferme, motifs imposes, solde', () => {
 
 test('alea : course de chaque produit, fermes protegees, chrono canicule', () => {
   const s = newGame(2);
-  toSeason(s); // printemps, aller-retour de 30 s : lait, œufs, fl 75 s, viande 30 s
+  toSeason(s); // printemps, aller-retour de 30 s : lait, œufs 75 s, fl 60 s, viande 30 s
   const [a, b] = s.teams;
   const disp = () => E.viewFor(s, 'display');
-  assert.deepEqual(disp().runBase, { lait: 75, oeuf: 75, viande: 30, fl: 75 });
+  assert.deepEqual(disp().runBase, { lait: 75, oeuf: 75, viande: 30, fl: 60 });
   E.drawCard(s, 0); // gel tardif : fl au quart du temps = 0,6 aller-retour, moins de 3/4 : non récoltable
   assert.equal(disp().runEff.fl, 0);
   assert.equal(disp().runEff.lait, 75);
@@ -266,12 +266,12 @@ test('alea : course de chaque produit, fermes protegees, chrono canicule', () =>
   b.equipment.push('serre');
   E.setChoice(s, b.id, 'parade');
   const h = E.viewFor(s, 'team', b.id).teams[1].harvest.find((x) => x.id === 'fl');
-  assert.equal(h.runSec, 75, 'ferme protégée : course normale');
-  assert.equal(h.stopAt, 0);
+  assert.equal(h.runSec, 60, 'ferme protégée : course normale');
+  assert.equal(h.stopAt, 15, 'elle s’arrête 15 s avant la fin du chrono (75 s)');
   assert.equal(disp().teams[1].exempt, true);
   s.season = 1; E.drawCard(s, 0); // canicule : un tiers de la recolte en moins
-  assert.equal(E.viewFor(s, 'team', a.id).teams[0].stopEarly, 25);
-  assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').runSec, 50);
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].stopEarly, 20, 'été : chrono de 60 s, un tiers en moins');
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').runSec, 40);
   s.season = 2; E.drawCard(s, 0); // renard
   assert.equal(disp().runEff.oeuf, 0);
   s.season = 2; E.drawCard(s, 2); // loup : viande au quart du temps, non récoltable
@@ -784,7 +784,7 @@ test('parcours : la course de chaque produit et les bonus suivent l’aller-reto
   assert.equal(v().teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'viande').stopAt, 45, 'elle s’arrête quand le chrono affiche 0:45');
   // canicule : un tiers de la recolte en moins
   s.season = 1; E.drawCard(s, 0);
-  assert.equal(E.viewFor(s, 'display').stopEarlySec, 25);
+  assert.equal(E.viewFor(s, 'display').stopEarlySec, 20);
   s.step = 1;
   assert.throws(() => E.setTripSec(s, 30), /avant la récolte/);
 });
@@ -824,10 +824,10 @@ test('produit non recoltable : course de moins de 3/4 d’aller-retour', () => {
   const t = s.teams[0];
   t.tiles.fl = 1;
   const fl = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'fl');
-  assert.equal(fl().runSec, 75);
-  E.drawCard(s, 0); // gel : 2,5 x 0,25 = 0,625 aller-retour < 0,75
+  assert.equal(fl().runSec, 60);
+  E.drawCard(s, 0); // gel : 2 x 0,25 = 0,5 aller-retour < 0,75
   assert.equal(fl().runSec, 0);
-  assert.equal(fl().baseRunSec, 75);
+  assert.equal(fl().baseRunSec, 60);
   s.step = 1;
   assert.throws(() => E.declareHarvest(s, t.id, { fl: 2 }), /non récoltable/);
   E.declareHarvest(s, t.id, { lait: 3, fl: 0 });
@@ -837,7 +837,7 @@ test('produit non recoltable : course de moins de 3/4 d’aller-retour', () => {
   // une course d'exactement 3/4 d'aller-retour reste possible
   s.card = null; s.step = 0; D.SEASONS[0].trips.fl = 0.75;
   assert.equal(fl().runSec, 25 + 20, 'course de 25 s + coup de collier');
-  D.SEASONS[0].trips.fl = 2.5;
+  D.SEASONS[0].trips.fl = 2;
 });
 
 test('previsions : l’animateur voit l’effet de la carte deja tiree en secret, pas les fermes', () => {
@@ -854,4 +854,21 @@ test('previsions : l’animateur voit l’effet de la carte deja tiree en secret
   const col = E.viewFor(s, 'admin').forecast;
   assert.equal(col.truthTone, 'col');
   assert.match(col.truthEffect, /Objectif : \d+ EB/);
+});
+
+test('serre : en hiver, les fruits et légumes courent 1,25 aller-retour au lieu de 0,75', () => {
+  const s = newGame();
+  toSeason(s);
+  const t = s.teams[0];
+  t.tiles.fl = 1;
+  s.season = 3; // hiver, aller-retour de 30 s
+  const fl = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'fl');
+  assert.equal(fl().runSec, 25, 'sans serre : 3/4 d’aller-retour, le minimum récoltable');
+  assert.equal(E.viewFor(s, 'display').runBase.fl, 25);
+  t.equipment.push('serre');
+  assert.equal(fl().runSec, 40);
+  assert.equal(fl().baseRunSec, 40);
+  assert.equal(E.viewFor(s, 'display').harvestSec, 60, 'le chrono ne change pas');
+  s.season = 0; // pas d'effet hors hiver
+  assert.equal(fl().runSec, 60);
 });
