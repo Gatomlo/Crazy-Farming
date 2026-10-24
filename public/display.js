@@ -82,7 +82,7 @@
       var base = V.runBase[p.id], eff = V.runEff[p.id], ch = eff !== base, per = V.perTripEff[p.id];
       var was = ch ? '<s style="font-size:30px;opacity:.5;margin-right:12px">' + txt(base) + '</s>' : '';
       var tag = per > 1 ? '<span style="font-size:28px;color:var(--mint);font-weight:700">' + per + ' jetons par trajet</span>' : '';
-      var none = !eff ? '<span style="font-size:28px;color:var(--flame);font-weight:700">Rien à récolter</span>' : '';
+      var none = !eff ? '<span style="font-size:28px;color:var(--flame);font-weight:700">' + (base ? 'Non récoltable' : 'Rien à récolter') + '</span>' : '';
       return '<div class="d-q" data-prow style="padding:8px 28px;gap:24px"><i style="background:' + p.color + ';width:30px;height:30px"></i><span style="font-size:46px;font-weight:800;flex:1">' + esc(p.name) + '</span>' + was + tag + none + '<span class="pclock pc-idle" data-pclock data-pid="' + p.id + '" data-run="' + eff + '">' + txt(eff) + '</span></div>';
     }).join('');
     var safe = V.teams.filter(function (t) { return t.exempt; }).map(function (t) { return t.name; });

@@ -258,11 +258,11 @@ test('alea : course de chaque produit, fermes protegees, chrono canicule', () =>
   const [a, b] = s.teams;
   const disp = () => E.viewFor(s, 'display');
   assert.deepEqual(disp().runBase, { lait: 75, oeuf: 75, viande: 30, fl: 75 });
-  E.drawCard(s, 0); // gel tardif : fl au quart du temps
-  assert.equal(disp().runEff.fl, 20);
+  E.drawCard(s, 0); // gel tardif : fl au quart du temps = 0,6 aller-retour, moins de 3/4 : non récoltable
+  assert.equal(disp().runEff.fl, 0);
   assert.equal(disp().runEff.lait, 75);
   b.tiles.fl = 2;
-  assert.equal(E.viewFor(s, 'team', b.id).teams[1].harvest.find((h) => h.id === 'fl').runSec, 20);
+  assert.equal(E.viewFor(s, 'team', b.id).teams[1].harvest.find((h) => h.id === 'fl').runSec, 0);
   b.equipment.push('serre');
   E.setChoice(s, b.id, 'parade');
   const h = E.viewFor(s, 'team', b.id).teams[1].harvest.find((x) => x.id === 'fl');
@@ -274,6 +274,9 @@ test('alea : course de chaque produit, fermes protegees, chrono canicule', () =>
   assert.equal(E.viewFor(s, 'team', a.id).teams[0].harvest.find((x) => x.id === 'lait').runSec, 50);
   s.season = 2; E.drawCard(s, 0); // renard
   assert.equal(disp().runEff.oeuf, 0);
+  s.season = 2; E.drawCard(s, 2); // loup : viande au quart du temps, non récoltable
+  assert.equal(disp().runEff.viande, 0);
+  assert.equal(disp().runEff.lait, 60);
   s.season = 2; E.drawCard(s, 1); // brouillard : moitie moins de course sur tout
   assert.deepEqual(disp().runEff, { lait: 30, oeuf: 30, viande: 40, fl: 30 });
   s.season = 0; E.drawCard(s, 1); // naissances : 2 jetons par trajet pour le lait
@@ -813,4 +816,42 @@ test('chrono : le temps restant brut devient négatif après la fin tant que le 
   assert.equal(at(25000).rawMs, 50000);
   assert.equal(at(95000).remainingMs, 0);
   assert.equal(at(95000).rawMs, -20000);
+});
+
+test('produit non recoltable : course de moins de 3/4 d’aller-retour', () => {
+  const s = newGame();
+  toSeason(s); // printemps, aller-retour de 30 s
+  const t = s.teams[0];
+  t.tiles.fl = 1;
+  const fl = () => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest.find((h) => h.id === 'fl');
+  assert.equal(fl().runSec, 75);
+  E.drawCard(s, 0); // gel : 2,5 x 0,25 = 0,625 aller-retour < 0,75
+  assert.equal(fl().runSec, 0);
+  assert.equal(fl().baseRunSec, 75);
+  s.step = 1;
+  assert.throws(() => E.declareHarvest(s, t.id, { fl: 2 }), /non récoltable/);
+  E.declareHarvest(s, t.id, { lait: 3, fl: 0 });
+  // le bonus de temps ne rend pas un produit récoltable
+  E.coupDeCollier(s, t.id);
+  assert.equal(fl().runSec, 0);
+  // une course d'exactement 3/4 d'aller-retour reste possible
+  s.card = null; s.step = 0; D.SEASONS[0].trips.fl = 0.75;
+  assert.equal(fl().runSec, 25 + 20, 'course de 25 s + coup de collier');
+  D.SEASONS[0].trips.fl = 2.5;
+});
+
+test('previsions : l’animateur voit l’effet de la carte deja tiree en secret, pas les fermes', () => {
+  const s = newGame();
+  toSeason(s);
+  s.forecast = { year: s.year, season: s.season, weather: 'froid', used: false };
+  s.nextCard = { year: s.year, season: s.season, id: 'gel' };
+  const adm = E.viewFor(s, 'admin').forecast;
+  assert.equal(adm.truth, 'Gel tardif');
+  assert.equal(adm.truthTone, 'neg');
+  assert.match(adm.truthEffect, /non récoltable.*Parade : serre/);
+  assert.equal(E.viewFor(s, 'team', s.teams[0].id).forecast.truthEffect, undefined);
+  s.nextCard = { year: s.year, season: s.season, id: 'inondation', collective: true };
+  const col = E.viewFor(s, 'admin').forecast;
+  assert.equal(col.truthTone, 'col');
+  assert.match(col.truthEffect, /Objectif : \d+ EB/);
 });

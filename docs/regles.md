@@ -48,7 +48,7 @@ La carte est tirée au hasard dans le paquet de la saison. Les chances dépenden
 Plusieurs cartes négatives partagent la même parade : un seul achat protège contre toutes. Chaque saison revient trois fois dans la partie : les cartes peuvent donc se répéter d'une année à l'autre.
 
 **Printemps**
-- Gel tardif (−) : fruits et légumes, les coureurs ne courent que le quart du temps. Parade : serre.
+- Gel tardif (−) : fruits et légumes, course trop courte : non récoltable cette saison. Parade : serre.
 - Grêle (−) : œufs et fruits et légumes, les coureurs ne courent que la moitié du temps. Parade : serre.
 - Naissances (+) : lait, 2 jetons par trajet.
 - Printemps doux (+) : fruits et légumes, 2 jetons par trajet.
@@ -62,7 +62,7 @@ Plusieurs cartes négatives partagent la même parade : un seul achat protège c
 
 **Automne**
 - Renard au poulailler (−) : plus aucun œuf à rapporter. Parade : chien de berger.
-- Loup rôdeur (−) : viande, les coureurs ne courent que le quart du temps. Parade : chien de berger.
+- Loup rôdeur (−) : viande, course trop courte : non récoltable cette saison. Parade : chien de berger.
 - Brouillard (−) : moitié moins de temps de course sur tous les produits. Parade : lampe-tempête.
 - Belles vendanges (+) : fruits et légumes, 2 jetons par trajet.
 - Année des glands (+) : viande, 2 jetons par trajet.
@@ -97,6 +97,8 @@ Exemples avec 4 fermes (l'objectif s'adapte au nombre de fermes) :
 Un coureur par tuile, sur le type de produit de cette tuile. Pendant la durée de l'étape, chaque coureur fait **autant d'allers-retours qu'il peut**, avec **un jeton par trajet** (deux avec une brouette). Il n'y a pas de plafond : tout dépend de la vitesse de l'équipe. Une ferme sans assez de joueurs ne peut pas faire courir toutes ses tuiles : agrandir ne sert alors à rien. Un coureur qui mélange deux types est le piège classique : on rappelle la règle une fois.
 
 **Durée de course de chaque produit.** L'animateur chronomètre un aller-retour sur le parcours (de 10 s à 2 min) et le renseigne dans la console. Chaque produit court ensuite un **nombre d'allers-retours propre à la saison** (de 1 à 2,5 ; rien pour les fruits et légumes en hiver) : au printemps, le lait, les œufs et les fruits et légumes courent 2,5 allers-retours et la viande un seul ; en été, 2 allers-retours, sauf les fruits et légumes (2,5) ; en automne, 2, sauf la viande (2,5) ; en hiver, 2, sauf les œufs (1). Il n'y a **pas de chrono général** à cette étape : chaque produit a son propre décompte sur l'écran et sur le mobile des fermes qui le produisent, avec un STOP clair à la fin. L'étape dure le temps du produit le plus long. Plus le parcours est long, plus tout dure : l'économie ne change pas.
+
+**Course minimale.** Une course de moins de **trois quarts d'aller-retour** est impossible : le produit n'est alors **pas récoltable** cette saison (aucun jeton à encoder, le bonus de temps n'y change rien). C'est le cas des fruits et légumes avec le gel tardif et de la viande avec le loup rôdeur ; la parade ou une boule d'évitement rend sa course normale.
 
 **Les cartes aléas** raccourcissent la course d'un produit (quart ou moitié du temps), la rallongent de moitié (le chrono s'allonge alors) ou donnent **2 jetons par trajet** à tous les coureurs de ce produit.
 

@@ -145,7 +145,7 @@
   // Course : chaque produit a sa duree selon la saison et la carte aleas ; un jeton rapporte = une ressource.
   // On encode a la fin de l'etape le nombre de jetons reellement rapportes pour chaque produit.
   function runInfo(h) {
-    if (!h.runSec) return '<b style="color:var(--bad)">Rien à récolter cette saison</b>';
+    if (!h.runSec) return '<b style="color:var(--bad)">' + (h.baseRunSec ? 'Course trop courte : non récoltable cette saison' : 'Rien à récolter cette saison') + '</b>';
     var changed = h.runSec !== h.baseRunSec, col = changed ? (h.runSec < h.baseRunSec ? 'var(--bad)' : 'var(--good)') : 'inherit';
     var when = h.overSec ? 'jusqu\'à ' + FF.fmt(h.overSec * 1000) + ' après la fin du chrono' : h.stopAt ? 'stop quand le chrono affiche ' + FF.fmt(h.stopAt * 1000) : 'jusqu\'à la fin du chrono';
     return h.runners + ' coureur' + (h.runners > 1 ? 's' : '') + ' · <b style="color:' + col + '">' + FF.fmt(h.runSec * 1000) + '</b>' + (changed ? ' <s>' + FF.fmt(h.baseRunSec * 1000) + '</s>' : '') + ' · ' + when + (h.perTrip > 1 ? ' · <b style="color:var(--good)">' + h.perTrip + ' jetons par trajet</b>' : '');
