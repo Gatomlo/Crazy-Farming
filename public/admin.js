@@ -128,8 +128,9 @@
 
   function cardPanel() {
     var c = V.card;
-    var q = V.quotaEff, prods = V.meta.products.map(function (p) {
-      return '<span class="pill" style="display:inline-flex;gap:8px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:' + p.color + ';display:inline-block"></i>' + esc(p.name) + ' ' + q[p.id] + '</span>';
+    var prods = V.meta.products.map(function (p) {
+      var run = V.runEff[p.id], per = V.perTripEff[p.id];
+      return '<span class="pill" style="display:inline-flex;gap:8px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:' + p.color + ';display:inline-block"></i>' + esc(p.name) + ' ' + (run ? FF.fmt(run * 1000) : '—') + (per > 1 ? ' · ' + per + ' jetons/trajet' : '') + '</span>';
     }).join(' ');
     var cardHtml = c && c.collective
       ? collectiveAdmin(c)
@@ -145,7 +146,7 @@
       '<div class="panel row"><div style="width:64px;height:64px;border-radius:14px;background:var(--text);color:var(--ink);display:grid;place-items:center;font-size:40px;font-weight:800">' + (V.die || '–') + '</div>' +
       '<div style="flex:1;min-width:140px"><div class="muted" style="font-size:13px">Dé des activités</div><div style="font-weight:700">' + esc(V.dieLabel || 'Pas encore lancé') + '</div></div>' +
       '<button class="btn primary" data-act="rollDie">Lancer le dé</button></div>' +
-      '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Quota de jetons par tuile · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
+      '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Temps de course par produit · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
   }
 
   // Bourse : echanges de stock entre fermes (suivi, annulation).
