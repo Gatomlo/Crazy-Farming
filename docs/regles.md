@@ -13,6 +13,10 @@ Réglés par l'animateur dans la salle d'attente, avant de lancer l'installation
 - **Taille des équipes** : 3 à 6 joueurs par ferme (5 = valeurs de référence). Elle adapte la composition de départ (3 joueurs : une tuile de production en moins ; 6 joueurs : une en plus), la valeur des **objectifs communs** (aléas collectifs, de ×0,9 à ×1,1) et la cagnotte du village à atteindre pour la 3ᵉ étoile (de 1,7 à 2,7 fois le capital de départ en 3 ans). Plus les équipes sont petites, moins une ferme peut faire courir de tuiles : agrandir ne sert à rien sans coureurs.
 - **Partie courte** : 2 ans (8 saisons) au lieu de 3. La 3ᵉ étoile demande une cagnotte de 1,3 à 1,8 fois le capital (selon la taille des équipes), le burn-out se déclenche à **8 boules** (la ferme repart avec 2) et les niveaux Zen / Agité / Stressé se resserrent. Il n'y a que **deux fêtes** : la première comme d'habitude (2 plats simples par ferme), la seconde est la finale de la partie normale (1 simple, 1 mixte, 1 composé).
 
+### Options de la salle d'attente
+- **Défi de saison « zéro perte »** (facultatif) : une saison par an (jamais celle de l'aléa collectif), annoncée sur l'écran. Chaque ferme qui a récolté et qui termine la saison **sans aucune matière brute restante** (tout vendu ou transformé) retire **1 boule**. Sans conséquence en cas d'échec.
+- **Bilan de saison** : à l'étape Achats, le projecteur affiche les jetons récoltés, les plats fabriqués, les EB encaissés aux ventes et le stress moyen du village, avec l'évolution depuis la saison précédente.
+
 ## Déroulé
 - Installation (10 min) : les fermes posent leurs tuiles et dépensent leur budget de 500 EB. La commande de la fête de l'année est tirée et répartie avant les achats.
 - 3 années de 4 saisons. Chaque saison compte 5 étapes : **Aléa** (30 s), **Récolte en relais** (durée propre à chaque produit), **Transformation et bourse** (1 min), **Marché** (1 min), **Achats et vacances** (30 s).

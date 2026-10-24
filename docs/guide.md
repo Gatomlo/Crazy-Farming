@@ -76,3 +76,8 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - **Mesurer un aller-retour** : dans le bloc chrono, « ⏱ Mesurer un aller-retour » (Départ puis Arrivée) propose la durée la plus proche à régler.
 - **Récolte** : la console indique pour chaque ferme « ✓ encodé » ou « en attente » ; un ⚠ signale un total de jetons invraisemblable à vérifier. Sur le mobile, les fermes comptent leurs jetons avec + et − pendant la course puis appuient sur « Encoder ma récolte ».
 - **Projecteur** : la touche **F** coupe ou remet les effets visuels (tirage de carte, météo animée).
+- **Prochaine action** : un bandeau en haut de la console indique ce qu'il faut faire maintenant (tirer la carte, lancer le chrono, valider les jetons de telle ferme, régler les ventes, étape suivante…), avec le bouton correspondant et un « ? » d'aide sur l'étape.
+- **Projecteur** : la touche **C** active un mode fort contraste (fond noir, petits textes agrandis), à mémoriser pour les salles claires.
+- **Options de la salle d'attente** : le **défi de saison « zéro perte »** et le **bilan de saison** se cochent avant l'installation (voir les règles).
+- **Cartes aléas** : une carte jouée une année ne revient pas les années suivantes tant que le paquet de la saison n'est pas épuisé.
+- **Mobiles** : une carte « À faire maintenant » liste les actions de l'étape et se coche au fil de l'avancement ; l'écran d'attente présente le rôle, la ferme, le déroulé et un petit glossaire.

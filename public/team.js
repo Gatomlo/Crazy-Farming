@@ -332,7 +332,7 @@
 
   function ferme() {
     if (V.phase === 'end') return ended();
-    if (V.phase === 'lobby') return hero('🚜', 'Bienvenue', 'On attend le départ', 'L\'animateur va lancer l\'installation. Gardez cet écran ouvert.') + farmCard();
+    if (V.phase === 'lobby') return hero('🚜', 'Bienvenue', 'On attend le départ', 'L\'animateur va lancer l\'installation. Gardez cet écran ouvert.') + welcomePanel() + farmCard();
     if (V.phase === 'setup' || V.phase === 'rearrange') {
       var setup = V.phase === 'setup';
       return hero(setup ? '🏡' : '🔧', setup ? 'Installation' : 'Réaménagement · avant l\'année ' + V.year, setup ? 'Montez votre ferme' : 'Adaptez votre ferme', 'Regardez le menu de la fête, répartissez les plats, puis achetez vos tuiles et votre matériel.') +
@@ -345,11 +345,72 @@
     var st = V.step, h = hero(FF.ICON.steps[st], 'Étape ' + (st + 1) + ' sur 5', V.meta.steps[st].name, STEP_HINT[st]);
     var col = st === 0 ? '' : activeCollective();
     if (me.stopped) return h + col + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements restent possibles.</div></section>' + bocalPanel() + farmCard();
+    h += challengePanel() + todoPanel(st);
     if (st === 0) return h + alea() + bocalPanel() + readyCard() + farmCard();
     if (st === 1) return h + col + harvestPanel() + collierPanel() + readyCard() + farmCard();
     if (st === 2) return h + col + harvestPanel() + stockPanel() + tradePanel() + transfoPanel() + fetePanel(true) + readyCard() + farmCard();
     if (st === 3) return h + col + marketPanel() + readyCard() + farmCard();
     return h + col + meteo() + stockPanel() + bocalPanel() + vacationPanel() + buyHint() + fetePanel(true) + readyCard() + farmCard();
+  }
+
+  // Accueil du joueur pendant la salle d'attente : son role, sa ferme, le deroule et un petit glossaire.
+  function welcomePanel() {
+    var card = function (id, icon, title, body, open) {
+      return '<details id="' + id + '" class="panel"' + (open ? ' open' : '') + '><summary><b>' + icon + ' ' + title + '</b></summary><div class="stack" style="margin-top:8px;font-size:15px;line-height:1.45">' + body + '</div></details>';
+    };
+    var roles = '<p style="margin:0">Chaque joueur a un badge, qui <b>change d\'un cran chaque année</b> : tout le monde essaie tous les métiers.</p><ul style="margin:0;padding-left:18px">' +
+      ['<b>Fermier en chef</b> : décide pour la ferme', '<b>Comptable</b> : valide les achats et les virements', '<b>Négociateur</b> : échange à la bourse et au marché', '<b>Gardien du bocal</b> : surveille le stress et annonce le coup de collier', '<b>Chef de relais</b> : organise les coureurs', '<b>Éclaireur</b> : lit la météo et les cartes'].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>';
+    var farm = '<p style="margin:0">Votre ferme a des <b>tuiles</b> de production (lait, œufs, viande, fruits et légumes). <b>Une tuile = un coureur</b> : sans joueur pour courir, une tuile de plus ne sert à rien. Ouvrez « Ma ferme » plus bas pour voir vos tuiles et votre matériel.</p>';
+    var play = '<p style="margin:0">On joue ensemble : le village gagne jusqu\'à <b>3 étoiles</b> (peu de stress, fêtes du Phoenix réussies, caisse du village bien remplie). Chaque saison a 5 étapes :</p><ol style="margin:0;padding-left:20px">' +
+      V.meta.steps.map(function (s, i) { return '<li><b>' + esc(s.name) + '</b></li>'; }).join('') + '</ol><p style="margin:0">Le bouton « ? » de chaque étape explique la règle.</p>';
+    var gloss = '<dl style="margin:0">' + [['Jeton', 'ce que rapporte un coureur à chaque trajet : 1 jeton = 1 ressource'], ['Ressource', 'lait, œufs, viande ou fruits et légumes en stock'], ['EB', 'l\'argent de la ferme'], ['Boule', 'un point de stress dans le bocal (' + V.meta.bocalMax + ' = burn-out)'], ['Parade', 'matériel qui protège d\'un aléa'], ['Aléa', 'la carte de la saison : météo, animaux, marché…']].map(function (g) { return '<dt style="font-weight:700;margin-top:6px">' + g[0] + '</dt><dd style="margin:0 0 0 0" class="muted">' + g[1] + '</dd>'; }).join('') + '</dl>';
+    return card('wRole', '🎭', 'Ton rôle', roles, true) + card('wFarm', '🏡', 'Ta ferme', farm) + card('wPlay', '🧭', 'Comment on joue', play) + card('wGloss', '📖', 'Petit glossaire', gloss);
+  }
+
+  // "A faire maintenant" : ce qu'on attend de la ferme a cette etape, coche au fil de l'avancement.
+  function todoItems(st) {
+    var items = [];
+    var item = function (text, done, optional) { items.push({ text: text, done: !!done, optional: !!optional }); };
+    var harvested = me.harvest && me.harvest.length && me.harvest.every(function (h) { return h.brought !== null; });
+    if (st === 0) {
+      var c = V.card;
+      if (!c) item('Le maire tire une carte…', false);
+      else if (c.collective) item('Aléa collectif : donnez au pot commun si vous le voulez', false, true);
+      else if (c.tone === 'neg') item('Choisir : subir, jouer sa parade ou ajouter une boule', !!me.choice);
+      else item('Bonne nouvelle : rien à faire', true);
+    } else if (st === 1) {
+      item('Courir et compter vos jetons avec + et −', harvested);
+      item('Encoder votre récolte', harvested);
+    } else if (st === 2) {
+      if (me.harvest && me.harvest.length) item('Encoder votre récolte', harvested);
+      item('Demander vos recettes à l\'animateur', !!me.transfo, true);
+      item('Échanger à la bourse', false, true);
+    } else if (st === 3) {
+      var S = me.sales || {};
+      item('Placer vos produits (grande distribution ou étal)', !!S.declared);
+      item('Tourner la roue de l\'étal', !!me.wheel, true);
+      item('Vente réglée par l\'animateur', !!S.settled);
+      if (V.challenge) item('Défi zéro perte : plus aucune matière brute en fin de saison', !!me.challengeOk, true);
+    } else {
+      item('Annoncer vos achats et vos vacances', false, true);
+      if (V.challenge) item('Défi zéro perte : ' + (me.challengeOk ? 'réussi, −1 boule à la fin de la saison' : 'vendez ou transformez le reste de votre stock'), !!me.challengeOk, true);
+    }
+    item('Appuyer sur « Prêts » pour passer à la suite', me.ready);
+    return items;
+  }
+  // Defi de saison facultatif et resultat de la saison precedente.
+  function challengePanel() {
+    var parts = '';
+    if (V.challenge) parts += '<section class="panel" style="border-color:var(--amber)"><b>🎯 ' + esc(V.challenge.title) + '</b><div class="muted" style="font-size:14px">' + esc(V.challenge.text) + '</div></section>';
+    var l = V.lastChallenge;
+    if (l && V.step === 0 && !(l.year === V.year && l.season === V.season)) parts += '<section class="panel" style="padding:10px 14px"><div class="muted" style="font-size:13px">Défi de la saison dernière : ' + (l.winners.length ? '<b>' + esc(l.winners.join(', ')) + '</b> ont réussi (−1 boule)' : 'aucune ferme n\'a réussi') + '.</div></section>';
+    return parts;
+  }
+  function todoPanel(st) {
+    var rows = todoItems(st).map(function (it) {
+      return '<li style="display:flex;gap:10px;align-items:flex-start;padding:4px 0' + (it.done ? ';opacity:.6' : '') + '"><span aria-hidden="true" style="font-size:20px;line-height:1.1">' + (it.done ? '✅' : '⬜') + '</span><span' + (it.done ? ' style="text-decoration:line-through"' : '') + '>' + esc(it.text) + (it.optional ? ' <span class="muted" style="font-size:12px">(facultatif)</span>' : '') + '</span></li>';
+    }).join('');
+    return '<section class="panel" style="padding:12px 16px"><div class="row" style="justify-content:space-between"><b>À faire maintenant</b><button class="btn small" data-act="help" data-step="' + st + '" aria-label="Aide sur cette étape">?</button></div><ul style="list-style:none;margin:6px 0 0;padding:0">' + rows + '</ul></section>';
   }
 
   function shopItem(i) {
@@ -466,6 +527,7 @@
     if (a === 'respondTrade') return conn.act('respondTrade', { tradeId: b.dataset.trade, accept: !!b.dataset.accept });
     if (a === 'cancelTrade') return conn.act('cancelTrade', { tradeId: b.dataset.trade });
     if (a === 'collier') return conn.act('collier');
+    if (a === 'help') return FF.showHelp(parseInt(b.dataset.step, 10));
     if (a === 'hvStep') { // compteur : on compte les jetons au fil de la course, puis on encode
       var hv = document.getElementById('hv-' + b.dataset.product);
       if (hv) hv.value = Math.max(0, (parseInt(hv.value, 10) || 0) + parseInt(b.dataset.delta, 10));

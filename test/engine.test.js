@@ -429,7 +429,7 @@ test('chrono : ajustement manuel et duree gardee pour les saisons suivantes', ()
 });
 
 test('auth : connexion, jeton signe, verrouillage, changement de mot de passe', () => {
-  process.env.FF_DATA_DIR = require('os').tmpdir() + '/ff-auth-' + process.pid;
+  process.env.FF_DATA_DIR = require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), 'ff-auth-')); // dossier neuf : un ancien dossier au meme pid fausserait needsSetup()
   delete require.cache[require.resolve('../lib/auth')];
   delete process.env.FF_ADMIN_PASSWORD;
   const A = require('../lib/auth');
@@ -972,4 +972,63 @@ test('annulation : une correction de l’animateur s’annule tant qu’aucune f
   dispatch(s, { role: 'team', teamId: a.id }, { type: 'setReady', ready: true });
   assert.equal(E.viewFor(s, 'admin').undo, null);
   assert.throws(() => dispatch(s, admin, { type: 'undo' }), /impossible d’annuler/);
+});
+
+test('cartes aléas : tirage sans remise sur les années, une carte écartée peut revenir', () => {
+  const s = newGame(2);
+  toSeason(s);
+  const seen = { 0: [], 1: [], 2: [] };
+  for (let y = 1; y <= 3; y++) {
+    for (const season of [0, 1, 2]) {
+      E.jumpTo(s, y, season);
+      s.collective = { year: y, id: 'noel', season: 3, done: false }; // l'aléa collectif tombe en hiver
+      const c = E.drawCard(s);
+      assert.ok(!seen[season].includes(c.id), `saison ${season} année ${y} : ${c.id} déjà joué`);
+      seen[season].push(c.id);
+    }
+  }
+  // un nouveau tirage dans la saison remplace la carte, et la carte écartée peut revenir plus tard
+  E.jumpTo(s, 1, 0);
+  s.cardsSeen = {};
+  s.collective = { year: 1, id: 'noel', season: 3, done: false };
+  const first = E.drawCard(s).id;
+  const second = E.drawCard(s).id;
+  assert.notEqual(first, second);
+  assert.deepEqual(s.cardsSeen[0], [second], 'la carte écartée n’est plus comptée comme jouée');
+  // paquet épuisé : on remélange
+  s.cardsSeen = { 0: D.CARDS[0].map((c) => c.id) };
+  assert.ok(E.drawCard(s, 0));
+});
+
+test('défi de saison zéro perte (facultatif) et bilan de saison', () => {
+  const s = newGame(2);
+  assert.equal(s.mode.challenge, false); assert.equal(s.mode.recap, true);
+  E.setMode(s, { size: 5, years: 3, challenge: true });
+  assert.equal(s.mode.challenge, true); assert.equal(s.mode.recap, true, 'inchangé');
+  toSeason(s);
+  assert.ok(s.challenge && s.challenge.year === 1, 'une saison de défi est tirée pour l’année');
+  assert.notEqual(s.challenge.season, s.collective.season, 'jamais la saison de l’aléa collectif');
+  const [a, b] = s.teams;
+  E.jumpTo(s, 1, 0); s.challenge = { year: 1, season: 0 };
+  assert.ok(E.viewFor(s, 'display').challenge);
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].challengeOk, false, 'rien récolté : pas de défi réussi');
+  s.step = 1;
+  E.declareHarvest(s, a.id, { lait: 4, oeuf: 3 }, true);
+  E.declareHarvest(s, b.id, { fl: 5, oeuf: 2 }, true);
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].challengeOk, false, 'il reste du stock');
+  a.rawAdj = { lait: -10, oeuf: -10 }; // tout a été vendu ou transformé
+  assert.equal(E.viewFor(s, 'team', a.id).teams[0].challengeOk, true);
+  a.bocal = 2; b.bocal = 2;
+  // bilan en cours de saison
+  const r = E.viewFor(s, 'display').recap;
+  assert.equal(r.farms, 2); assert.equal(r.tokens, 4 + 3 + 5 + 2);
+  s.step = 4; E.nextStep(s); // fin de saison : le défi est réglé
+  assert.equal(a.bocal, 1, 'ferme réussie : −1 boule'); assert.equal(b.bocal, 2);
+  assert.deepEqual(E.viewFor(s, 'display').lastChallenge.winners, [a.name]);
+  assert.equal(E.viewFor(s, 'display').prevRecap.tokens, 14);
+  assert.equal(E.viewFor(s, 'display').challenge, null, 'le défi ne dure qu’une saison');
+  // sans l'option : aucun défi, aucun effet
+  const s2 = newGame(2); toSeason(s2); E.jumpTo(s2, 1, 0);
+  assert.equal(E.viewFor(s2, 'display').challenge, null);
+  E.setMode(newGame(1), { size: 5, years: 3, recap: false });
 });

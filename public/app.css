@@ -128,7 +128,7 @@ body.display { overflow: hidden; }
 .d-season { border-radius: 999px; padding: 6px 34px; color: var(--ink); font: 800 46px/1.15 var(--f-body); white-space: nowrap; }
 .d-meteo { display: flex; align-items: center; gap: 20px; font-size: 34px; font-weight: 700; }
 .d-meteo .ic { font-size: 60px; line-height: 1; }
-.d-meteo small { display: block; font-size: 22px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.d-meteo small { display: block; font-size: 26px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
 .d-collect { display: flex; align-items: center; gap: 22px; font-size: 28px; padding: 10px 24px; border-radius: 20px; background: var(--surface); }
 .d-collect .t { font-weight: 800; white-space: nowrap; }
 .d-collect .g { color: var(--muted); white-space: nowrap; }
@@ -179,7 +179,7 @@ body.display { overflow: hidden; }
 .meter i.on.Zen { background: var(--teal); border-color: transparent; }
 .meter i.on.Agité { background: var(--pb); border-color: transparent; }
 .meter i.on.Stressé { background: var(--bad); border-color: transparent; }
-.d-tag { display: inline-block; font-size: 24px; font-weight: 700; padding: 2px 18px; border-radius: 999px; background: var(--surface-2); color: var(--fg); }
+.d-tag { display: inline-block; font-size: 26px; font-weight: 700; padding: 2px 18px; border-radius: 999px; background: var(--surface-2); color: var(--fg); }
 .d-tag.ok { background: var(--good-soft); color: var(--good); }
 .d-tag.bad { background: var(--bad-soft); color: var(--bad); }
 
@@ -273,3 +273,13 @@ body.team .btn { white-space: normal; padding-top: 8px; padding-bottom: 8px; lin
 .stepper { display: inline-flex; align-items: center; gap: 6px; }
 .stepper .btn { min-width: 52px; min-height: 52px; font-size: 26px; padding: 0; }
 .stepper input { width: 64px; min-height: 52px; text-align: center; font-size: 22px; font-weight: 700; }
+
+/* Aide par etape */
+.help-modal { position: fixed; inset: 0; z-index: 40; background: rgba(20, 14, 10, .6); display: flex; align-items: center; justify-content: center; padding: 18px; }
+.help-box { background: var(--panel, #fbf2df); color: var(--text, #2b1d12); border-radius: 22px; padding: 22px; max-width: 520px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+
+/* Projecteur fort contraste (touche C) : fond noir, textes blancs, petits textes agrandis, effets attenues */
+body.display.hc { --bg: #000; --bg-glow: none; --surface: #161616; --surface-2: #2a2a2a; --fg: #fff; --muted: #ececec; --line: #8a8a8a; --line2: #aaa; --sand: #ffd37a; --good: #7dffc3; --bad: #ff8a94; --teal: #5fe0b5; --warn: #ffb25a; --text: #fff; background: #000; font-weight: 600; }
+body.display.hc .d-tag, body.display.hc .d-meteo small, body.display.hc .d-note, body.display.hc .d-village { font-size: 30px; }
+body.display.hc .d-q, body.display.hc .d-team, body.display.hc .d-mk { outline: 2px solid rgba(255,255,255,.35); }
+body.display.hc canvas { opacity: .3; }

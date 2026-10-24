@@ -49,6 +49,25 @@
     if (state !== 'stop') seen[key] = false;
   }
 
+  // Aide courte par etape (bouton « ? » des mobiles et de la console).
+  var HELP = [
+    ['Aléa', 'Une carte tombe sur le village. Négative : chaque ferme choisit de subir l\'effet, de jouer sa parade (si elle a le matériel) ou d\'ajouter une boule de stress pour l\'éviter. Positive : rien à faire. Aléa collectif : tout le village doit réunir un objectif avant l\'échéance, sans choix individuel.'],
+    ['Récolte en relais', 'Un coureur par tuile. Chaque produit a sa durée de course, avec un décompte et un STOP. Un trajet = un jeton rapporté = une ressource en stock, sans plafond. Comptez vos jetons avec + et −, puis encodez-les. Le coup de collier (+1 boule) et le tracteur ajoutent du temps de course.'],
+    ['Transformation et bourse', 'Demandez vos recettes (1 par saison, 4 de plus par atelier) : l\'animateur échange vos jetons contre des plats, qui valent 3, 4 ou 5 fois un produit brut. Échangez avec les autres fermes depuis le mobile : tout accord est définitif. Les matières brutes ni transformées ni vendues sont perdues en fin de saison.'],
+    ['Marché', 'Placez d\'abord vos produits, puis tournez la roue. Grande distribution : 7 EB le produit brut, toujours payé. Étal : 14 EB, mais la roue décide de la part vendue, et le goût du moment ajoute ou retire 25 points. Les invendus de l\'étal sont perdus.'],
+    ['Achats et vacances', 'Matériel de la ferme (les tuiles ne s\'achètent qu\'à l\'installation et en fin d\'année) et vacances : 30 EB par voyageur, −1 boule, mais le voyageur ne court pas la saison suivante. Regardez la météo de la saison suivante : elle n\'est juste que 7 fois sur 10.']
+  ];
+  function showHelp(step) {
+    var h = HELP[step];
+    if (!h) return;
+    var old = document.getElementById('helpModal'); if (old) old.remove();
+    var el = document.createElement('div');
+    el.id = 'helpModal'; el.className = 'help-modal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Aide : ' + h[0]);
+    el.innerHTML = '<div class="help-box"><div class="eyebrow">Étape ' + (step + 1) + ' sur 5</div><h2 style="font-size:36px;margin:2px 0 8px">' + esc(h[0]) + '</h2><p style="margin:0 0 14px;line-height:1.45">' + esc(h[1]) + '</p><button class="btn primary block" data-help-close="1">Compris</button></div>';
+    el.addEventListener('click', function (e) { if (e.target === el || (e.target.dataset && e.target.dataset.helpClose)) el.remove(); });
+    document.body.appendChild(el);
+  }
+
   var toastTimer = null;
   function toast(msg) {
     var el = document.getElementById('toast');
@@ -136,5 +155,5 @@
     }
   };
 
-  window.FF = { elapsed: elapsed, paintProd: paintProd, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
+  window.FF = { showHelp: showHelp, elapsed: elapsed, paintProd: paintProd, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
 })();

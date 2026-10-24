@@ -56,6 +56,7 @@ async function playPage(browser, page, states, query) {
   await pg.route('**/fonts.g*/**', (r) => r.abort());
   await pg.goto(PUBLIC + page + '.html?' + query);
   await pg.waitForTimeout(200);
+  if (page === 'display') { await pg.keyboard.press('c'); await pg.keyboard.press('f'); await pg.keyboard.press('f'); } // fort contraste, effets coupes puis remis
   for (let i = 0; i < states.length; i++) {
     await pg.evaluate((n) => window.__push(n), i);
     await pg.waitForTimeout(40);
@@ -66,7 +67,7 @@ async function playPage(browser, page, states, query) {
   return errs;
 }
 
-for (const [label, mode] of [['partie normale', null], ['3 joueurs, partie courte', { size: 3, years: 2 }], ['6 joueurs', { size: 6, years: 3 }]]) {
+for (const [label, mode] of [['partie normale', null], ['3 joueurs, partie courte', { size: 3, years: 2 }], ['6 joueurs avec défi de saison', { size: 6, years: 3, challenge: true }]]) {
   test(`écrans : aucune erreur de script sur toute une partie (${label})`, { skip: !chromium && 'Playwright indisponible', timeout: 120000 }, async (t) => {
     let browser;
     try { browser = await chromium.launch(); } catch (e) { t.skip('Chromium indisponible'); return; }

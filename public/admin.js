@@ -43,6 +43,8 @@
     var sizes = V.meta.teamSizes.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.size ? ' selected' : '') + '>' + n + ' joueurs par ferme</option>'; }).join('');
     var yrs = V.meta.yearChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.years ? ' selected' : '') + '>' + (n === 3 ? '3 ans · partie normale' : n + ' ans · partie courte') + '</option>'; }).join('');
     var mode = '<div class="panel row" style="gap:12px;align-items:center"><b>Mode de jeu</b><select id="modeSize" data-mode="1" aria-label="Taille des équipes">' + sizes + '</select><select id="modeYears" data-mode="1" aria-label="Durée de la partie">' + yrs + '</select>' +
+      '<label class="row" style="font-weight:500;gap:6px"><input type="checkbox" id="modeChallenge" data-mode="1"' + (V.mode.challenge ? ' checked' : '') + ' style="min-height:0;width:20px;height:20px"> Défi de saison « zéro perte »</label>' +
+      '<label class="row" style="font-weight:500;gap:6px"><input type="checkbox" id="modeRecap" data-mode="1"' + (V.mode.recap ? ' checked' : '') + ' style="min-height:0;width:20px;height:20px"> Bilan de saison au projecteur</label>' +
       '<span class="muted" style="font-size:13px;flex-basis:100%">La taille des équipes adapte les tuiles de départ, les objectifs communs et la cagnotte à atteindre ; la partie courte (8 saisons) resserre le bocal de stress et la cagnotte, et la fête de la 2e année est la finale complète.</span></div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Les fermes</h2>' + mode +
       '<form class="row" data-form="addTeam"><label class="muted" for="newName">Nom</label><input id="newName" maxlength="40" placeholder="Nom de la ferme (facultatif)">' +
@@ -65,6 +67,65 @@
       '<details id="timerAdj"><summary>⏱ Régler le chrono</summary><div class="stack" style="margin-top:8px"><div class="tools">' + adj + '</div>' +
       '<div class="row"><label for="timerSec" class="muted">Durée (secondes)</label><input id="timerSec" inputmode="numeric" placeholder="ex. 90" style="width:100px"><button class="btn small" data-act="timerSet">Fixer</button></div>' +
       (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + '</section>';
+  }
+
+  // "Prochaine action" : ce que l'animateur doit faire maintenant, avec le bouton correspondant.
+  function nextAction() {
+    var active = V.teams.filter(function (t) { return !t.stopped; });
+    var names = function (arr) { return arr.map(function (t) { return t.name; }).join(', '); };
+    var r = { text: '', detail: '', label: '', act: '', team: '', ready: false, help: V.phase === 'season' ? V.step : -1 };
+    if (V.phase === 'setup' || V.phase === 'rearrange') {
+      var free = V.menu ? V.menu.items.filter(function (x) { return !x.team; }).length : 0;
+      if (free) { r.text = 'Il reste ' + free + ' plat' + (free > 1 ? 's' : '') + ' de la fête à répartir'; r.detail = 'Laisse les fermes se décider, ou répartis le reste au hasard.'; r.label = 'Répartir au hasard'; r.act = 'autoAssign'; }
+      else { r.text = V.phase === 'setup' ? 'Les fermes sont installées ?' : 'Les fermes sont réaménagées ?'; r.detail = 'Quand les achats sont faits, démarre l\'année ' + V.year + '.'; r.label = 'Démarrer l\'année ' + V.year; r.act = 'startYear'; r.ready = active.length > 0 && active.every(function (t) { return t.ready; }); }
+      return r;
+    }
+    if (V.phase === 'closing') {
+      if (!V.closedYear) { r.text = 'Clôture de l\'année ' + V.year; r.detail = 'Applique les charges de toutes les fermes.'; r.label = 'Appliquer les charges'; r.act = 'closeYear'; }
+      else if (!V.feteDone) { r.text = 'La Fête du Phoenix'; r.detail = 'Joue la fête : le résultat dépend des plats livrés.'; r.label = 'Jouer la fête'; r.act = 'fete'; }
+      else if (V.year < V.years) { r.text = 'Année ' + V.year + ' terminée'; r.detail = 'Réaménagement de 5 minutes avant l\'année suivante.'; r.label = 'Année suivante'; r.act = 'nextYear'; r.ready = true; }
+      else { r.text = 'Dernière fête jouée'; r.detail = 'Termine la partie pour compter les étoiles.'; r.label = 'Terminer la partie'; r.act = 'finish'; r.ready = true; }
+      return r;
+    }
+    if (V.phase !== 'season') return null;
+    var next = V.step === 4 ? (V.season === 3 ? 'Clôturer l\'année' : 'Saison suivante') : 'Étape suivante';
+    var goNext = function (text, detail) { r.text = text; r.detail = detail || ''; r.label = next; r.act = 'nextStep'; r.ready = true; return r; };
+    if (V.step === 0) {
+      if (!V.card) { r.text = 'Tire la carte aléa'; r.detail = 'La carte et l\'aléa du village apparaissent sur l\'écran.'; r.label = 'Tirer une carte'; r.act = 'drawCard'; return r; }
+      if (!V.card.collective && V.card.tone === 'neg') {
+        var wait = active.filter(function (t) { return !t.choice; });
+        if (wait.length) { r.text = 'En attente du choix de ' + names(wait); r.detail = 'Subir, jouer sa parade ou ajouter une boule.'; r.label = next; r.act = 'nextStep'; return r; }
+      }
+      return goNext('Carte lue, les fermes ont choisi', V.card.collective ? 'Rappelle l\'objectif commun et son échéance.' : '');
+    }
+    if (V.step === 1) {
+      var idle = !V.timer.running && FF.remaining(V) >= V.timer.durationMs;
+      var wait2 = active.filter(function (t) { return t.harvest && t.harvest.length && t.harvest.some(function (h) { return h.brought === null; }); });
+      if (idle) { r.text = 'Coureurs en place ?'; r.detail = 'Lance le chrono : tous les décomptes de produits démarrent ensemble.'; r.label = 'Lancer le chrono'; r.act = 'timerStart'; r.ready = true; return r; }
+      if (!V.timer.running && FF.remaining(V) > 0) { r.text = 'Chrono en pause'; r.detail = 'Reprends quand les coureurs sont prêts.'; r.label = 'Reprendre'; r.act = 'timerStart'; return r; }
+      if (wait2.length) { r.text = 'Course en cours · ' + (active.length - wait2.length) + '/' + active.length + ' fermes ont encodé'; r.detail = 'En attente de : ' + names(wait2) + '.'; r.label = next; r.act = 'nextStep'; return r; }
+      return goNext('Toutes les fermes ont encodé', 'Passe à la transformation.');
+    }
+    if (V.step === 2) {
+      var pend = active.filter(function (t) { return t.transfo && !t.transfo.done; });
+      if (pend.length) { r.text = 'Jetons à échanger : ' + names(pend); r.detail = 'Fais l\'échange physique puis valide.'; r.label = 'Valider ' + pend[0].name; r.act = 'validateTransfo'; r.team = pend[0].id; r.ready = true; return r; }
+      return goNext('Recettes traitées', 'Rappel : les matières non transformées ni vendues seront perdues.');
+    }
+    if (V.step === 3) {
+      var toPay = active.filter(function (t) { return t.sales && t.sales.declared && !t.sales.settled && t.wheel; });
+      var noPlace = active.filter(function (t) { return !(t.sales && t.sales.declared); });
+      if (toPay.length) { r.text = 'Ventes à régler : ' + names(toPay); r.detail = 'Paye la ferme après avoir vérifié le compte physique.'; r.label = 'Régler ' + toPay[0].name; r.act = 'settleSales'; r.team = toPay[0].id; r.ready = true; return r; }
+      if (noPlace.length) { r.text = 'En attente du placement de ' + names(noPlace); r.detail = 'Chaque ferme place ses produits puis tourne la roue.'; r.label = next; r.act = 'nextStep'; return r; }
+      return goNext('Marché terminé', 'Annonce la météo de la saison suivante à l\'étape Achats.');
+    }
+    return goNext(V.season === 3 ? 'Dernière étape de l\'année' : 'Dernière étape de la saison', 'Matériel et vacances : annoncez chaque achat à voix haute.');
+  }
+  function nextActionPanel() {
+    var r = nextAction();
+    if (!r) return '';
+    return '<section class="panel row" style="gap:14px;flex-wrap:nowrap;border-left:6px solid var(--amber)"><div style="flex:1;min-width:0"><div class="eyebrow">Prochaine action</div><div style="font-size:22px;font-weight:800;line-height:1.2">' + esc(r.text) + '</div>' + (r.detail ? '<div class="muted" style="font-size:14px">' + esc(r.detail) + '</div>' : '') + '</div>' +
+      (r.help >= 0 ? '<button class="btn small" data-act="help" data-step="' + r.help + '" aria-label="Aide sur cette étape">?</button>' : '') +
+      '<button class="btn primary' + (r.ready ? ' pulse' : '') + '" style="min-height:52px" data-act="' + r.act + '"' + (r.team ? ' data-team="' + r.team + '"' : '') + '>' + esc(r.label) + '</button></section>';
   }
 
   // Chronometre de mesure d'un aller-retour : Depart puis Arrivee, propose la duree la plus proche.
@@ -346,6 +407,7 @@
     var h = header();
     if (V.phase === 'lobby') h += lobby();
     else {
+      h += nextActionPanel();
       h += forecastBanner();
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
@@ -366,7 +428,7 @@
     var k = e.target && e.target.dataset && e.target.dataset.assign;
     if (k) conn.act('assignDish', { key: k, teamId: e.target.value });
     if (e.target && e.target.dataset && e.target.dataset.trip) conn.act('setTripSec', { sec: parseInt(e.target.value, 10) });
-    if (e.target && e.target.dataset && e.target.dataset.mode) conn.act('setMode', { size: parseInt(val('modeSize'), 10), years: parseInt(val('modeYears'), 10) });
+    if (e.target && e.target.dataset && e.target.dataset.mode) conn.act('setMode', { size: parseInt(val('modeSize'), 10), years: parseInt(val('modeYears'), 10), challenge: !!(document.getElementById('modeChallenge') || {}).checked, recap: !!(document.getElementById('modeRecap') || {}).checked });
   });
 
   // ---------- Chrono local ----------
@@ -430,6 +492,7 @@
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
     if (a === 'cancelTrade' || a === 'revertTrade') return conn.act(a, { tradeId: b.dataset.trade });
+    if (a === 'help') return FF.showHelp(parseInt(b.dataset.step, 10));
     if (a === 'twStart') { tw.start = Date.now(); tw.ms = 0; return render(); }
     if (a === 'twStop') { tw.ms = Date.now() - tw.start; tw.start = 0; return render(); }
     if (a === 'twUse') { tw.ms = 0; return conn.act('setTripSec', { sec: parseInt(b.dataset.sec, 10) }); }

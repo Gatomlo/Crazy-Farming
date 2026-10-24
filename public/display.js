@@ -37,6 +37,15 @@
     FFX.reveal(c, { seasonName: V.seasonName, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
   }
 
+  // Touche C : mode fort contraste (fond noir, textes agrandis) pour les salles claires ou les projecteurs faibles.
+  try { if (localStorage.getItem('ff_hc') === '1') document.body.classList.add('hc'); } catch (e) { /* stockage indisponible */ }
+  window.addEventListener('keydown', function (e) {
+    if ((e.key !== 'c' && e.key !== 'C') || e.ctrlKey || e.metaKey || e.altKey) return;
+    var on = document.body.classList.toggle('hc');
+    try { localStorage.setItem('ff_hc', on ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
+    FF.toast(on ? 'Fort contraste activé (touche C pour revenir)' : 'Fort contraste coupé');
+  });
+
   // Touche F : coupe ou remet les effets visuels.
   window.addEventListener('keydown', function (e) {
     if (e.key !== 'f' && e.key !== 'F') return;
@@ -127,6 +136,34 @@
       '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:14px">' + rows + '</div></section>';
   }
 
+  // Defi de saison (facultatif) et resultat de la saison precedente.
+  function challengeLine() {
+    var out = '';
+    if (V.challenge) out += '<div style="font-size:40px;font-weight:700;color:var(--amber)">🎯 ' + esc(V.challenge.title) + ' <span style="font-size:30px;font-weight:600;color:var(--muted)">· ' + esc(V.challenge.text) + '</span></div>';
+    var l = V.lastChallenge;
+    if (l && V.step === 0 && !(l.year === V.year && l.season === V.season)) out += '<div style="font-size:30px;color:var(--muted)">Défi de la saison dernière : ' + (l.winners.length ? '<b style="color:var(--mint)">' + esc(l.winners.join(', ')) + '</b> ' + (l.winners.length > 1 ? 'ont réussi' : 'a réussi') + ' (−1 boule)' : 'aucune ferme n\'a réussi') + '</div>';
+    return out;
+  }
+
+  // Bilan de la saison pendant l'etape Achats : les chiffres du village et leur evolution depuis la saison precedente.
+  function recapPanel() {
+    var r = V.recap, p = V.prevRecap;
+    var delta = function (v, prev) {
+      if (!p || !prev) return '';
+      var d = Math.round((v - prev) / prev * 100);
+      return '<span style="font-size:30px;font-weight:700;color:' + (d >= 0 ? 'var(--mint)' : 'var(--flame)') + '">' + (d >= 0 ? '▲ +' : '▼ ') + d + ' %</span>';
+    };
+    var tile = function (icon, label, val, d) {
+      return '<div class="d-q" style="flex-direction:column;align-items:flex-start;gap:4px;padding:14px 26px;background:var(--surface);border-radius:24px;flex:1 1 40%"><span style="font-size:28px;color:var(--muted)">' + icon + ' ' + esc(label) + '</span><span style="font-size:76px;font-weight:800;line-height:1">' + val + '</span>' + d + '</div>';
+    };
+    var stress = V.teams.length ? Math.round(V.teams.reduce(function (n, t) { return n + t.bocal; }, 0) / V.teams.length * 10) / 10 : 0;
+    var comment = !p ? 'Première saison : voilà le point de départ du village.' : r.tokens >= p.tokens ? 'La récolte du village est en hausse : bravo aux coureurs !' : 'La récolte baisse par rapport à la saison dernière : que s\'est-il passé ?';
+    return '<section style="flex:1.4;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px"><div style="font-size:32px;font-weight:800;color:var(--muted)">Bilan de la saison · ' + esc(V.seasonName.toLowerCase()) + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:14px">' + tile('🧺', 'Jetons récoltés', r.tokens, delta(r.tokens, p && p.tokens)) + tile('🍽️', 'Plats fabriqués', r.dishes, delta(r.dishes, p && p.dishes)) +
+      tile('💰', 'EB aux ventes', r.income, delta(r.income, p && p.income)) + tile('🫙', 'Stress moyen', stress, '') + '</div>' +
+      '<div style="font-size:30px;color:var(--muted)">' + esc(comment) + '</div></section>';
+  }
+
   // Rappel de la carte aleas pendant les etapes qu'elle concerne (bourse, marche).
   function cardText(c) { return c.collective ? (c.resolved === false ? c.loseText : c.resolved === true ? c.winText : 'Objectif : ' + c.goalText) : c.effect; }
   function cardBanner(id) {
@@ -193,7 +230,7 @@
       var parName = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : '';
       return '<section class="d-card pop">' + (c.icon ? '<div class="d-icon" aria-hidden="true">' + c.icon + '</div>' : '') + '<span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
         '<div style="font-size:120px;line-height:1;font-weight:800">' + esc(c.title) + '</div><div style="font-size:56px;font-weight:700;line-height:1.1">' + esc(c.effect) + '</div>' +
-        (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + die + '</section>';
+        (c.tone === 'neg' ? '<div class="d-parade">' + (c.parade ? '🛡️ Parade : <b>' + esc(parName) + '</b>' : 'Pas de parade') + '</div>' : '') + challengeLine() + die + '</section>';
     }
     if (id === 'recolte') return quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
@@ -201,7 +238,7 @@
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
       return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide · Matières ni vendues ni transformées : perdues') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
     }
-    return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']);
+    return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + (V.recap ? recapPanel() : list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']));
   }
 
   function joinUrl() { return location.origin + FF.BASE + '/team?s=' + V.code; }
