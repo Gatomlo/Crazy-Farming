@@ -98,7 +98,7 @@ Un coureur par tuile, sur le type de produit de cette tuile. Pendant la durée d
 
 **Temps bonus.** Un **coup de collier** (+1 boule, une fois par saison) donne **20 secondes de course** après la fin du chrono. Le **tracteur** en ajoute 15 à chaque saison. Les deux se cumulent : les autres fermes se sont déjà arrêtées pendant que l’équipe concernée continue de courir.
 
-**Valeur d'un jeton.** Le rendement est une fraction de ressource (« 1 jeton = 1,25 ressource », « 1 jeton = 0,5 ressource »…) ; l'application arrondit le total de chaque produit. Il dépend de la saison, du produit et de la carte aléa. La grille est calibrée pour un aller-retour d'environ **30 secondes** ; l'animateur règle la durée réelle sur la console (de 10 à 40 s) et la valeur d'un jeton s'adapte : plus le parcours est court, moins un jeton rapporte.
+**Valeur d'un jeton.** Le rendement est une fraction de ressource (« 1 jeton = 1,25 ressource », « 1 jeton = 0,5 ressource »…) ; l'application arrondit le total de chaque produit. Il dépend de la saison, du produit et de la carte aléa. La grille est calibrée pour un aller-retour d'environ **30 secondes** ; l'animateur règle la durée réelle sur la console (de 10 s à 2 min) et la valeur d'un jeton s'adapte : plus le parcours est court, moins un jeton rapporte.
 
 **Encodage :** à la fin de l'étape, chaque ferme encode sur mobile le nombre de jetons réellement rapportés pour chaque produit. Ressources obtenues = jetons rapportés × valeur du jeton (arrondi par produit). L'animateur peut corriger. Les matières brutes qui ne sont ni transformées ni vendues sont **perdues en fin de saison**.
 

@@ -58,7 +58,7 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 ## Si ça déraille
 - **Le temps file** : « Aller à » une saison plus loin, ou raccourcis le chrono de l'étape.
 - **Dispute sur un échange** : rappelle que tout accord conclu est définitif, sinon tranche.
-- **Réglage du parcours** : avant la première récolte, chronomètre un aller-retour d'un coureur et choisis la durée la plus proche dans la console (bloc chrono, « Aller-retour d'un coureur »). La valeur d'un jeton s'adapte. Vise un parcours de 20 à 30 s : au-delà de 40 s, il y a trop peu de trajets pour que la partie reste équilibrée.
+- **Réglage du parcours** : avant la première récolte, chronomètre un aller-retour d'un coureur et choisis la durée la plus proche dans la console (bloc chrono, « Aller-retour d'un coureur »). La valeur d'un jeton s'adapte. Vise un parcours de 20 à 30 s. Au-delà de 40 s, il y a peu de trajets par saison : allonge alors le chrono de récolte (au moins 1,5 fois l'aller-retour, par exemple 135 s pour 90 s) avec « Régler le chrono » et « Garder cette durée ».
 - **Jetons de trop** : si une équipe annonce plus de jetons que ses coureurs ne pouvaient en rapporter, corrige avec − / + dans la console.
 - **Un solde ou un bocal est faux** : corrige tout de suite dans le tableau des fermes (banque ou bocal, avec motif), c'est tracé au journal.
 - **Une ferme domine** : rappelle l'objectif collectif et pousse la commande du village.
