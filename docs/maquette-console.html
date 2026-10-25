@@ -73,7 +73,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn.ghost { background: transparent; }
 
 /* ---------- Scène : « Maintenant » ---------- */
-.hero { display: grid; gap: 18px; background: linear-gradient(160deg, var(--card), var(--card2)); }
+.hero { position: relative; z-index: 6; display: grid; gap: 18px; background: linear-gradient(160deg, var(--card), var(--card2)); }
 .hero .big { font: 800 clamp(72px, 11vw, 132px)/0.95 var(--f-body); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .hero .big.low { color: var(--bad); }
 .progress { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
@@ -155,6 +155,22 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
   table { min-width: 460px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Niveau 3 : tiroirs, panneaux flottants, bascule Cartes / Tableau ---------- */
+.drawer { display: grid; gap: 12px; margin-top: 10px; padding: 12px; border-radius: 14px; background: var(--card2); }
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+input:not([type=checkbox]) { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 10px; padding: 6px 10px; min-width: 0; }
+.pop { position: absolute; left: 0; top: calc(100% + 8px); z-index: 120; width: min(360px, 86vw); background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; }
+.seg { display: inline-flex; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: transparent; border-radius: 9px; padding: 5px 12px; font-weight: 700; font-size: 13px; color: var(--muted); }
+.seg button.on { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.stage.tbl { grid-template-columns: minmax(0, 1fr); }
+.checks { display: grid; gap: 6px; }
+.nw { white-space: nowrap; }
+summary { list-style: none; } summary::-webkit-details-marker { display: none; }
+.card > summary, details.card > summary { list-style: none; }
+.btn.opt { display: inline-flex; }
+@media (max-width: 1100px) { .btn.opt { display: none; } }
 </style>
 </head>
 <body>
@@ -170,129 +186,180 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
 
 <script>
 (function () {
+  /* Maquette : même contrôles que la console actuelle, rangés par niveau.
+     Niveau 1 = toujours visible (état, action principale) · niveau 2 = panneau de l'étape · niveau 3 = tiroirs (corrections) · niveau 4 = vue Tableau dense. */
   var FARMS = [
-    { id: 1, name: 'Les Bergers', color: '#8FD36B', bank: 520, stress: 2, ready: true, choice: 'Parade jouée', gage: '🎁 L’équipe choisit la musique de la saison.', gageDone: false, taken: true },
-    { id: 2, name: 'Les Maraîchers', color: '#F2B63D', bank: 610, stress: 5, ready: false, choice: 'Subit l’effet', gage: '🎭 Toute l’équipe annonce ses décisions en rimant.', gageDone: true, taken: true },
-    { id: 3, name: 'Les Éleveurs', color: '#F29CB0', bank: 480, stress: 8, ready: false, choice: null, gage: '🎭 L’équipe chante un refrain devant tout le village.', gageDone: false, taken: true },
-    { id: 4, name: 'Les Gourmets', color: '#8EC5F0', bank: 700, stress: 1, ready: true, choice: '+1 stress', gage: '🎁 Le maire félicite la ferme à voix haute.', gageDone: false, taken: true }
+    { id: 1, name: 'Les Bergers', color: '#8FD36B', bank: 520, stress: 2, ready: true, choice: 'Parade jouée', gage: '🎁 L’équipe choisit la musique de la saison.', gageDone: false, tiles: '2 chèvreries · 1 poulailler · atelier', equip: 'Tracteur, panier ×2', stock: 'Lait 8 · Œufs 3 · Fromage 1', harvest: { lait: 8, oeuf: 3 }, wheel: 'Tout vendu', taken: true },
+    { id: 2, name: 'Les Maraîchers', color: '#F2B63D', bank: 610, stress: 5, ready: false, choice: 'Subit l’effet', gage: '🎭 Toute l’équipe annonce ses décisions en rimant.', gageDone: true, tiles: '2 potagers · 1 poulailler', equip: 'Serre, brouette', stock: 'Fruits et légumes 12 · Œufs 2', harvest: { fl: 12, oeuf: 2 }, wheel: 'Trois quarts', taken: true },
+    { id: 3, name: 'Les Éleveurs', color: '#F29CB0', bank: 480, stress: 8, ready: false, choice: null, gage: '🎭 L’équipe chante un refrain devant tout le village.', gageDone: false, tiles: '2 porcheries · 1 chèvrerie', equip: 'Chien de berger', stock: 'Viande 6 · Lait 4', harvest: { viande: 6, lait: 40 }, wheel: null, taken: true },
+    { id: 4, name: 'Les Gourmets', color: '#8EC5F0', bank: 700, stress: 1, ready: true, choice: '+1 stress', gage: '🎁 Le maire félicite la ferme à voix haute.', gageDone: false, tiles: '1 porcherie · 1 potager · atelier', equip: 'Camionnette, table', stock: 'Viande 3 · Fruits et légumes 5', harvest: { viande: 3, fl: 5 }, wheel: null, taken: true }
   ];
+  var PROD = { lait: '🥛 Lait', oeuf: '🥚 Œufs', viande: '🥩 Viande', fl: '🥕 Fruits et légumes' };
   var STEPS = [['🎴', 'Aléa'], ['🧺', 'Récolte'], ['🍳', 'Transformation'], ['🏪', 'Marché'], ['🛒', 'Achats']];
-  // État de la maquette : phase + étape
   var S = [
     { id: 'lobby', label: 'Salle d’attente', phase: 'lobby' },
+    { id: 'setup', label: 'Installation', phase: 'setup' },
     { id: 'alea', label: '1 · Aléa', phase: 'season', step: 0 },
+    { id: 'colec', label: '1 · Aléa collectif', phase: 'season', step: 0 },
     { id: 'recolte', label: '2 · Récolte', phase: 'season', step: 1 },
     { id: 'transfo', label: '3 · Transformation', phase: 'season', step: 2 },
     { id: 'marche', label: '4 · Marché', phase: 'season', step: 3 },
     { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
     { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
   ];
-  var cur = 1, secs = 24, running = true, menuOpen = false, settingsOpen = false;
+  var cur = 2, secs = 24, running = true, menuOpen = false, settingsOpen = false, view = 'cards', pop = null;
   var app = document.getElementById('app');
-  var fmt = function (s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  var fmt = function (n) { return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
   var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
+  var isSeason = function () { return S[cur].phase === 'season'; };
 
-  // ---------- Fermes (colonne de droite) ----------
+  /* ---------- État de chaque ferme à l'étape courante ---------- */
   function farmStatus(f) {
     var id = S[cur].id;
     if (id === 'alea') return f.choice ? ['ok', '✓ ' + f.choice] : ['warn', 'Choix en attente'];
+    if (id === 'colec') return f.id === 1 ? ['ok', 'A donné 20'] : ['', 'N’a pas donné'];
     if (id === 'recolte') return f.id < 3 ? ['ok', '✓ Récolte encodée'] : ['warn', 'En course…'];
     if (id === 'transfo') return f.id === 2 ? ['warn', 'Jetons à échanger'] : ['ok', '✓ Recettes traitées'];
     if (id === 'marche') return f.id === 1 ? ['ok', '✓ Payée'] : f.id === 2 ? ['warn', 'À payer · 56 EB'] : ['', 'Roue à tourner'];
     if (id === 'achats') return f.ready ? ['ok', '✓ Prête'] : ['', 'Dans la boutique'];
     if (id === 'cloture') return f.id === 3 ? ['bad', '1 plat à livrer'] : ['ok', '✓ Plats livrés'];
+    if (id === 'setup') return f.ready ? ['ok', '✓ Prête'] : ['warn', 'Installe sa ferme'];
     return ['ok', f.taken ? 'Ferme prise' : 'Libre'];
   }
-  function farmCard(f) {
-    var st = farmStatus(f), L = lvl(f.stress), segs = '';
-    for (var i = 0; i < 10; i++) segs += '<i class="' + (i < f.stress ? 'on ' + L[1] : '') + '"></i>';
-    var season = S[cur].phase === 'season';
-    return '<article class="farm fade' + (st[0] === 'warn' ? ' attn' : '') + '"><div class="row sb"><div class="name"><span class="sw" style="background:' + f.color + '"></span>' + f.name + '</div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>' +
-      '<div class="row sb"><span class="num" style="font-weight:800">💰 ' + f.bank + ' EB</span><span class="pill ' + L[2] + '">' + L[0] + ' · ' + f.stress + '/10</span></div>' +
-      '<div class="stress" aria-label="' + f.stress + ' points de stress sur 10">' + segs + '</div>' +
-      (season && f.gage ? '<div class="gage"><span>' + f.gage + '</span><button class="btn sm ' + (f.gageDone ? 'good' : '') + '" style="margin-left:auto">' + (f.gageDone ? '✓ Fait' : 'Fait ?') + '</button></div>' : '') +
-      '<details><summary>Corrections ›</summary><div class="fix"><button class="btn sm">Banque ±</button><button class="btn sm">Stress −1</button><button class="btn sm">Stress +1</button><button class="btn sm">Tuile gratuite</button><button class="btn sm">Libérer la ferme</button></div></details></article>';
+  var stressBar = function (f) { var L = lvl(f.stress), h = ''; for (var i = 0; i < 10; i++) h += '<i class="' + (i < f.stress ? 'on ' + L[1] : '') + '"></i>'; return '<div class="stress" aria-label="' + f.stress + ' points de stress sur 10">' + h + '</div>'; };
+  var gageLine = function (f) { return isSeason() && f.gage ? '<div class="gage"><span>' + f.gage + '</span><button class="btn sm ' + (f.gageDone ? 'good' : '') + '" style="margin-left:auto">' + (f.gageDone ? '✓ Fait' : 'Fait ?') + '</button></div>' : ''; };
+
+  /* ---------- Tiroir complet d'une ferme (niveau 3) : toutes les corrections actuelles ---------- */
+  function harvestFix(f) {
+    return Object.keys(f.harvest).map(function (k) {
+      var odd = f.harvest[k] > 30;
+      return '<div class="row" style="gap:6px"><span style="min-width:150px">' + PROD[k] + '</span><button class="btn sm">−</button><b class="num" style="min-width:28px;text-align:center">' + f.harvest[k] + '</b><button class="btn sm">+</button>' + (odd ? '<span class="pill bad" title="Plus de jetons que ses coureurs ne pouvaient en rapporter">⚠ à vérifier</span>' : '') + '</div>';
+    }).join('');
+  }
+  function drawer(f) {
+    return '<div class="drawer"><div class="g2"><div><div class="eyebrow">Banque</div><div class="row"><input placeholder="± montant" style="width:96px"><input placeholder="Motif" style="width:120px"><button class="btn sm">Valider</button></div></div>' +
+      '<div><div class="eyebrow">Stress</div><div class="row"><button class="btn sm">−1</button><button class="btn sm">+1</button><span class="mut num">' + f.stress + ' / 10</span></div></div></div>' +
+      '<div><div class="eyebrow">Stock</div><div style="font-size:14px">📦 ' + f.stock + '</div></div>' +
+      (S[cur].step === 1 || S[cur].step === 2 ? '<div><div class="eyebrow">Récolte encodée (corriger)</div>' + harvestFix(f) + '</div>' : '') +
+      '<div><div class="eyebrow">Tuiles et matériel</div><div style="font-size:14px">' + f.tiles + '<br><span class="mut">' + f.equip + '</span></div><div class="row" style="margin-top:6px"><select><option>Chèvrerie</option><option>Poulailler</option><option>Porcherie</option><option>Potager-verger</option><option>Atelier</option><option>Gîte à la ferme</option></select><button class="btn sm">Tuile gratuite</button></div></div>' +
+      '<div class="fix"><button class="btn sm ' + (f.ready ? 'good' : '') + '">' + (f.ready ? '✓ Prête' : 'Marquer prête') + '</button>' + (S[cur].step === 3 ? '<button class="btn sm">🎡 Tourner la roue</button>' : '') + '<button class="btn sm">🔓 Libérer la ferme</button></div></div>';
   }
 
-  // ---------- Contenu de la scène selon l'étape ----------
+  /* ---------- Colonne des fermes : Cartes (par défaut) ---------- */
+  function farmCard(f) {
+    var st = farmStatus(f), L = lvl(f.stress);
+    return '<article class="farm fade' + (st[0] === 'warn' ? ' attn' : '') + '"><div class="row sb"><div class="name"><span class="sw" style="background:' + f.color + '"></span>' + f.name + '</div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>' +
+      '<div class="row sb"><span class="num" style="font-weight:800">💰 ' + f.bank + ' EB</span><span class="pill ' + L[2] + '">' + L[0] + ' · ' + f.stress + '/10</span></div>' + stressBar(f) + gageLine(f) +
+      '<details><summary>Détail et corrections ›</summary>' + drawer(f) + '</details></article>';
+  }
+
+  /* ---------- Vue Tableau dense : toutes les colonnes de la console actuelle ---------- */
+  function farmTable() {
+    var rows = FARMS.map(function (f) {
+      var st = farmStatus(f), L = lvl(f.stress);
+      return '<tr><td><b><span class="sw" style="background:' + f.color + ';display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px"></span>' + f.name + '</b></td>' +
+        '<td class="nw"><b class="num">' + f.bank + ' EB</b><div class="fix" style="margin:2px 0 0"><button class="btn sm">±</button></div></td>' +
+        '<td style="min-width:150px">' + stressBar(f) + '<div class="row" style="gap:6px;margin-top:4px"><span class="pill ' + L[2] + '">' + L[0] + '</span><button class="btn sm">−1</button><button class="btn sm">+1</button></div></td>' +
+        '<td style="font-size:13px;min-width:170px">' + f.tiles + '<div class="mut">' + f.equip + '</div><div style="margin-top:3px">📦 ' + f.stock + '</div></td>' +
+        '<td style="font-size:13px;min-width:200px">' + (S[cur].step >= 1 && isSeason() ? harvestFix(f) : '<span class="mut">—</span>') + '</td>' +
+        '<td><span class="pill ' + st[0] + '">' + st[1] + '</span><div style="margin-top:4px;font-size:13px">' + (f.wheel || '<span class="mut">roue pas tournée</span>') + '</div></td>' +
+        '<td><button class="btn sm ' + (f.ready ? 'good' : '') + '">' + (f.ready ? '✓ Prête' : 'En cours') + '</button><div class="fix" style="margin:4px 0 0"><button class="btn sm">🎡</button><button class="btn sm">🎁</button><button class="btn sm">🔓</button></div></td></tr>';
+    }).join('');
+    return '<div class="card" style="overflow-x:auto"><table style="min-width:980px"><thead><tr><th>Ferme</th><th>Banque</th><th>Stress</th><th>Tuiles, matériel, stock</th><th>Récolte (corriger)</th><th>État de l’étape</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  /* ---------- Chrono : tous les réglages actuels, dans un panneau ---------- */
+  function chronoBar() {
+    var p = pop === 'chrono' ? '<div class="pop" id="popchrono"><div class="eyebrow">Ajuster le chrono</div><div class="fix" style="margin:6px 0"><button class="btn sm">−30 s</button><button class="btn sm">−15 s</button><button class="btn sm">+15 s</button><button class="btn sm">+30 s</button><button class="btn sm">+1 min</button></div>' +
+      '<div class="row"><input placeholder="Durée (s)" style="width:110px"><button class="btn sm">Fixer</button></div><label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-top:8px"><input type="checkbox" style="margin-top:3px"> Garder cette durée pour cette étape aux saisons suivantes</label></div>' : '';
+    return '<div class="row" style="position:relative"><button class="btn primary" id="runbtn">' + (running ? '⏸ Pause' : '▶ Lancer le chrono') + '</button><button class="btn">↺ Remettre à zéro</button><button class="btn ghost" id="chronoPop">⏱ Régler ▾</button>' + p + '</div>';
+  }
+
+  /* ---------- Panneaux de l'étape (niveau 2) ---------- */
+  function heroHead(eyebrow, title, chip) { return '<div class="row sb"><div><div class="eyebrow">' + eyebrow + '</div><h2 style="margin-top:6px">' + title + '</h2></div>' + (chip ? '<span class="pill warn">' + chip + '</span>' : '') + '</div>'; }
+  var big = function () { return '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div>' + chronoBar(); };
+  var say = function (t) { return '<div class="say"><span class="q">🗣️</span><span><b>À dire :</b> ' + t + '</span></div>'; };
+
   function stageHtml() {
-    var id = S[cur].id, h = '';
+    var id = S[cur].id;
     if (id === 'lobby') {
-      return '<div class="card hero fade"><div class="eyebrow">Avant de commencer</div><h2>Salle d’attente</h2>' +
-        '<div class="row" style="gap:22px;align-items:center"><div style="width:132px;height:132px;border-radius:16px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);font-size:12px;color:#444;text-align:center;padding:8px">QR code<br>de la partie<br><b style="font-size:20px;letter-spacing:.2em">QWXY</b></div>' +
-        '<div style="flex:1;min-width:220px"><b style="font-size:18px">Les équipes scannent et choisissent une ferme libre.</b><div class="mut" style="font-size:14px;margin-top:4px">4 fermes prises sur 4 · chacune peut renommer la sienne.</div><div class="chips" style="margin-top:10px"><span class="pill">5 joueurs par ferme</span><span class="pill">3 ans</span><span class="pill ok">Bilan de saison</span><span class="pill ok">Gages de stress</span></div></div></div></div>' +
-        '<div class="card fade"><div class="row sb"><div><div class="eyebrow">Présentation du jeu · diapo 2 sur 8</div><h2 style="margin-top:6px">⭐ Les 3 étoiles du village</h2></div><div class="row"><button class="btn sm">◀</button><button class="btn sm primary">▶</button></div></div>' +
-        '<div class="say" style="margin-top:12px"><span class="q">🗣️</span><span><b>À dire :</b> insistez, aucune ferme ne gagne seule. Ensuite : « Votre ferme ».</span></div></div>';
+      return '<div class="card hero fade"><div class="eyebrow">Avant de commencer</div><h2>Salle d’attente</h2><div class="row" style="gap:22px;align-items:center"><div style="width:132px;height:132px;border-radius:16px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);font-size:12px;color:#444;text-align:center;padding:8px">QR code<br>de la partie<br><b style="font-size:20px;letter-spacing:.2em">QWXY</b></div>' +
+        '<div style="flex:1;min-width:220px"><b style="font-size:18px">Les équipes scannent et choisissent une ferme libre.</b><div class="mut" style="font-size:14px;margin-top:4px">4 fermes prises sur 4 · chacune peut renommer la sienne.</div><div class="chips" style="margin-top:10px"><span class="pill">5 joueurs par ferme</span><span class="pill">3 ans</span><span class="pill ok">Bilan de saison</span><span class="pill ok">Gages de stress</span></div></div></div>' +
+        '<form class="row"><input placeholder="Nom d’une nouvelle ferme" style="flex:1;min-width:160px"><select><option>Les Bergers</option><option>Les Maraîchers</option></select><button class="btn sm primary" type="button">Ajouter</button></form></div>' +
+        '<div class="card fade"><div class="row sb"><div><div class="eyebrow">Présentation du jeu · diapo 2 sur 8</div><h2 style="margin-top:6px">⭐ Les 3 étoiles du village</h2></div><div class="row"><button class="btn sm">◀</button><button class="btn sm primary">▶</button><button class="btn sm ghost">✖ Fermer</button></div></div>' + say('insistez, aucune ferme ne gagne seule. Ensuite : « Votre ferme ».') + '</div>';
     }
-    if (id === 'alea') {
-      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 1 sur 5 · Printemps · année 1</div><h2 style="margin-top:6px">🎴 Aléa</h2></div><span class="pill warn">3 sur 4 ont choisi</span></div>' +
-        '<div class="cardshow"><div class="ico">🧊</div><div><span class="pill bad">Carte négative</span><h3>Gel tardif</h3><div style="font-size:17px">Fruits et légumes : course trop courte, non récoltable.</div><div class="mut" style="margin-top:6px">Parade : <b style="color:var(--ink)">serre</b></div></div></div>' +
-        '<div class="say"><span class="q">🗣️</span><span><b>À dire :</b> « Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter 1 stress. »</span></div></div>' +
-        '<div class="card fade"><div class="row sb"><b>🎲 Dés des activités</b><button class="btn sm primary">Lancer les dés manquants (2)</button></div><div class="checks" style="margin-top:10px">' +
-        '<div class="check"><b style="flex:1">Les Bergers</b><span class="dice"><span class="die" title="Gîte">4</span><span class="die" title="Ferme pédagogique">5</span></span></div>' +
-        '<div class="check"><b style="flex:1">Les Gourmets</b><span class="dice"><span class="die fail" title="Restaurant : ne fonctionne pas">1</span><button class="btn sm">🎲</button></span></div></div></div>';
+    if (id === 'setup') {
+      return '<div class="card hero fade">' + heroHead('Avant l’année 1', '🏡 Installation des fermes', '2 sur 4 prêtes') + big() + say('les fermes répartissent la commande de la fête, puis posent leurs tuiles et dépensent leurs 500 EB.') + '</div>' +
+        '<div class="card fade"><div class="row sb"><b>🎉 Commande de la Fête du Phoenix · année 1</b><span class="pill warn">2 plats à répartir</span></div><table><thead><tr><th>Plat</th><th>Ferme responsable</th></tr></thead><tbody>' +
+        '<tr><td><b>Fromage</b> <span class="mut">simple · 2 laits</span></td><td><select><option>Les Bergers</option></select></td></tr><tr><td><b>Confiture</b> <span class="mut">simple</span></td><td><select><option>Les Maraîchers</option></select></td></tr><tr><td><b>Saucisson</b></td><td><select><option>— à prendre —</option></select></td></tr><tr><td><b>Fromage</b></td><td><select><option>— à prendre —</option></select></td></tr></tbody></table>' +
+        '<div class="row"><button class="btn sm">Répartir le reste au hasard</button><button class="btn sm">Tirer un autre menu</button></div></div>';
+    }
+    if (id === 'alea' || id === 'colec') {
+      var cardBox = '<div class="cardshow"><div class="ico">🧊</div><div><span class="pill bad">Carte négative</span><h3>Gel tardif</h3><div style="font-size:17px">Fruits et légumes : course trop courte, non récoltable.</div><div class="mut" style="margin-top:6px">Parade : <b style="color:var(--ink)">serre</b></div></div></div><div class="row"><button class="btn sm">🎴 Tirer une autre carte</button></div>';
+      var col = '<div class="cardshow"><div class="ico">🌱</div><div><span class="pill warn">🤝 Aléa collectif · tout le village</span><h3>Semences communes</h3><div style="font-size:16px">Chaque ferme met des fruits et légumes en commun.</div><div class="row" style="margin-top:6px"><b>Objectif : 8 jetons de fruits et légumes</b><span class="mut">avant la fin de « Transformation »</span></div></div></div><div class="progress" style="height:12px"><i style="width:50%"></i></div><b class="num">4 / 8</b>' +
+        '<div class="checks">' + FARMS.map(function (f, i) { return '<div class="check"><b style="flex:1">' + f.name + '</b><button class="btn sm">−1</button><b class="num" style="min-width:22px;text-align:center">' + (i === 0 ? 4 : 0) + '</b><button class="btn sm">+1</button></div>'; }).join('') + '</div><div class="row"><span class="mut" style="font-size:13px">Les fermes déclarent leurs jetons sur mobile : vérifiez la remise physique.</span><button class="btn sm" style="margin-left:auto">Clôturer maintenant</button></div>';
+      return '<div class="card hero fade">' + heroHead('Étape 1 sur 5 · Printemps · année 1', '🎴 Aléa', id === 'alea' ? '3 sur 4 ont choisi' : 'Objectif commun en cours') + (id === 'alea' ? cardBox : col) +
+        say(id === 'alea' ? '« Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter 1 stress. »' : '« Le village doit réunir l’objectif ensemble avant l’échéance. »') + '</div>' +
+        '<div class="card fade"><div class="row sb"><b>🎲 Dés des activités</b><button class="btn sm primary">Lancer les dés manquants (2)</button></div><div class="checks" style="margin-top:10px"><div class="check"><b style="flex:1">Les Bergers</b><span class="dice"><span class="die">4</span><span class="die">5</span></span></div><div class="check"><b style="flex:1">Les Gourmets</b><span class="dice"><span class="die fail">1</span><button class="btn sm">🎲</button></span></div></div></div>' +
+        '<details class="card fade"><summary class="row sb" style="cursor:pointer"><b>🔮 Prévision météo annoncée · carte tirée en secret</b><span class="mut" style="font-size:13px">Afficher</span></summary><div class="row" style="margin-top:10px"><div style="font-size:36px">❄️</div><div><b>Vague de froid annoncée</b><div class="mut" style="font-size:13px">Visible par les joueurs</div></div><div style="margin-left:auto;text-align:right;font-size:13px">Carte secrète : <b style="color:var(--bad)">Gel tardif</b><br><span class="mut">Parade : serre</span></div></div></details>';
     }
     if (id === 'recolte') {
-      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 2 sur 5 · Récolte en relais</div><h2 style="margin-top:6px">🧺 Qui court ?</h2></div><span class="pill ok">2 sur 4 ont encodé</span></div>' +
-        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div>' +
-        '<div class="say"><span class="q">🗣️</span><span>« Coureurs en place… Trois, deux, un, partez ! » Chaque produit s’arrête à son STOP.</span></div></div>' +
+      return '<div class="card hero fade">' + heroHead('Étape 2 sur 5 · Récolte en relais', '🧺 Qui court ?', '2 sur 4 ont encodé') + big() + say('« Coureurs en place… Trois, deux, un, partez ! » Chaque produit s’arrête à son STOP.') +
+        '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><label class="mut">🏃 Aller-retour d’un coureur</label><select><option>30 s</option></select><button class="btn sm">⏱ Mesurer</button><span class="mut" style="font-size:12px">Course du produit le plus long : 75 s · collier +20 s · tracteur +15 s</span></div></div>' +
         '<div class="card fade"><div class="row sb"><b>⏱️ Décomptes par ferme</b><span class="mut" style="font-size:13px">Temps différents : tracteur, coup de collier, parades</span></div><table><thead><tr><th>Ferme</th><th>Lait</th><th>Œufs</th><th>Fruits et légumes</th></tr></thead><tbody>' +
-        '<tr><td><b>Les Bergers</b></td><td><span class="clock go">0:42</span></td><td><span class="clock go">0:42</span></td><td>—</td></tr>' +
-        '<tr><td><b>Les Maraîchers</b> <span class="pill ok">protégée</span></td><td>—</td><td><span class="clock go">1:12</span></td><td><span class="clock go">1:12</span></td></tr>' +
-        '<tr><td><b>Les Gourmets</b> <span class="pill ok">+15 s</span></td><td>—</td><td>—</td><td><span class="clock go">0:57</span></td></tr></tbody></table></div>';
+        '<tr><td><b>Les Bergers</b></td><td><span class="clock go">0:42</span></td><td><span class="clock go">0:42</span></td><td>—</td></tr><tr><td><b>Les Maraîchers</b> <span class="pill ok">protégée</span></td><td>—</td><td><span class="clock go">1:12</span></td><td><span class="clock go">1:12</span></td></tr><tr><td><b>Les Gourmets</b> <span class="pill ok">+15 s</span></td><td>—</td><td>—</td><td><span class="clock go">0:57</span></td></tr></tbody></table></div>';
     }
     if (id === 'transfo') {
-      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 3 sur 5 · Transformation et bourse</div><h2 style="margin-top:6px">🍳 Jetons à échanger</h2></div><span class="pill warn">1 demande en attente</span></div>' +
-        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div></div>' +
-        '<div class="card fade"><b>Échanges de jetons</b><table><thead><tr><th>Ferme</th><th>Reçoit</th><th>Rend</th><th></th></tr></thead><tbody>' +
-        '<tr><td><b>Les Maraîchers</b></td><td><span class="token">4</span> fruits et légumes</td><td><span class="token">2</span> confitures</td><td><button class="btn primary sm">Jetons échangés ✓</button></td></tr>' +
-        '<tr><td><b>Les Bergers</b></td><td class="mut">—</td><td class="mut">—</td><td><span class="pill ok">Validé</span></td></tr></tbody></table></div>' +
-        '<div class="card fade"><b>🔁 Bourse</b><div class="checks" style="margin-top:8px"><div class="check done"><span class="b">✓</span>Bergers ↔ Gourmets : 2 laits contre 1 fromage</div><div class="check"><span class="b"></span>Éleveurs → Maraîchers : 3 viandes pour 20 EB <span class="pill warn" style="margin-left:auto">en attente</span></div></div></div>';
+      return '<div class="card hero fade">' + heroHead('Étape 3 sur 5 · Transformation et bourse', '🍳 Jetons à échanger', '1 demande en attente') + big() + '</div>' +
+        '<div class="card fade"><b>Échanges de jetons</b><table><thead><tr><th>Ferme</th><th>Reçoit</th><th>Rend</th><th>Limite</th><th></th></tr></thead><tbody><tr><td><b>Les Maraîchers</b></td><td><span class="token">4</span> fruits et légumes</td><td><span class="token">2</span> confitures</td><td class="mut">1 max</td><td><button class="btn primary sm">Jetons échangés ✓</button></td></tr><tr><td><b>Les Bergers</b></td><td class="mut">—</td><td class="mut">—</td><td class="mut">4 max</td><td><span class="pill ok">Validé</span></td></tr></tbody></table></div>' +
+        '<div class="card fade"><b>🔁 Bourse entre fermes</b><table><thead><tr><th>Échange</th><th>Contenu</th><th>Prix</th><th>État</th><th></th></tr></thead><tbody><tr><td>Bergers ↔ Gourmets</td><td>donne 2 laits<br>demande 1 fromage</td><td>troc</td><td><span class="pill ok">Conclu</span></td><td><button class="btn sm">Annuler l’échange</button></td></tr><tr><td>Éleveurs → Maraîchers</td><td>donne 3 viandes<br>demande rien</td><td>20 EB</td><td><span class="pill warn">En attente</span></td><td><button class="btn sm">Annuler</button></td></tr></tbody></table></div>';
     }
     if (id === 'marche') {
-      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 4 sur 5 · Marché</div><h2 style="margin-top:6px">🏪 Ventes à régler</h2></div><span class="pill warn">2 à payer</span></div>' +
-        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div></div>' +
-        '<div class="card fade"><table><thead><tr><th>Ferme</th><th>Roue</th><th>Jetons à recevoir</th><th>À payer</th><th></th></tr></thead><tbody>' +
-        '<tr><td><b>Les Maraîchers</b></td><td><span class="pill ok">Trois quarts</span></td><td><span class="token">7</span><div class="mut" style="font-size:12px">4 supermarché · 3 étal</div></td><td><b class="num">56 EB</b><div class="mut" style="font-size:12px">frais déjà payés</div></td><td><button class="btn primary sm">Payer</button></td></tr>' +
-        '<tr><td><b>Les Éleveurs</b></td><td><span class="pill">Roue pas tournée</span></td><td><span class="token">5</span><div class="mut" style="font-size:12px">5 supermarché</div></td><td><b class="num">35 EB</b></td><td><button class="btn sm">Payer</button></td></tr>' +
-        '<tr><td><b>Les Bergers</b></td><td><span class="pill ok">Tout vendu · −1 stress</span></td><td><span class="token">6</span></td><td><b class="num">98 EB</b></td><td><span class="pill ok">Payée</span></td></tr></tbody></table></div>';
+      return '<div class="card hero fade">' + heroHead('Étape 4 sur 5 · Marché', '🏪 Ventes à régler', '2 à payer') + big() + '</div>' +
+        '<div class="card fade"><table><thead><tr><th>Ferme</th><th>Roue</th><th>Produits placés</th><th>Jetons à recevoir</th><th>À payer</th><th></th></tr></thead><tbody>' +
+        '<tr><td><b>Les Maraîchers</b></td><td><span class="pill ok">Trois quarts</span></td><td style="font-size:13px">Œufs : 2 super / 3 étal (vendu 2)<br>Fruits et légumes : 2 super</td><td><span class="token">7</span><div class="mut" style="font-size:12px">4 super · 3 étal</div></td><td><b class="num">56 EB</b><div class="mut" style="font-size:12px">frais déjà payés</div></td><td><button class="btn primary sm">Valider et payer</button></td></tr>' +
+        '<tr><td><b>Les Éleveurs</b></td><td><button class="btn sm">🎡 Tourner</button></td><td style="font-size:13px">Viande : 5 super</td><td><span class="token">5</span><div class="mut" style="font-size:12px">5 super</div></td><td><b class="num">35 EB</b></td><td><button class="btn sm">Valider et payer</button></td></tr>' +
+        '<tr><td><b>Les Bergers</b></td><td><span class="pill ok">Tout vendu · −1 stress</span></td><td style="font-size:13px">Lait : 3 étal</td><td><span class="token">6</span></td><td><b class="num">98 EB</b></td><td><span class="pill ok">Payée</span></td></tr></tbody></table></div>';
     }
     if (id === 'achats') {
-      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 5 sur 5 · Achats et vacances</div><h2 style="margin-top:6px">🛒 Dernière minute</h2></div><span class="pill ok">2 fermes prêtes</span></div>' +
-        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div>' +
-        '<div class="say"><span class="q">🗣️</span><span>Annoncez chaque achat à voix haute. Regardez la météo de la saison suivante !</span></div></div>' +
+      return '<div class="card hero fade">' + heroHead('Étape 5 sur 5 · Achats et vacances', '🛒 Dernière minute', '2 fermes prêtes') + big() + say('annoncez chaque achat à voix haute. Regardez la météo de la saison suivante !') + '</div>' +
         '<div class="card fade"><div class="row"><div style="font-size:44px">☀️</div><div><div class="eyebrow">Prévision affichée aux joueurs · été</div><b style="font-size:18px">Forte chaleur annoncée</b></div><div class="mut" style="margin-left:auto;text-align:right;font-size:13px">Carte tirée en secret :<br><b style="color:var(--bad)">Sécheresse</b> (parade : arrosage)</div></div></div>' +
         '<div class="card fade"><b>Achats de la saison</b><div class="checks" style="margin-top:8px"><div class="check"><span class="b">🛒</span>Les Gourmets : arrosage + 1 vacance <b style="margin-left:auto">60 EB</b></div><div class="check"><span class="b">🛒</span>Les Bergers : panier de récolte <b style="margin-left:auto">40 EB</b></div></div></div>';
     }
-    return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Fin de l’année 1</div><h2 style="margin-top:6px">🎉 Clôture et Fête du Phoenix</h2></div><span class="pill ok">Charges appliquées</span></div>' +
-      '<div class="checks"><div class="check done"><span class="b">✓</span>Charges de l’année payées par les 4 fermes</div><div class="check"><span class="b"></span>Livraison des plats : 7 sur 8 <span class="pill bad" style="margin-left:auto">Les Éleveurs : 1 manquant</span></div></div></div>' +
-      '<div class="card fade"><b>Commande de la fête</b><table><thead><tr><th>Plat</th><th>Ferme</th><th></th></tr></thead><tbody><tr><td><b>Fromage</b></td><td>Les Bergers</td><td><span class="pill ok">Livré</span></td></tr><tr><td><b>Confiture</b></td><td>Les Maraîchers</td><td><span class="pill ok">Livré</span></td></tr><tr><td><b>Saucisson</b></td><td>Les Éleveurs</td><td><button class="btn sm">Livré ?</button></td></tr></tbody></table></div>';
+    return '<div class="card hero fade">' + heroHead('Fin de l’année 1', '🎉 Clôture et Fête du Phoenix', 'Charges appliquées') + '<table><thead><tr><th>Ferme</th><th>Taxes</th><th>Eau</th><th>Nourriture</th><th>Électricité</th><th>Total</th><th>Résultat</th></tr></thead><tbody>' +
+      FARMS.map(function (f, i) { return '<tr><td><b>' + f.name + '</b></td><td class="num">' + (80 + i * 20) + '</td><td class="num">' + (i % 2 ? 20 : 10) + '</td><td class="num">30</td><td class="num">' + (i === 0 || i === 3 ? 10 : 0) + '</td><td class="num"><b>' + (140 + i * 20) + ' EB</b></td><td><span class="pill ok">Payé</span></td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<div class="card fade"><div class="row sb"><b>Livraison des plats</b><span class="pill bad">7 sur 8</span></div><table><thead><tr><th>Plat</th><th>Ferme</th><th></th></tr></thead><tbody><tr><td><b>Fromage</b></td><td>Les Bergers</td><td><span class="pill ok">Livré par la ferme</span></td></tr><tr><td><b>Confiture</b></td><td>Les Maraîchers</td><td><span class="pill ok">Livré</span></td></tr><tr><td><b>Saucisson</b></td><td>Les Éleveurs</td><td><button class="btn sm">Livré ?</button></td></tr></tbody></table>' +
+      '<details><summary class="mut" style="cursor:pointer;font-size:13px">Forcer le résultat de la fête</summary><div class="row" style="margin-top:8px"><button class="btn sm good">Réussie (−2 stress)</button><button class="btn sm" style="background:var(--bad);color:#fff">Ratée (+2 stress)</button></div></details>' +
+      '<div class="row"><button class="btn sm">Année suivante (réaménagement)</button><button class="btn sm ghost">Terminer la partie</button></div></div>';
   }
 
-  // ---------- Action principale du dock ----------
+  /* ---------- Dock : l'action principale de l'étape ---------- */
   function dock() {
     var id = S[cur].id;
     var d = {
-      lobby: ['Les 4 fermes sont prêtes', 'Quand la présentation est finie, lancez l’installation.', 'Lancer l’installation', true],
+      lobby: ['Les 4 fermes sont prises', 'Fermez la présentation, puis lancez l’installation.', 'Lancer l’installation', true],
+      setup: ['Il reste 2 plats de la fête à répartir', 'Répartissez-les (au hasard si besoin) avant de démarrer.', 'Démarrer l’année 1', false],
       alea: ['En attente du choix des Éleveurs', 'Subir, jouer sa parade ou ajouter 1 stress.', 'Étape suivante', false],
-      recolte: ['Course en cours · 2 sur 4 ont encodé', 'En attente : Éleveurs, Gourmets.', secs ? '⏸ Pause' : 'Étape suivante', false],
+      colec: ['Objectif commun : 4 sur 8', 'Rappelez l’objectif et son échéance.', 'Étape suivante', false],
+      recolte: ['Course en cours · 2 sur 4 ont encodé', 'En attente : Éleveurs, Gourmets.', running ? '⏸ Pause' : '▶ Reprendre', false],
       transfo: ['Jetons à échanger : Les Maraîchers', 'Faites l’échange physique, puis validez.', 'Valider Les Maraîchers', true],
       marche: ['Ventes à régler : Les Maraîchers', 'Payez après avoir vérifié le compte physique.', 'Payer Les Maraîchers · 56 EB', true],
       achats: ['Dernière étape de la saison', 'Matériel et vacances : annoncez chaque achat.', 'Saison suivante', true],
-      cloture: ['Un plat manque encore', 'Marquez-le livré ou jouez la fête : elle sera ratée.', 'Jouer la fête', false]
+      cloture: ['Un plat manque encore', 'Marquez-le livré, ou jouez la fête : elle sera ratée.', 'Jouer la fête', false]
     }[id];
-    return '<footer class="dock"><button class="btn" id="prev" ' + (cur === 0 ? 'disabled' : '') + '>◀</button><div class="next"><b>' + d[0] + '</b><span class="mut" style="font-size:13px">' + d[1] + '</span></div>' +
-      '<span class="mut" style="font-size:12px" title="Raccourcis clavier"><kbd>Espace</kbd> chrono · <kbd>→</kbd> suite</span><button class="btn primary go' + (d[3] ? ' pulse' : '') + '" id="go">' + d[2] + '</button></footer>';
+    return '<footer class="dock"><button class="btn" id="prev" ' + (cur === 0 ? 'disabled' : '') + ' title="Étape précédente">◀</button><div class="next"><b>' + d[0] + '</b><span class="mut" style="font-size:13px">' + d[1] + '</span></div>' +
+      '<span class="mut" style="font-size:12px"><kbd>Espace</kbd> chrono · <kbd>→</kbd> suite</span><button class="btn primary go' + (d[3] ? ' pulse' : '') + '" id="go">' + d[2] + '</button></footer>';
   }
 
+  /* ---------- Barre du haut : étapes, navigation, outils ---------- */
   function top() {
     var s = S[cur], rail = '';
-    if (s.phase === 'season') {
-      STEPS.forEach(function (st, i) { rail += (i ? '<span class="bar"></span>' : '') + '<button class="' + (i < s.step ? 'done' : i === s.step ? 'now' : '') + '" data-go="' + (i + 1) + '"><span class="dot">' + (i < s.step ? '✓' : i + 1) + '</span><span class="lbl">' + st[1] + '</span></button>'; });
-    } else rail = '<button class="now"><span class="dot">' + (s.phase === 'lobby' ? '·' : '🎉') + '</span><span class="lbl">' + (s.phase === 'lobby' ? 'Salle d’attente' : 'Clôture de l’année 1') + '</span></button>';
+    if (s.phase === 'season') STEPS.forEach(function (st, i) { rail += (i ? '<span class="bar"></span>' : '') + '<button class="' + (i < s.step ? 'done' : i === s.step ? 'now' : '') + '"><span class="dot">' + (i < s.step ? '✓' : i + 1) + '</span><span class="lbl">' + st[1] + '</span></button>'; });
+    else rail = '<button class="now"><span class="dot">' + (s.phase === 'lobby' ? '·' : s.phase === 'setup' ? '🏡' : '🎉') + '</span><span class="lbl">' + (s.phase === 'lobby' ? 'Salle d’attente' : s.phase === 'setup' ? 'Installation' : 'Clôture de l’année 1') + '</span></button>';
+    var nav = pop === 'nav' ? '<div class="pop" id="popnav" style="right:0;left:auto"><div class="eyebrow">Aller à…</div><div class="row" style="margin:6px 0"><select><option>Année 1</option><option>Année 2</option><option>Année 3</option></select><select><option>Printemps</option><option>Été</option><option>Automne</option><option>Hiver</option></select><button class="btn sm primary">Aller à</button></div><div class="mut" style="font-size:12px">Saut direct au début de la saison : les charges et la fête des années sautées ne sont pas jouées.</div></div>' : '';
     return '<header class="top"><div class="brand"><div class="logo">🚜</div><h1>Farming’s Folies</h1><span class="code">QWXY</span></div><nav class="rail" aria-label="Étapes">' + rail + '</nav>' +
-      '<div class="tools"><button class="icon opt" title="Écran des joueurs">📺</button><button class="icon opt" title="QR code">📱</button><button class="icon opt" title="Annuler la dernière correction">↶</button><button class="icon" id="gear" title="Paramètres de la partie">⚙️</button>' +
-      '<span style="position:relative"><button class="icon" id="more" title="Plus">⋯</button><div class="menu' + (menuOpen ? ' open' : '') + '" id="menu"><button>📜 Journal</button><button>📖 Règles</button><button>🧭 Guide</button><button>🎯 Objectifs à l’écran</button><button>← Mes parties</button></div></span></div></header>';
+      '<div class="tools"><button class="icon opt" title="Écran des joueurs">📺</button><button class="icon opt" title="QR code">📱</button><button class="btn sm opt" title="Annule la dernière correction (impossible dès qu’une ferme a joué)">↶ Annuler : banque</button><span style="position:relative"><button class="icon" id="navbtn" title="Aller à une saison">🧭</button>' + nav + '</span><button class="icon" id="gear" title="Paramètres de la partie">⚙️</button>' +
+      '<button class="icon" id="more" title="Plus">⋯</button><div class="menu' + (menuOpen ? ' open' : '') + '"><button>📜 Journal</button><button>📖 Règles</button><button>🧭 Guide</button><button>🎯 Objectifs à l’écran</button><button>← Mes parties</button></div></div></header>';
   }
 
   function settings() {
@@ -300,14 +367,16 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
     var lobbyOnly = S[cur].phase === 'lobby';
     var sw = function (label, hint, on, dis) { return '<label class="opt"><input type="checkbox" class="switch"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '><span><b>' + label + '</b><small>' + hint + '</small></span></label>'; };
     return '<div class="veil" id="veil"><section class="sheet" role="dialog" aria-label="Paramètres de la partie"><div class="row sb"><h2 style="font:700 34px/1 var(--f-display);margin:0">⚙️ Paramètres de la partie</h2><button class="btn sm" id="closeSettings">Fermer</button></div>' +
-      '<div class="sec"><h3>👥 Équipes et durée</h3><div class="row"><select' + (lobbyOnly ? '' : ' disabled') + '><option>5 joueurs par ferme</option><option>4 joueurs par ferme</option></select><select' + (lobbyOnly ? '' : ' disabled') + '><option>3 ans · partie normale</option><option>2 ans · partie courte</option></select></div>' + (lobbyOnly ? '' : '<small class="mut">Réglable seulement dans la salle d’attente.</small>') + '</div>' +
+      '<div class="sec"><h3>👥 Équipes et durée</h3><div class="row"><select' + (lobbyOnly ? '' : ' disabled') + '><option>5 joueurs par ferme</option></select><select' + (lobbyOnly ? '' : ' disabled') + '><option>3 ans · partie normale</option></select></div>' + (lobbyOnly ? '' : '<small class="mut">Réglable seulement dans la salle d’attente.</small>') + '</div>' +
       '<div class="sec"><h3>🎲 Options de jeu</h3>' + sw('Défi de saison « zéro perte »', 'Salle d’attente seulement.', false, !lobbyOnly) + sw('Bilan de saison au projecteur', 'Modifiable à tout moment.', true) + sw('Gages selon le niveau de stress', 'Sans effet sur les règles. Les gages se rédigent dans les Réglages de l’accueil.', true) + '</div>' +
-      '<div class="sec"><h3>📺 Écran des joueurs</h3><div class="row"><button class="btn sm">📱 Afficher le QR code</button><button class="btn sm">🎯 Afficher les objectifs</button></div></div>' +
-      '<div class="sec"><h3>🏃 Parcours</h3><div class="row"><label class="mut">Aller-retour d’un coureur</label><select><option>30 s</option><option>40 s</option></select><button class="btn sm">⏱ Mesurer un aller-retour</button></div></div></section></div>';
+      '<div class="sec"><h3>📺 Écran des joueurs</h3><div class="row"><button class="btn sm">📱 Afficher le QR code</button><button class="btn sm">🎯 Afficher les objectifs</button></div></div></section></div>';
   }
 
   function render() {
-    app.innerHTML = top() + '<main class="stage"><div class="col" id="left">' + stageHtml() + '</div><aside class="col"><div class="row sb"><b>Les fermes</b><span class="mut" style="font-size:13px">' + FARMS.filter(function (f) { return f.ready; }).length + ' sur 4 prêtes</span></div>' + FARMS.map(farmCard).join('') + '</aside></main>' + dock() + settings();
+    var tableMode = view === 'table';
+    var seg = '<div class="seg"><button data-view="cards" class="' + (!tableMode ? 'on' : '') + '">Cartes</button><button data-view="table" class="' + (tableMode ? 'on' : '') + '">Tableau</button></div>';
+    var farms = '<div class="row sb"><b>Les fermes</b>' + seg + '</div>' + (tableMode ? '' : FARMS.map(farmCard).join(''));
+    app.innerHTML = top() + '<main class="stage' + (tableMode ? ' tbl' : '') + '"><div class="col">' + stageHtml() + '</div><aside class="col">' + farms + (tableMode ? farmTable() : '') + '</aside></main>' + dock() + settings();
     paintClock();
   }
   function paintClock() {
@@ -317,26 +386,31 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
   }
 
   var statesEl = document.getElementById('states');
-  S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { cur = i; secs = 24; menuOpen = false; sync(); }; statesEl.appendChild(b); });
+  S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { go(i); }; statesEl.appendChild(b); });
+  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; pop = null; sync(); }
   function sync() { Array.prototype.forEach.call(statesEl.children, function (b, i) { b.classList.toggle('on', i === cur); }); render(); }
 
   document.addEventListener('click', function (e) {
     var t = e.target;
-    if (t.id === 'gear') { settingsOpen = true; menuOpen = false; return render(); }
+    if (t.closest('[data-view]')) { view = t.closest('[data-view]').dataset.view; return render(); }
+    if (t.id === 'gear') { settingsOpen = true; menuOpen = false; pop = null; return render(); }
     if (t.id === 'closeSettings' || t.id === 'veil') { settingsOpen = false; return render(); }
-    if (t.id === 'more') { menuOpen = !menuOpen; return render(); }
-    if (menuOpen && !t.closest('.menu')) { menuOpen = false; render(); }
-    if (t.closest('[data-go]')) { cur = Math.min(S.length - 1, parseInt(t.closest('[data-go]').dataset.go, 10)); secs = 24; return sync(); }
-    if (t.id === 'go') { cur = Math.min(S.length - 1, cur + 1); secs = 24; return sync(); }
-    if (t.id === 'prev') { cur = Math.max(0, cur - 1); secs = 24; return sync(); }
+    if (t.id === 'more') { menuOpen = !menuOpen; pop = null; return render(); }
+    if (t.id === 'chronoPop') { pop = pop === 'chrono' ? null : 'chrono'; return render(); }
+    if (t.id === 'navbtn') { pop = pop === 'nav' ? null : 'nav'; return render(); }
+    if (t.id === 'runbtn') { running = !running; return render(); }
+    if ((menuOpen || pop) && !t.closest('.menu, .pop')) { menuOpen = false; pop = null; render(); }
+    if (t.id === 'go') return go(cur + 1);
+    if (t.id === 'prev') return go(cur - 1);
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { settingsOpen = false; menuOpen = false; render(); }
-    if (e.code === 'Space') { e.preventDefault(); running = !running; }
-    if (e.key === 'ArrowRight') { cur = Math.min(S.length - 1, cur + 1); secs = 24; sync(); }
-    if (e.key === 'ArrowLeft') { cur = Math.max(0, cur - 1); secs = 24; sync(); }
+    if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'Escape') { settingsOpen = false; menuOpen = false; pop = null; render(); }
+    if (e.code === 'Space') { e.preventDefault(); running = !running; render(); }
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
   });
-  setInterval(function () { if (running && secs > 0 && S[cur].phase === 'season') { secs--; paintClock(); } }, 1000);
+  setInterval(function () { if (running && secs > 0 && isSeason() || running && secs > 0 && S[cur].phase === 'setup') { secs--; paintClock(); } }, 1000);
 
   var themeBtn = document.getElementById('theme');
   themeBtn.onclick = function () {
