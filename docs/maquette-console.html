@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette · Console du maire du village</title>
+<style>
+/* ---------- Jetons de design (parchemin / cuir, mêmes couleurs que le jeu) ---------- */
+:root {
+  --bg: #f4ead3; --bg2: #efe1c2; --card: #fffaf0; --card2: #f8eed8; --line: #e3d3ae; --ink: #2a1d15; --muted: #7a6853;
+  --accent: #e0701f; --accent2: #ff934f; --accent-ink: #2b1100; --teal: #3a7c66; --teal-soft: rgba(58,124,102,.14); --bad: #b8283a; --bad-soft: rgba(184,40,58,.12);
+  --warn: #a64e0c; --warn-soft: rgba(224,112,31,.14); --shadow: 0 1px 2px rgba(42,29,21,.06), 0 12px 32px -16px rgba(42,29,21,.35);
+  --r: 20px; --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --f-display: "Amatic SC", var(--f-body);
+}
+:root[data-theme="dark"] {
+  --bg: #1a130f; --bg2: #21170f; --card: #2a1d15; --card2: #33241a; --line: #46342a; --ink: #f3e9d8; --muted: #b9a78f;
+  --accent: #ff934f; --accent2: #e0701f; --accent-ink: #2b1100; --teal: #66bb9b; --teal-soft: rgba(102,187,155,.16); --bad: #f2616d; --bad-soft: rgba(242,97,109,.16);
+  --warn: #ff934f; --warn-soft: rgba(255,147,79,.16); --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: hidden; }
+body { background: radial-gradient(80% 40% at 10% -10%, rgba(58,124,102,.14), transparent 60%), radial-gradient(70% 40% at 100% 0%, rgba(255,147,79,.18), transparent 60%), var(--bg); background-attachment: fixed; color: var(--ink); font-family: var(--f-body); line-height: 1.4; min-height: 100vh; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.mut { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Bandeau « maquette » (hors interface) ---------- */
+.mock { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 8px 16px; background: #1f1712; color: #f3e9d8; font-size: 13px; }
+.mock b { letter-spacing: .08em; text-transform: uppercase; font-size: 11px; color: #ff934f; }
+.mock button { border: 1px solid #5a4638; background: #2b2019; color: #f3e9d8; border-radius: 99px; padding: 4px 12px; font-size: 13px; }
+.mock button.on { background: #ff934f; color: #2b1100; border-color: transparent; font-weight: 700; }
+.mock .sp { flex: 1; }
+
+/* ---------- Structure : barre haute, scène, dock d'action ---------- */
+.app { width: 100%; display: grid; grid-template-rows: auto 1fr auto; min-height: calc(100vh - 42px); max-width: 1480px; margin: 0 auto; }
+.top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px clamp(14px, 3vw, 28px); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: grid; place-items: center; font-size: 20px; box-shadow: 0 8px 18px -10px rgba(224,112,31,.9); flex: none; }
+.brand h1 { margin: 0; font: 700 28px/1 var(--f-display); letter-spacing: .02em; color: var(--accent); white-space: nowrap; }
+.code { font-weight: 800; letter-spacing: .18em; font-size: 13px; background: var(--card2); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; }
+.rail { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.rail button { border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 99px; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; transition: background .2s, color .2s; }
+.rail button .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: var(--card2); border: 1px solid var(--line); transition: all .2s; }
+.rail button.done .dot { background: var(--teal); color: #fff; border-color: transparent; }
+.rail button.now { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.rail button.now .dot { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.rail .bar { width: clamp(8px, 2vw, 26px); height: 2px; background: var(--line); border-radius: 2px; }
+.tools { display: flex; align-items: center; gap: 6px; }
+.icon { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; font-size: 18px; position: relative; transition: transform .15s; }
+.icon:hover { transform: translateY(-1px); }
+.icon.on { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.menu { position: absolute; right: 0; top: 46px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 6px; min-width: 210px; display: none; z-index: 30; }
+.menu.open { display: block; }
+.menu button { display: flex; gap: 10px; width: 100%; text-align: left; border: 0; background: transparent; padding: 9px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.menu button:hover { background: var(--card2); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: clamp(14px, 2vw, 24px); padding: clamp(14px, 2.4vw, 28px); align-items: start; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: clamp(16px, 2vw, 24px); min-width: 0; }
+.card h2 { margin: 0; font: 700 30px/1 var(--f-display); letter-spacing: .02em; }
+.eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sb { justify-content: space-between; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 99px; padding: 3px 11px; font-size: 12.5px; font-weight: 700; background: var(--card2); border: 1px solid var(--line); white-space: nowrap; }
+.pill.ok { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.pill.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 9px 16px; font-weight: 700; font-size: 14px; transition: transform .12s, box-shadow .2s, filter .2s; }
+.btn:hover { transform: translateY(-1px); filter: brightness(.98); }
+.btn.sm { padding: 5px 11px; font-size: 13px; border-radius: 11px; }
+.btn.primary { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: var(--accent-ink); border-color: transparent; box-shadow: 0 12px 26px -14px rgba(224,112,31,.9); }
+.btn.good { background: var(--teal); color: #fff; border-color: transparent; }
+.btn.ghost { background: transparent; }
+
+/* ---------- Scène : « Maintenant » ---------- */
+.hero { display: grid; gap: 18px; background: linear-gradient(160deg, var(--card), var(--card2)); }
+.hero .big { font: 800 clamp(72px, 11vw, 132px)/0.95 var(--f-body); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.hero .big.low { color: var(--bad); }
+.progress { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 70%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 99px; transition: width .6s linear; }
+.say { display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); border-radius: 14px; padding: 10px 14px; font-size: 14.5px; }
+.say .q { font-size: 20px; line-height: 1; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.checks { display: grid; gap: 6px; }
+.check { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--card2); font-size: 14.5px; }
+.check .b { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; flex: none; }
+.check.done { opacity: .65; } .check.done .b { background: var(--teal); border-color: transparent; color: #fff; }
+
+.cardshow { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
+.cardshow .ico { font-size: clamp(70px, 9vw, 120px); line-height: 1; filter: drop-shadow(0 12px 20px rgba(0,0,0,.25)); }
+.cardshow h3 { margin: 4px 0 6px; font: 800 clamp(30px, 3.6vw, 44px)/1.05 var(--f-body); }
+.dice { display: flex; gap: 8px; }
+.die { width: 38px; height: 38px; border-radius: 11px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-weight: 800; }
+.die.fail { background: var(--bad); color: #fff; }
+
+table { border-collapse: separate; border-spacing: 0 8px; width: 100%; }
+th { text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 12px; font-weight: 800; }
+td { background: var(--card2); padding: 10px 12px; vertical-align: middle; }
+td:first-child { border-radius: 14px 0 0 14px; } td:last-child { border-radius: 0 14px 14px 0; }
+.clock { font-weight: 800; font-variant-numeric: tabular-nums; border-radius: 12px; padding: 5px 10px; background: var(--card); border: 1px solid var(--line); display: inline-block; min-width: 64px; text-align: center; }
+.clock.go { outline: 2px solid var(--teal); }
+.token { font-size: 26px; font-weight: 800; line-height: 1; }
+
+/* ---------- Colonne des fermes ---------- */
+.farm { display: grid; gap: 10px; padding: 14px 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); transition: transform .2s, border-color .2s; }
+.farm:hover { transform: translateY(-2px); }
+.farm.attn { border-color: var(--accent); }
+.farm .name { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.farm .sw { width: 10px; height: 10px; border-radius: 50%; }
+.stress { display: flex; gap: 3px; }
+.stress i { flex: 1; height: 8px; border-radius: 99px; background: var(--line); }
+.stress i.on.z { background: var(--teal); } .stress i.on.a { background: var(--accent2); } .stress i.on.s { background: var(--bad); }
+.farm details summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent); list-style: none; }
+.farm details summary::-webkit-details-summary { display: none; }
+.fix { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.gage { font-size: 13px; background: var(--card2); border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: flex-start; }
+
+/* ---------- Dock d'action (une action principale, toujours à portée) ---------- */
+.dock { position: sticky; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px clamp(14px, 3vw, 28px) calc(12px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 84%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); }
+.dock .next { flex: 1; min-width: 0; }
+.dock .next b { display: block; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock .go { min-height: 52px; padding: 0 28px; font-size: 16px; white-space: nowrap; flex: none; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; }
+.dock .go.pulse { animation: pulse 1.8s infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(224,112,31,.5), 0 12px 26px -14px rgba(224,112,31,.9); } 50% { box-shadow: 0 0 0 10px rgba(224,112,31,0), 0 12px 26px -14px rgba(224,112,31,.9); } }
+kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; }
+
+.fade { animation: fade .35s ease both; }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1000px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .card { overflow-x: auto; }
+  .rail { overflow: hidden; justify-content: flex-start; } .rail .bar { display: none; }
+  .dock kbd, .dock span[title] { display: none; }
+  .rail button span.lbl { display: none; } .rail button.now span.lbl { display: inline; }
+  .brand h1 { display: none; }
+}
+@media (max-width: 560px) {
+  .dock .next { display: none; } .dock .go { padding: 0 18px; flex: 1; max-width: none; } .top { overflow: hidden; }
+  .cardshow { grid-template-columns: 1fr; }
+  .tools .icon.opt { display: none; }
+  .top { gap: 8px; } .rail button { padding: 4px 6px; } .rail button:not(.now) .dot { width: 18px; height: 18px; }
+  table { min-width: 460px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="mock">
+  <b>Maquette</b><span class="mut">État de la partie :</span>
+  <span id="states" class="row" style="gap:6px"></span>
+  <span class="sp"></span>
+  <button id="theme">🌙 Mode sombre</button>
+</div>
+
+<div class="app" id="app"></div>
+
+<script>
+(function () {
+  var FARMS = [
+    { id: 1, name: 'Les Bergers', color: '#8FD36B', bank: 520, stress: 2, ready: true, choice: 'Parade jouée', gage: '🎁 L’équipe choisit la musique de la saison.', gageDone: false, taken: true },
+    { id: 2, name: 'Les Maraîchers', color: '#F2B63D', bank: 610, stress: 5, ready: false, choice: 'Subit l’effet', gage: '🎭 Toute l’équipe annonce ses décisions en rimant.', gageDone: true, taken: true },
+    { id: 3, name: 'Les Éleveurs', color: '#F29CB0', bank: 480, stress: 8, ready: false, choice: null, gage: '🎭 L’équipe chante un refrain devant tout le village.', gageDone: false, taken: true },
+    { id: 4, name: 'Les Gourmets', color: '#8EC5F0', bank: 700, stress: 1, ready: true, choice: '+1 stress', gage: '🎁 Le maire félicite la ferme à voix haute.', gageDone: false, taken: true }
+  ];
+  var STEPS = [['🎴', 'Aléa'], ['🧺', 'Récolte'], ['🍳', 'Transformation'], ['🏪', 'Marché'], ['🛒', 'Achats']];
+  // État de la maquette : phase + étape
+  var S = [
+    { id: 'lobby', label: 'Salle d’attente', phase: 'lobby' },
+    { id: 'alea', label: '1 · Aléa', phase: 'season', step: 0 },
+    { id: 'recolte', label: '2 · Récolte', phase: 'season', step: 1 },
+    { id: 'transfo', label: '3 · Transformation', phase: 'season', step: 2 },
+    { id: 'marche', label: '4 · Marché', phase: 'season', step: 3 },
+    { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
+    { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
+  ];
+  var cur = 1, secs = 24, running = true, menuOpen = false;
+  var app = document.getElementById('app');
+  var fmt = function (s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
+
+  // ---------- Fermes (colonne de droite) ----------
+  function farmStatus(f) {
+    var id = S[cur].id;
+    if (id === 'alea') return f.choice ? ['ok', '✓ ' + f.choice] : ['warn', 'Choix en attente'];
+    if (id === 'recolte') return f.id < 3 ? ['ok', '✓ Récolte encodée'] : ['warn', 'En course…'];
+    if (id === 'transfo') return f.id === 2 ? ['warn', 'Jetons à échanger'] : ['ok', '✓ Recettes traitées'];
+    if (id === 'marche') return f.id === 1 ? ['ok', '✓ Payée'] : f.id === 2 ? ['warn', 'À payer · 56 EB'] : ['', 'Roue à tourner'];
+    if (id === 'achats') return f.ready ? ['ok', '✓ Prête'] : ['', 'Dans la boutique'];
+    if (id === 'cloture') return f.id === 3 ? ['bad', '1 plat à livrer'] : ['ok', '✓ Plats livrés'];
+    return ['ok', f.taken ? 'Ferme prise' : 'Libre'];
+  }
+  function farmCard(f) {
+    var st = farmStatus(f), L = lvl(f.stress), segs = '';
+    for (var i = 0; i < 10; i++) segs += '<i class="' + (i < f.stress ? 'on ' + L[1] : '') + '"></i>';
+    var season = S[cur].phase === 'season';
+    return '<article class="farm fade' + (st[0] === 'warn' ? ' attn' : '') + '"><div class="row sb"><div class="name"><span class="sw" style="background:' + f.color + '"></span>' + f.name + '</div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>' +
+      '<div class="row sb"><span class="num" style="font-weight:800">💰 ' + f.bank + ' EB</span><span class="pill ' + L[2] + '">' + L[0] + ' · ' + f.stress + '/10</span></div>' +
+      '<div class="stress" aria-label="' + f.stress + ' points de stress sur 10">' + segs + '</div>' +
+      (season && f.gage ? '<div class="gage"><span>' + f.gage + '</span><button class="btn sm ' + (f.gageDone ? 'good' : '') + '" style="margin-left:auto">' + (f.gageDone ? '✓ Fait' : 'Fait ?') + '</button></div>' : '') +
+      '<details><summary>Corrections ›</summary><div class="fix"><button class="btn sm">Banque ±</button><button class="btn sm">Stress −1</button><button class="btn sm">Stress +1</button><button class="btn sm">Tuile gratuite</button><button class="btn sm">Libérer la ferme</button></div></details></article>';
+  }
+
+  // ---------- Contenu de la scène selon l'étape ----------
+  function stageHtml() {
+    var id = S[cur].id, h = '';
+    if (id === 'lobby') {
+      return '<div class="card hero fade"><div class="eyebrow">Avant de commencer</div><h2>Salle d’attente</h2>' +
+        '<div class="row" style="gap:22px;align-items:center"><div style="width:132px;height:132px;border-radius:16px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);font-size:12px;color:#444;text-align:center;padding:8px">QR code<br>de la partie<br><b style="font-size:20px;letter-spacing:.2em">QWXY</b></div>' +
+        '<div style="flex:1;min-width:220px"><b style="font-size:18px">Les équipes scannent et choisissent une ferme libre.</b><div class="mut" style="font-size:14px;margin-top:4px">4 fermes prises sur 4 · chacune peut renommer la sienne.</div><div class="chips" style="margin-top:10px"><span class="pill">5 joueurs par ferme</span><span class="pill">3 ans</span><span class="pill ok">Bilan de saison</span><span class="pill ok">Gages de stress</span></div></div></div></div>' +
+        '<div class="card fade"><div class="row sb"><div><div class="eyebrow">Présentation du jeu · diapo 2 sur 8</div><h2 style="margin-top:6px">⭐ Les 3 étoiles du village</h2></div><div class="row"><button class="btn sm">◀</button><button class="btn sm primary">▶</button></div></div>' +
+        '<div class="say" style="margin-top:12px"><span class="q">🗣️</span><span><b>À dire :</b> insistez, aucune ferme ne gagne seule. Ensuite : « Votre ferme ».</span></div></div>';
+    }
+    if (id === 'alea') {
+      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 1 sur 5 · Printemps · année 1</div><h2 style="margin-top:6px">🎴 Aléa</h2></div><span class="pill warn">3 sur 4 ont choisi</span></div>' +
+        '<div class="cardshow"><div class="ico">🧊</div><div><span class="pill bad">Carte négative</span><h3>Gel tardif</h3><div style="font-size:17px">Fruits et légumes : course trop courte, non récoltable.</div><div class="mut" style="margin-top:6px">Parade : <b style="color:var(--ink)">serre</b></div></div></div>' +
+        '<div class="say"><span class="q">🗣️</span><span><b>À dire :</b> « Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter 1 stress. »</span></div></div>' +
+        '<div class="card fade"><div class="row sb"><b>🎲 Dés des activités</b><button class="btn sm primary">Lancer les dés manquants (2)</button></div><div class="checks" style="margin-top:10px">' +
+        '<div class="check"><b style="flex:1">Les Bergers</b><span class="dice"><span class="die" title="Gîte">4</span><span class="die" title="Ferme pédagogique">5</span></span></div>' +
+        '<div class="check"><b style="flex:1">Les Gourmets</b><span class="dice"><span class="die fail" title="Restaurant : ne fonctionne pas">1</span><button class="btn sm">🎲</button></span></div></div></div>';
+    }
+    if (id === 'recolte') {
+      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 2 sur 5 · Récolte en relais</div><h2 style="margin-top:6px">🧺 Qui court ?</h2></div><span class="pill ok">2 sur 4 ont encodé</span></div>' +
+        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div>' +
+        '<div class="say"><span class="q">🗣️</span><span>« Coureurs en place… Trois, deux, un, partez ! » Chaque produit s’arrête à son STOP.</span></div></div>' +
+        '<div class="card fade"><div class="row sb"><b>⏱️ Décomptes par ferme</b><span class="mut" style="font-size:13px">Temps différents : tracteur, coup de collier, parades</span></div><table><thead><tr><th>Ferme</th><th>Lait</th><th>Œufs</th><th>Fruits et légumes</th></tr></thead><tbody>' +
+        '<tr><td><b>Les Bergers</b></td><td><span class="clock go">0:42</span></td><td><span class="clock go">0:42</span></td><td>—</td></tr>' +
+        '<tr><td><b>Les Maraîchers</b> <span class="pill ok">protégée</span></td><td>—</td><td><span class="clock go">1:12</span></td><td><span class="clock go">1:12</span></td></tr>' +
+        '<tr><td><b>Les Gourmets</b> <span class="pill ok">+15 s</span></td><td>—</td><td>—</td><td><span class="clock go">0:57</span></td></tr></tbody></table></div>';
+    }
+    if (id === 'transfo') {
+      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 3 sur 5 · Transformation et bourse</div><h2 style="margin-top:6px">🍳 Jetons à échanger</h2></div><span class="pill warn">1 demande en attente</span></div>' +
+        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div></div>' +
+        '<div class="card fade"><b>Échanges de jetons</b><table><thead><tr><th>Ferme</th><th>Reçoit</th><th>Rend</th><th></th></tr></thead><tbody>' +
+        '<tr><td><b>Les Maraîchers</b></td><td><span class="token">4</span> fruits et légumes</td><td><span class="token">2</span> confitures</td><td><button class="btn primary sm">Jetons échangés ✓</button></td></tr>' +
+        '<tr><td><b>Les Bergers</b></td><td class="mut">—</td><td class="mut">—</td><td><span class="pill ok">Validé</span></td></tr></tbody></table></div>' +
+        '<div class="card fade"><b>🔁 Bourse</b><div class="checks" style="margin-top:8px"><div class="check done"><span class="b">✓</span>Bergers ↔ Gourmets : 2 laits contre 1 fromage</div><div class="check"><span class="b"></span>Éleveurs → Maraîchers : 3 viandes pour 20 EB <span class="pill warn" style="margin-left:auto">en attente</span></div></div></div>';
+    }
+    if (id === 'marche') {
+      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 4 sur 5 · Marché</div><h2 style="margin-top:6px">🏪 Ventes à régler</h2></div><span class="pill warn">2 à payer</span></div>' +
+        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div></div>' +
+        '<div class="card fade"><table><thead><tr><th>Ferme</th><th>Roue</th><th>Jetons à recevoir</th><th>À payer</th><th></th></tr></thead><tbody>' +
+        '<tr><td><b>Les Maraîchers</b></td><td><span class="pill ok">Trois quarts</span></td><td><span class="token">7</span><div class="mut" style="font-size:12px">4 supermarché · 3 étal</div></td><td><b class="num">56 EB</b><div class="mut" style="font-size:12px">frais déjà payés</div></td><td><button class="btn primary sm">Payer</button></td></tr>' +
+        '<tr><td><b>Les Éleveurs</b></td><td><span class="pill">Roue pas tournée</span></td><td><span class="token">5</span><div class="mut" style="font-size:12px">5 supermarché</div></td><td><b class="num">35 EB</b></td><td><button class="btn sm">Payer</button></td></tr>' +
+        '<tr><td><b>Les Bergers</b></td><td><span class="pill ok">Tout vendu · −1 stress</span></td><td><span class="token">6</span></td><td><b class="num">98 EB</b></td><td><span class="pill ok">Payée</span></td></tr></tbody></table></div>';
+    }
+    if (id === 'achats') {
+      return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Étape 5 sur 5 · Achats et vacances</div><h2 style="margin-top:6px">🛒 Dernière minute</h2></div><span class="pill ok">2 fermes prêtes</span></div>' +
+        '<div class="big" id="clock">' + fmt(secs) + '</div><div class="progress"><i id="bar"></i></div>' +
+        '<div class="say"><span class="q">🗣️</span><span>Annoncez chaque achat à voix haute. Regardez la météo de la saison suivante !</span></div></div>' +
+        '<div class="card fade"><div class="row"><div style="font-size:44px">☀️</div><div><div class="eyebrow">Prévision affichée aux joueurs · été</div><b style="font-size:18px">Forte chaleur annoncée</b></div><div class="mut" style="margin-left:auto;text-align:right;font-size:13px">Carte tirée en secret :<br><b style="color:var(--bad)">Sécheresse</b> (parade : arrosage)</div></div></div>' +
+        '<div class="card fade"><b>Achats de la saison</b><div class="checks" style="margin-top:8px"><div class="check"><span class="b">🛒</span>Les Gourmets : arrosage + 1 vacance <b style="margin-left:auto">60 EB</b></div><div class="check"><span class="b">🛒</span>Les Bergers : panier de récolte <b style="margin-left:auto">40 EB</b></div></div></div>';
+    }
+    return '<div class="card hero fade"><div class="row sb"><div><div class="eyebrow">Fin de l’année 1</div><h2 style="margin-top:6px">🎉 Clôture et Fête du Phoenix</h2></div><span class="pill ok">Charges appliquées</span></div>' +
+      '<div class="checks"><div class="check done"><span class="b">✓</span>Charges de l’année payées par les 4 fermes</div><div class="check"><span class="b"></span>Livraison des plats : 7 sur 8 <span class="pill bad" style="margin-left:auto">Les Éleveurs : 1 manquant</span></div></div></div>' +
+      '<div class="card fade"><b>Commande de la fête</b><table><thead><tr><th>Plat</th><th>Ferme</th><th></th></tr></thead><tbody><tr><td><b>Fromage</b></td><td>Les Bergers</td><td><span class="pill ok">Livré</span></td></tr><tr><td><b>Confiture</b></td><td>Les Maraîchers</td><td><span class="pill ok">Livré</span></td></tr><tr><td><b>Saucisson</b></td><td>Les Éleveurs</td><td><button class="btn sm">Livré ?</button></td></tr></tbody></table></div>';
+  }
+
+  // ---------- Action principale du dock ----------
+  function dock() {
+    var id = S[cur].id;
+    var d = {
+      lobby: ['Les 4 fermes sont prêtes', 'Quand la présentation est finie, lancez l’installation.', 'Lancer l’installation', true],
+      alea: ['En attente du choix des Éleveurs', 'Subir, jouer sa parade ou ajouter 1 stress.', 'Étape suivante', false],
+      recolte: ['Course en cours · 2 sur 4 ont encodé', 'En attente : Éleveurs, Gourmets.', secs ? '⏸ Pause' : 'Étape suivante', false],
+      transfo: ['Jetons à échanger : Les Maraîchers', 'Faites l’échange physique, puis validez.', 'Valider Les Maraîchers', true],
+      marche: ['Ventes à régler : Les Maraîchers', 'Payez après avoir vérifié le compte physique.', 'Payer Les Maraîchers · 56 EB', true],
+      achats: ['Dernière étape de la saison', 'Matériel et vacances : annoncez chaque achat.', 'Saison suivante', true],
+      cloture: ['Un plat manque encore', 'Marquez-le livré ou jouez la fête : elle sera ratée.', 'Jouer la fête', false]
+    }[id];
+    return '<footer class="dock"><button class="btn" id="prev" ' + (cur === 0 ? 'disabled' : '') + '>◀</button><div class="next"><b>' + d[0] + '</b><span class="mut" style="font-size:13px">' + d[1] + '</span></div>' +
+      '<span class="mut" style="font-size:12px" title="Raccourcis clavier"><kbd>Espace</kbd> chrono · <kbd>→</kbd> suite</span><button class="btn primary go' + (d[3] ? ' pulse' : '') + '" id="go">' + d[2] + '</button></footer>';
+  }
+
+  function top() {
+    var s = S[cur], rail = '';
+    if (s.phase === 'season') {
+      STEPS.forEach(function (st, i) { rail += (i ? '<span class="bar"></span>' : '') + '<button class="' + (i < s.step ? 'done' : i === s.step ? 'now' : '') + '" data-go="' + (i + 1) + '"><span class="dot">' + (i < s.step ? '✓' : i + 1) + '</span><span class="lbl">' + st[1] + '</span></button>'; });
+    } else rail = '<button class="now"><span class="dot">' + (s.phase === 'lobby' ? '·' : '🎉') + '</span><span class="lbl">' + (s.phase === 'lobby' ? 'Salle d’attente' : 'Clôture de l’année 1') + '</span></button>';
+    return '<header class="top"><div class="brand"><div class="logo">🚜</div><h1>Farming’s Folies</h1><span class="code">QWXY</span></div><nav class="rail" aria-label="Étapes">' + rail + '</nav>' +
+      '<div class="tools"><button class="icon opt" title="Écran des joueurs">📺</button><button class="icon opt" title="QR code">📱</button><button class="icon opt" title="Annuler la dernière correction">↶</button><button class="icon" title="Paramètres de la partie">⚙️</button>' +
+      '<span style="position:relative"><button class="icon" id="more" title="Plus">⋯</button><div class="menu' + (menuOpen ? ' open' : '') + '" id="menu"><button>📜 Journal</button><button>📖 Règles</button><button>🧭 Guide</button><button>🎯 Objectifs à l’écran</button><button>← Mes parties</button></div></span></div></header>';
+  }
+
+  function render() {
+    app.innerHTML = top() + '<main class="stage"><div class="col" id="left">' + stageHtml() + '</div><aside class="col"><div class="row sb"><b>Les fermes</b><span class="mut" style="font-size:13px">' + FARMS.filter(function (f) { return f.ready; }).length + ' sur 4 prêtes</span></div>' + FARMS.map(farmCard).join('') + '</aside></main>' + dock();
+    paintClock();
+  }
+  function paintClock() {
+    var c = document.getElementById('clock'), b = document.getElementById('bar');
+    if (c) { c.textContent = fmt(secs); c.classList.toggle('low', secs <= 10); }
+    if (b) b.style.width = Math.round(secs / 60 * 100) + '%';
+  }
+
+  var statesEl = document.getElementById('states');
+  S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { cur = i; secs = 24; menuOpen = false; sync(); }; statesEl.appendChild(b); });
+  function sync() { Array.prototype.forEach.call(statesEl.children, function (b, i) { b.classList.toggle('on', i === cur); }); render(); }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.id === 'more') { menuOpen = !menuOpen; return render(); }
+    if (menuOpen && !t.closest('.menu')) { menuOpen = false; render(); }
+    if (t.closest('[data-go]')) { cur = Math.min(S.length - 1, parseInt(t.closest('[data-go]').dataset.go, 10)); secs = 24; return sync(); }
+    if (t.id === 'go') { cur = Math.min(S.length - 1, cur + 1); secs = 24; return sync(); }
+    if (t.id === 'prev') { cur = Math.max(0, cur - 1); secs = 24; return sync(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space') { e.preventDefault(); running = !running; }
+    if (e.key === 'ArrowRight') { cur = Math.min(S.length - 1, cur + 1); secs = 24; sync(); }
+    if (e.key === 'ArrowLeft') { cur = Math.max(0, cur - 1); secs = 24; sync(); }
+  });
+  setInterval(function () { if (running && secs > 0 && S[cur].phase === 'season') { secs--; paintClock(); } }, 1000);
+
+  var themeBtn = document.getElementById('theme');
+  themeBtn.onclick = function () {
+    var dark = document.documentElement.dataset.theme !== 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    themeBtn.textContent = dark ? '☀️ Mode clair' : '🌙 Mode sombre';
+  };
+  if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) themeBtn.click();
+  sync();
+})();
+</script>
+</body>
+</html>
