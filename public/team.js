@@ -136,15 +136,28 @@
   }
   // Tant que l'objectif n'est pas atteint, le bandeau ouvre le détail ; une fois atteint (ou réglé), il change de couleur et ne s'ouvre plus.
   function colBanner() {
+    if (V.phase !== 'season' || !V.card) return '';
     var k = colState();
-    if (!k) return '';
+    if (!k) return cardBanner();
     var c = k.c, cls = k.done ? (c.resolved ? 'ok' : 'bad') : k.reached ? 'ok' : '';
     var right = k.done ? (c.resolved ? '✓ Atteint' : '✗ Manqué') : k.reached ? '✓ Atteint' : 'Ouvrir ›';
     var inner = '<span class="cb-ic" aria-hidden="true">' + (c.icon || '🤝') + '</span><span class="cb-tx"><b>Aléa collectif · ' + esc(c.title) + '</b><small>' + esc(c.goalText) + ' · ' + k.tot + ' / ' + c.need + (k.openable ? ' · avant la fin de « ' + esc(dueName(c)) + ' »' : '') + '</small></span><span class="cb-go">' + right + '</span>';
     return k.openable ? '<button class="col-banner ' + cls + '" data-act="openCol" aria-label="Ouvrir le détail de l\'aléa collectif">' + inner + '</button>' : '<div class="col-banner ' + cls + ' closed">' + inner + '</div>';
   }
+  // Carte aléa normale : même bandeau en haut, il ouvre la carte et le choix de la ferme.
+  function cardBanner() {
+    var c = V.card, neg = c.tone === 'neg';
+    var lab = { subit: 'Effet subi', parade: 'Parade jouée', boule: '+1 stress' }[me.choice];
+    var chosen = neg && me.choice;
+    var cls = neg ? (chosen ? 'neg done' : 'neg') : 'ok';
+    var right = neg ? (chosen ? '✓ ' + lab : 'Choisir ›') : 'Voir ›';
+    return '<button class="col-banner ' + cls + '" data-act="openCol" aria-label="Ouvrir la carte aléa"><span class="cb-ic" aria-hidden="true">' + (c.icon || '🎴') + '</span><span class="cb-tx"><b>Aléa · ' + esc(c.title) + '</b><small>' + (neg ? 'Négatif' : 'Positif') + ' · ' + esc(c.effect) + '</small></span><span class="cb-go">' + right + '</span></button>';
+  }
   function colModal() {
     var k = colState();
+    if (colOpen && !k && V.phase === 'season' && V.card) {
+      return '<div class="help-modal" data-colbg="1" style="align-items:flex-start;overflow:auto"><div class="help-box" style="padding:0;background:transparent;box-shadow:none;max-width:520px">' + alea() + '<button class="btn block" style="margin-top:8px" data-act="closeCol">Fermer</button></div></div>';
+    }
     if (!colOpen || !k || !k.openable) { colOpen = false; return ''; }
     return '<div class="help-modal" data-colbg="1" style="align-items:flex-start;overflow:auto"><div class="help-box" style="padding:0;background:transparent;box-shadow:none;max-width:520px">' + collectivePanel(k.c) + '<button class="btn block" style="margin-top:8px" data-act="closeCol">Fermer</button></div></div>';
   }
@@ -172,7 +185,7 @@
     if (V.phase !== 'season' || !V.card) return '<section class="panel stack"><b>🎴 Carte aléa</b><p class="muted" style="margin:0">Le maire du village n\'a pas encore tiré la carte.</p></section>' + meteo();
     var c = V.card, has = c.parade && me.equipment.indexOf(c.parade) >= 0;
     var par = c.parade ? catName(c.parade) : null;
-    if (c.collective) return '<section class="panel soft" style="padding:12px 16px"><b>' + (c.icon || '🤝') + ' ' + esc(c.title) + '</b><div class="muted" style="font-size:14px">Aléa collectif : aucun choix individuel. Le détail et les dons sont dans le bandeau tout en haut de l\'écran.</div></section>';
+    if (c.collective) return aleaSummary();
     var neg = c.tone === 'neg';
     var btn = function (k, label, sub, dis) { return '<button class="btn ' + (me.choice === k ? 'primary' : '') + '" data-act="choice" data-choice="' + k + '"' + (dis ? ' disabled' : '') + '><span><b>' + (me.choice === k ? '✓ ' : '') + label + '</b><small>' + sub + '</small></span></button>'; };
     var choices = neg
@@ -180,6 +193,14 @@
       : '<div class="muted" style="font-size:14px">Bonne nouvelle : rien à faire, profitez-en !</div>';
     return '<section class="panel stack" style="border-color:' + (neg ? 'var(--bad)' : 'var(--teal)') + '"><div class="row" style="justify-content:space-between"><b>🎴 Carte aléa</b><span class="pill ' + (neg ? 'bad' : 'ok') + '">' + (neg ? 'Négatif' : 'Positif') + '</span></div>' +
       '<div style="font-family:var(--f-display);font-size:42px;line-height:1;color:var(--sand);font-weight:700">' + esc(c.title) + '</div><div>' + esc(c.effect) + '</div>' + choices + '</section>';
+  }
+
+  // Sur l'Accueil : un rappel court ; la carte et le choix sont dans le bandeau tout en haut.
+  function aleaSummary() {
+    var c = V.card;
+    if (!c) return alea();
+    var hint = c.collective ? 'Aléa collectif : aucun choix individuel. Le détail et les dons sont dans le bandeau tout en haut de l\'écran.' : c.tone === 'neg' ? 'Touchez le bandeau en haut pour choisir : subir, parade ou +1 stress.' : 'Bonne nouvelle : rien à faire. Le bandeau en haut garde la carte à portée de main.';
+    return '<section class="panel soft" style="padding:12px 16px"><b>' + (c.icon || '🎴') + ' ' + esc(c.title) + '</b><div style="font-size:14px">' + esc(c.collective ? c.story : c.effect) + '</div><div class="muted" style="font-size:13px">' + hint + '</div></section>';
   }
 
   // Activités complémentaires : un dé par activité et par saison (1 = rien, 2 à 6 = effet plus ou moins fort).
@@ -215,7 +236,6 @@
   }
   function bonusLine(h) {
     var b = h.bonus || {}, parts = [];
-    if (b.brouette) parts.push('+' + b.brouette + ' brouette');
     if (b.pedago) parts.push('+' + b.pedago + ' ferme pédagogique');
     return parts.length ? '<div style="font-size:12px;color:var(--good);font-weight:700">Jetons bonus ajoutés à l\'encodage : ' + parts.join(' · ') + '</div>' : '';
   }
@@ -230,12 +250,13 @@
         '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-end"><span class="muted" style="font-size:12px">' + runInfo(h) + '</span><span class="row" style="gap:8px;flex-wrap:nowrap">' + input + '</span></div>' + (declared || V.step > 1 ? bonusLine(h) : '') + '</div>';
     }).join('');
     var tot = me.harvest.reduce(function (n, h) { return n + (h.brought !== null ? h.value : 0); }, 0);
+    var baskets = me.equipment.filter(function (e) { return e === 'panier'; }).length, carry = me.equipment.indexOf('brouette') >= 0 ? '<div style="font-size:13px;color:var(--good);font-weight:700">' + icon('brouette') + ' Brouette : tous vos coureurs peuvent prendre 2 jetons par trajet.</div>' : baskets ? '<div style="font-size:13px;color:var(--good);font-weight:700">🧺 ' + plural(baskets, 'coureur peut', 'coureurs peuvent') + ' prendre 2 jetons par trajet (panier de récolte).</div>' : '';
     var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : course normale.</div>' : '';
     var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">' + esc(V.card.title) + ' : la récolte s\'arrête ' + me.stopEarly + ' s avant la fin du chrono.</div>' : '';
     var bonus = me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Bonus : vos coureurs courent ' + me.bonusSec + ' s de plus.</div>' : '';
     var btn = open ? '<button class="btn primary" data-act="declareHarvest">' + (declared ? 'Modifier la récolte' : 'Encoder ma récolte') + '</button>' : '';
     var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock (bonus compris). Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">Comptez les jetons au fil de la course avec + et −, puis appuyez sur « Encoder ma récolte » : un jeton = une ressource en stock.</div>';
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + prot + early + bonus + btn + hint + '</section>';
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + carry + prot + early + bonus + btn + hint + '</section>';
   }
 
   // ---------- Fête du Phoenix ----------
@@ -305,7 +326,7 @@
     }).join('');
     var recap = T && Object.keys(items).length ? '<div style="background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:14px"><div><b>À apporter au maire du village :</b> ' + esc(tokenList(T.receive, all)) + (Object.keys(T.use).length ? ' + vos plats : ' + esc(tokenList(T.use, all)) : '') + '</div><div><b>Vous recevez :</b> ' + esc(tokenList(T.give, all)) + '</div></div>' : '';
     var st = done ? '<div style="color:var(--good);font-weight:700">Validé : les plats sont dans votre stock.</div>' : T ? '<div style="font-weight:700;color:var(--warn)">Demande envoyée : apportez les jetons au maire du village.</div>' : '';
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🍳 Transformation</b><span class="num muted">max ' + me.recipeLimit + ' recette' + (me.recipeLimit > 1 ? 's' : '') + '</span></div>' +
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🍳 Transformation</b><span class="num muted">max ' + me.recipeLimit + ' recette' + (me.recipeLimit > 1 ? 's' : '') + (me.recipeBonus ? ' (dont +' + me.recipeBonus + ' restaurant)' : '') + '</span></div>' +
       '<div class="muted" style="font-size:13px">Choisissez les plats à fabriquer. Les plats dont il manque des ingrédients sont grisés. L\'app calcule les jetons à apporter au maire du village et ceux que vous recevez en échange. Un plat composé utilise des plats déjà fabriqués.</div>' + form + recap +
       '<button class="btn primary" data-act="requestTransfo"' + (done ? ' disabled' : '') + '>' + (T ? 'Modifier ma demande' : 'Envoyer ma demande') + '</button>' + st + '</section>';
   }
@@ -380,9 +401,9 @@
     var wheel = me.wheel ? '<div style="font-size:22px;font-weight:800">' + esc(me.wheel.label) + '</div>' : '<div class="muted">La roue ne concerne que l\'étal.</div>';
     var canSpin = S.declared && !S.settled && Q.stallUnits > 0;
     var spin = Q.stallUnits > 0 || me.wheel ? '<button class="btn" data-act="spinWheel"' + (canSpin ? '' : ' disabled') + '>🎡 ' + (me.wheel ? (me.freeSpin ? 'Relancer la roue (gratuit)' : 'Relancer la roue (+1 stress)') : 'Tourner la roue de l\'étal') + '</button>' : '';
-    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue et le goût du moment, frais ' + Q.fee + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' sur ' + Q.stallUnits + ', frais ' + Q.fee + ')</span>');
+    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.income ? ' · gîte <b class="num">+' + Q.income + ' EB</b>' : '') + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue et le goût du moment, frais ' + Q.fee + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' sur ' + Q.stallUnits + ', frais ' + Q.fee + ')</span>');
     var acts = (Q.activities || []).map(function (a) {
-      return '<div style="font-size:13px"><b>' + a.icon + ' ' + esc(a.name) + '</b> : ' + (a.roll ? (a.n ? '<span style="color:var(--good);font-weight:700">dé ' + a.roll + (a.gain ? ' · +' + a.gain + ' EB' : '') + '</span>' : '<span style="color:var(--bad);font-weight:700">dé 1 · ne fonctionne pas</span>') : '<span class="muted">dé pas encore lancé (onglet Accueil, étape Aléa)</span>') + '</div>';
+      return '<div style="font-size:13px"><b>' + a.icon + ' ' + esc(a.name) + '</b> : ' + (a.roll ? (a.n ? '<span style="color:var(--good);font-weight:700">dé ' + a.roll + ' · ' + (V.meta.activities.filter(function (x) { return x.id === a.id; })[0].effects[a.roll - 1]) + (a.gain && a.id === 'magasin' ? ' (+' + a.gain + ' EB)' : '') + '</span>' : '<span style="color:var(--bad);font-weight:700">dé 1 · ne fonctionne pas</span>') : '<span class="muted">dé pas encore lancé (onglet Accueil, étape Aléa)</span>') + '</div>';
     }).join('');
     var report = Q.report && Q.report.length ? '<div class="stack" style="gap:6px"><b>📣 Retour du marché</b>' + Q.report.map(function (l) { return '<div style="border-left:4px solid ' + (l.level === 'tout' || l.level === 'bien' ? 'var(--good)' : 'var(--bad)') + ';padding-left:10px">' + esc(l.text) + '</div>'; }).join('') + '</div>' : '';
     var status = S.settled ? '<div style="color:var(--good);font-weight:700">Payé : ' + (S.amount >= 0 ? '+' : '−') + Math.abs(S.amount) + ' EB. Bien joué !</div>' : me.wheel ? '<div style="font-weight:700;color:var(--warn)">Montrez vos produits au maire du village : il vérifie et paie.</div>' : S.declared ? '<div style="font-weight:700;color:var(--warn)">Placement validé : tournez la roue de l\'étal, ou attendez le paiement du supermarché.</div>' : '';
@@ -447,7 +468,7 @@
       var c = V.card;
       if (!c) item('Le maire du village tire une carte…', false);
       else if (c.collective) item('Aléa collectif : donnez au pot commun si vous le voulez (bandeau en haut)', false, true);
-      else if (c.tone === 'neg') item('Choisir : subir, jouer sa parade ou ajouter 1 stress', !!me.choice);
+      else if (c.tone === 'neg') item('Choisir (bandeau en haut) : subir, jouer sa parade ou ajouter 1 stress', !!me.choice);
       else item('Bonne nouvelle : rien à faire', true);
       if (acts !== null) item('Lancer le dé de chaque activité complémentaire', acts);
     } else if (st === 1) {
@@ -500,7 +521,7 @@
     var st = V.step, h = hero(FF.ICON.steps[st], 'Étape ' + (st + 1) + ' sur 5', V.meta.steps[st].name, STEP_HINT[st]);
     if (me.stopped) return h + '<section class="panel warn"><b>😴 Burn-out</b><div>Votre ferme est à l\'arrêt cette saison : récupérez ! Les virements et les achats restent possibles.</div></section>';
     h += todoPanel() + challengePanel();
-    if (st === 0) return h + alea() + activitiesPanel() + readyCard();
+    if (st === 0) return h + aleaSummary() + activitiesPanel() + readyCard();
     if (st === 1) return h + harvestPanel() + collierPanel() + readyCard();
     if (st === 2) return h + harvestPanel() + tradePanel() + transfoPanel() + readyCard();
     if (st === 3) return h + marketPanel() + readyCard();
@@ -750,7 +771,7 @@
     if (a === 'deliver') return conn.act('deliverDish', { key: b.dataset.key, delivered: true });
     if (a === 'undeliver') return conn.act('deliverDish', { key: b.dataset.key, delivered: false });
     if (a === 'undoBuy') return conn.act('undoBuy').then(function (r) { if (r && r.ok) FF.toast('Achat annulé.'); });
-    if (a === 'choice') return conn.act('setChoice', { choice: b.dataset.choice });
+    if (a === 'choice') { colOpen = false; return conn.act('setChoice', { choice: b.dataset.choice }); }
     if (a === 'rollActivity') return conn.act('rollActivity', { activity: b.dataset.activity });
     if (a === 'contribute') { var gn = parseInt(val('giveN'), 10); if (!(gn > 0)) return FF.toast('Indique une quantité.'); return conn.act('contribute', { n: gn }).then(function (r) { if (r && r.ok) FF.toast('Merci pour le village !'); }); }
     if (a === 'offerTrade') {

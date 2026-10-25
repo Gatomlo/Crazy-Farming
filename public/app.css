@@ -294,6 +294,8 @@ body.display.hc canvas { opacity: .3; }
 .col-banner.ok { background: var(--teal); color: var(--teal-ink); box-shadow: none; }
 .col-banner.bad { background: var(--bad); color: #fff; box-shadow: none; }
 .col-banner.closed { cursor: default; }
+.col-banner.neg { background: var(--bad); color: #fff; box-shadow: none; }
+.col-banner.neg.done { opacity: .85; }
 
 /* Navigation : pastille du panier */
 .t-nav button { position: relative; }

@@ -79,7 +79,7 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - **Objectifs et bilan** : le bouton « Afficher les objectifs à l'écran » réaffiche les 3 étoiles et l'avancement ; « Bilan de saison » s'active ou se coupe à tout moment depuis l'en-tête de la console.
 - **Chronos différents** : quand des fermes ont des temps de course différents (protection, tracteur, coup de collier), le tableau « Qui peut encore courir ? » donne un décompte par ferme sur le projecteur et dans la console.
 - **Marché** : la colonne « Jetons à recevoir » indique d'un coup d'œil ce que la ferme doit te remettre (supermarché + étal).
-- **Fête** : chaque ferme livre ses plats depuis son mobile le jour de la fête ; tu peux valider à la main. Un échec pèse +2 stress pour tous.
+- **Fête** : chaque ferme livre ses plats depuis son mobile le jour de la fête ; tu peux valider à la main. Un échec pèse +2 stress pour tous, +1 par plat manquant pour son responsable.
 - **Projecteur** : la touche **F** coupe ou remet les effets visuels (tirage de carte, météo animée).
 - **Prochaine action** : un bandeau en haut de la console indique ce qu'il faut faire maintenant (tirer la carte, lancer le chrono, valider les jetons de telle ferme, régler les ventes, étape suivante…), avec le bouton correspondant et un « ? » d'aide sur l'étape.
 - **Projecteur** : la touche **C** active un mode fort contraste (fond noir, petits textes agrandis), à mémoriser pour les salles claires.

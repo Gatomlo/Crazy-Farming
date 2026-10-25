@@ -33,8 +33,8 @@ Réglés par le maire du village dans la salle d'attente, avant de lancer l'inst
 
 ## Matériel (boutique, étapes Achats ou à l'installation)
 Tout se met dans un **panier** : on ajoute les articles, on vérifie le total, puis on **valide** (le comptable annonce l'achat). Rien n'est payé avant la validation, et la boutique rappelle ce que la ferme possède déjà. L'achat peut être annulé pendant quelques secondes.
-- **Panier de récolte** 40 EB : l'un de vos coureurs ramène 2 jetons par trajet (cumulable, un panier par coureur).
-- **Brouette** 120 EB (une seule par ferme) : chaque coureur de la ferme ajoute **2 jetons** à sa récolte, pour chaque produit récoltable. Les jetons bonus sont ajoutés automatiquement à l'encodage.
+- **Panier de récolte** 40 EB : l'un de vos coureurs peut prendre **2 jetons au lieu d'1** à chaque trajet (cumulable, un panier par coureur).
+- **Brouette** 120 EB (une seule par ferme) : **tous** les coureurs de la ferme peuvent prendre 2 jetons au lieu d'1 à chaque trajet. C'est une règle physique : les coureurs comptent eux-mêmes leurs jetons, l'encodage ne change pas.
 - **Tracteur** 100 EB : vos coureurs peuvent courir un demi aller-retour de plus à chaque récolte, après la fin du chrono (l'app indique les secondes, par exemple 15 s).
 - Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle ; en hiver, vous pouvez courir plus longtemps pour les fruits et légumes : l'app indique les secondes en plus), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
 - **Table de marché** 40 EB : l'étal passe à 10 produits (8 au départ). Elle se cumule avec la camionnette : 14 produits avec les deux.
@@ -45,21 +45,16 @@ Tout se met dans un **panier** : on ajoute les articles, on vérifie le total, p
 Une vacance retire 1 stress tout de suite pour 30 EB, mais elle prive la ferme d'un coureur pendant une saison (environ 3 jetons, soit 20 EB ou plus). Elle coûte donc 50 EB et plus par stress : c'est le remède d'urgence. Le hamac coûte 100 EB et retire 1 stress par saison, pour toute la partie : il devient rentable dès la 2ᵉ saison, mais il est limité à 1 par ferme, donc au plus −1 par saison. Les deux se complètent : le hamac pour le stress de fond, les vacances pour les coups durs.
 
 ## Activités complémentaires
-Quatre activités, à acheter à l'installation ou en fin d'année (100 EB chacune, une fois chacune, mais une ferme peut en acheter plusieurs différentes ; chacune compte comme une tuile pour la taxe) :
-- 🛏️ **Gîte à la ferme** : des plats posés à l'étal sont vendus d'office, sans passer par la roue.
-- 🥫 **Magasin à la ferme** : des produits bruts posés à l'étal sont vendus d'office.
-- 🍽️ **Restaurant à la ferme** : après la roue, des invendus de l'étal sont rachetés au prix du supermarché.
-- 🐑 **Ferme pédagogique** : des jetons bonus s'ajoutent à la récolte, sur le produit que la ferme cultive le plus.
+Quatre activités, à acheter à l'installation ou en fin d'année (100 EB chacune, une fois chacune, mais une ferme peut en acheter plusieurs différentes ; chacune compte comme une tuile pour la taxe). **Chacune a un effet différent** :
+- 🛏️ **Gîte à la ferme** : une **recette en EB** s'ajoute à vos ventes du marché, quoi que fasse la roue (15, 20, 25, 35 ou 45 EB pour un dé de 2 à 6).
+- 🥫 **Magasin à la ferme** : des **produits bruts posés à l'étal sont vendus d'office**, sans passer par la roue (2, 2, 3, 3 ou 4 produits).
+- 🍽️ **Restaurant à la ferme** : des **recettes en plus** à la transformation (+1, +1, +2, +2 ou +3 sur la limite de recettes de la saison).
+- 🐑 **Ferme pédagogique** : des **jetons bonus à la récolte**, sur le produit que la ferme cultive le plus (2, 3, 4, 5 ou 6 jetons).
 
-**À chaque saison (étape Aléa), la ferme lance un dé par activité.** Sur **1**, l'activité ne fonctionne pas du tout (1 chance sur 6). De 2 à 6, plus le dé est haut, plus l'effet est fort :
-- Gîte : 1, 1, 2, 2, 3 plats pour 2, 3, 4, 5, 6.
-- Magasin : 2, 2, 3, 3, 4 produits.
-- Restaurant : 2, 2, 3, 4, 5 invendus.
-- Ferme pédagogique : 2, 3, 4, 5, 6 jetons.
-L'app propose le lancer sur le mobile (le maire du village peut lancer à la place des fermes), explique l'effet obtenu et l'applique au marché ou à la récolte.
+**À chaque saison (étape Aléa), la ferme lance un dé par activité.** Sur **1**, l'activité ne fonctionne pas du tout (1 chance sur 6). De 2 à 6, plus le dé est haut, plus l'effet est fort. L'app propose le lancer sur le mobile (le maire du village peut lancer à la place des fermes), explique l'effet obtenu et l'applique.
 
 ## Aléas
-Une carte par saison, tirée par le maire du village. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter 1 stress** pour éviter l'effet. Les fermes qui ont des activités complémentaires lancent leurs dés à cette étape.
+Une carte par saison, tirée par le maire du village. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter 1 stress** pour éviter l'effet. Les fermes qui ont des activités complémentaires lancent leurs dés à cette étape. La carte est affichée dans un **bandeau tout en haut du mobile** qui ouvre le détail et le choix (comme l'aléa collectif).
 
 ### Météo
 Pendant l'étape Achats (et dès l'installation pour le printemps de l'année 1), une **prévision météo** est annoncée pour la saison suivante, sur l'écran de projection et sur les mobiles : froid, chaleur, orages, brouillard, temps doux, ou ciel incertain. Elle aide à décider d'acheter une parade, mais elle **n'est pas fiable** :
@@ -160,13 +155,13 @@ Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits
   - Hiver : fromage, gratin, quiche, lasagne, viande recherchés ; confiture, tarte, cake, fruits et légumes boudés.
 - Un plat vaut son multiplicateur × le prix du produit brut (×3, ×4, ×5).
 - Cartes : touristes (au moins trois quarts vendus), grève et routes enneigées (étal fermé), hiver gourmand (+5 EB par plat).
-- Activités complémentaires : gîte (plats d'office), magasin (produits bruts d'office), restaurant (invendus rachetés), selon le dé de la saison (voir plus haut).
+- Activités complémentaires : le gîte verse une recette en EB et le magasin vend d'office des produits bruts de l'étal, selon le dé de la saison (voir plus haut).
 
 ## Bocal de stress
 - Un point de stress = un prix payé pour aller plus vite. Niveaux : **Zen** (0 à 3), **Agité** (4 à 6), **Stressé** (7 à 9).
 - À **10 points de stress : burn-out**. La ferme repart avec 3 points de stress mais s'arrête une saison : pas de récolte, de transformation ni de marché. Achats, virements et vacances restent possibles ; les charges courent toujours.
 - **Vacances** : 30 EB par voyageur, à l'étape Achats (dans la boutique) ; −1 stress, et le voyageur ne court pas la saison suivante.
-- Hamac : −1 stress par saison. Fête réussie : −2 stress. **Fête ratée : +2 stress pour toute ferme, plus +2 par plat non livré pour son responsable (4 au plus).** L'échec pèse donc plus lourd que la réussite ne rapporte.
+- Hamac : −1 stress par saison. Fête réussie : −2 stress. **Fête ratée : +2 stress pour toutes les fermes, plus +1 par plat non livré pour son responsable.**
 
 ## Banque et virements
 - Départ : 500 EB. Les virements entre fermes ou vers le maire du village se font sur mobile avec un motif imposé (vente de produits, échange à la bourse, remboursement ; taxe, achat, amende). Pendant un aléa collectif en argent, un **compte du village** s'ouvre dans l'onglet Banque : on y vire ses EB (motif « Don au village »), la cagnotte avance pour tout le village.
@@ -189,4 +184,4 @@ Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits
 - Le **bilan de saison** s'active ou se coupe à tout moment depuis la console.
 
 ## Application mobile
-Quatre onglets : **Accueil** (ce qu'il y a à faire maintenant, avec les actions de l'étape), **Ferme** (stock toujours visible, tuiles, activités, matériel, stress, objectifs, commande de la fête, charges), **Boutique** (panier, vacances, matériel, agrandissements et activités en fin d'année) et **Banque**. L'aléa collectif est un bandeau tout en haut : il ouvre le détail et les dons tant que l'objectif n'est pas atteint, puis change de couleur et se referme. À la roue du marché, une animation montre où elle s'arrête, avec toutes les issues possibles. Si des fermes ont des temps de course différents (protection, tracteur, coup de collier), le projecteur et la console affichent un décompte par ferme.
+Quatre onglets : **Accueil** (ce qu'il y a à faire maintenant, avec les actions de l'étape), **Ferme** (stock toujours visible, tuiles, activités, matériel, stress, objectifs, commande de la fête, charges), **Boutique** (panier, vacances, matériel, agrandissements et activités en fin d'année) et **Banque**. La carte aléa et l'aléa collectif sont des bandeaux tout en haut : celui de l'aléa collectif ouvre le détail et les dons tant que l'objectif n'est pas atteint, puis change de couleur et se referme. À la roue du marché, une animation montre où elle s'arrête, avec toutes les issues possibles. Si des fermes ont des temps de course différents (protection, tracteur, coup de collier), le projecteur et la console affichent un décompte par ferme.

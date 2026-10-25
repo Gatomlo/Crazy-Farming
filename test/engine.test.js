@@ -310,7 +310,7 @@ test('menu de la fete : tirage, repartition, livraison, responsabilite', () => {
   const resp = s.teams.find((t) => t.id === s.menu.items[0].team);
   E.fete(s); // calculee : un plat manque
   assert.equal(s.fetes[0].success, false);
-  assert.equal(resp.bocal, 4); // +2 fete ratee, +2 pour le plat non livre de son responsable
+  assert.equal(resp.bocal, 3); // +2 fete ratee, +1 pour le plat non livre de son responsable
   assert.equal(s.teams.find((t) => t !== resp).bocal, 2);
   // annee 2 : menu plus complexe et different
   E.nextYear(s);
@@ -1078,23 +1078,18 @@ test('boutique : hamac unique, vacances dans le panier, jamais plus de voyageurs
   assert.match(shop.find((i) => i.id === 'serre').effect, /15 s de plus/);
 });
 
-test('brouette : +2 jetons par coureur, uniquement sur les produits récoltables', () => {
+test('panier et brouette : règle physique (2 jetons par trajet), l’encodage ne change pas', () => {
   const s = newGame(2);
   toSeason(s);
   s.season = 0; s.step = 1;
-  const t = s.teams[0]; // 2 chèvreries + 1 poulailler
+  const t = s.teams[0];
   t.equipment.push('brouette');
   E.declareHarvest(s, t.id, { lait: 5, oeuf: 2 }, true);
   const h = E.viewFor(s, 'team', t.id).teams[0].harvest;
-  assert.equal(h.find((x) => x.id === 'lait').value, 5 + 4); // 2 coureurs x 2
-  assert.equal(h.find((x) => x.id === 'oeuf').value, 2 + 2);
-  assert.equal(E.viewFor(s, 'team', t.id).teams[0].stock.raw.lait, 9);
-  const m = s.teams[1]; // maraîchers : fruits et légumes + œufs, gel tardif => fruits non récoltables
-  m.equipment.push('brouette');
-  s.card = Object.assign({ season: 0 }, D.CARDS[0][0]);
-  E.declareHarvest(s, m.id, { oeuf: 1 }, true);
-  const mh = E.viewFor(s, 'team', m.id).teams.find((x) => x.id === m.id).harvest;
-  assert.equal(mh.find((x) => x.id === 'fl').bonus.brouette, 0, 'pas de bonus sans course');
+  assert.equal(h.find((x) => x.id === 'lait').value, 5, 'les jetons encodés sont ceux rapportés');
+  assert.equal(E.viewFor(s, 'team', t.id).teams[0].stock.raw.lait, 5);
+  assert.match(D.CATALOGUE.find((i) => i.id === 'brouette').effect, /2 jetons au lieu d’1/);
+  assert.match(D.CATALOGUE.find((i) => i.id === 'panier').effect, /Un de vos coureurs/);
 });
 
 test('activités : un dé par activité, 1 = rien, achat unique, effets chiffrés', () => {
@@ -1115,20 +1110,27 @@ test('activités : un dé par activité, 1 = rien, achat unique, effets chiffré
   assert.equal(t.actRolls.resto, 1);
   assert.equal(E.activityEffect('resto', 1).n, 0);
   assert.match(E.activityEffect('resto', 1).text, /ne fonctionne pas/);
-  // marché : le gîte garantit 3 plats à l'étal même quand la roue ne vend rien
+  // marché : le gîte verse sa recette en EB quoi que fasse la roue ; le magasin vend d'office des produits bruts de l'étal
   s.step = 3;
-  t.pantry.fromage = 3; t.dishes.simple = 3;
-  E.declareSales(s, t.id, { dir_fromage: 3 });
+  t.actRolls.gite = 6; // 45 EB
+  E.declareSales(s, t.id, {});
+  assert.equal(E.salesQuote(s, t, t.sales).total, 45, 'recette du gîte sans aucune vente');
+  t.rawAdj = { lait: 5 }; t.sales = null;
+  E.declareSales(s, t.id, { dir_lait: 4 });
   t.wheel = { label: 'Rien ne se vend', frac: 0, idx: 10, n: 1 };
-  const q = E.salesQuote(s, t, t.sales);
-  assert.equal(q.soldUnits, 3);
-  assert.equal(q.sold, 3 * 42);
-  assert.equal(q.total, 3 * 42 - D.MARKET.stallFee);
-  assert.equal(q.activities.find((a) => a.id === 'gite').gain, 3 * 42);
-  // restaurant à 6 : rachète les invendus au prix du supermarché
-  t.actRolls.gite = 1; t.actRolls.resto = 6;
-  const q2 = E.salesQuote(s, t, t.sales);
-  assert.equal(q2.sold, 3 * 21, '3 invendus rachetés à 21 EB (3 x 7)');
+  t.actRolls.magasin = 1;
+  let q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.soldUnits, 0); assert.equal(q.total, 45 - D.MARKET.stallFee);
+  t.activities.push('magasin'); t.actRolls.magasin = 6; // 4 produits d'office
+  q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.soldUnits, 4); assert.equal(q.sold, 4 * 14);
+  assert.equal(q.total, 4 * 14 - D.MARKET.stallFee + 45);
+  assert.equal(q.activities.find((a) => a.id === 'magasin').gain, 4 * 14);
+  // le restaurant ajoute des recettes à la transformation
+  t.actRolls.resto = 6; t.activities.push('resto');
+  assert.equal(E.viewFor(s, 'team', t.id).teams[0].recipeLimit, 1 + 3);
+  t.actRolls.resto = 1;
+  assert.equal(E.viewFor(s, 'team', t.id).teams[0].recipeLimit, 1);
   // le dé de la ferme pédagogique ajoute des jetons au produit le plus cultivé
   s.step = 1; t.stopped = false;
   E.buyCart(s, t.id, ['act_pedago'], true);
@@ -1225,13 +1227,13 @@ test('fête : livraison par la ferme (le plat quitte son stock), échec plus lou
   E.deliverDish(s, a.id, mine[0].key);
   E.setDelivered(s, mine[0].key, false); // le maire retire la livraison : le plat revient au stock
   assert.equal(a.pantry[mine[0].dish], 1);
-  // échec : +2 pour tous, +2 par plat non livré (4 au plus) pour le responsable
+  // échec : +2 pour tous, +1 par plat non livré pour le responsable
   for (const it of s.menu.items) it.delivered = false;
   a.bocal = 0; b.bocal = 0;
   E.fete(s);
   assert.equal(s.fetes[0].success, false);
-  assert.equal(a.bocal, 2 + 4, 'deux plats manquants : plafond de +4');
-  assert.equal(b.bocal, 2 + 4);
+  assert.equal(a.bocal, 2 + 2, 'deux plats manquants : +1 chacun');
+  assert.equal(b.bocal, 2 + 2);
   assert.throws(() => E.deliverDish(s, a.id, mine[0].key), /déjà jouée/);
 });
 

@@ -128,7 +128,7 @@ function play(P, seed, strat) {
           const crew = Math.min(h.runners, staffLeft); staffLeft -= crew;
           for (let k = 0; k < crew; k++) {
             const trip = P.tripSec * P.skillRef / clip(a.skill + P.noiseSd * gauss(r), 0.3, 1.1); // skillRef : habilete du joueur qui a chronometre l'essai
-            tokens += Math.floor(h.runSec / trip) * (h.perTrip + (k === 0 && i < nBrouette ? 1 : 0));
+            tokens += Math.floor(h.runSec / trip) * (h.perTrip + (t.equipment.includes('brouette') || (k === 0 && i < nBrouette) ? 1 : 0));
           }
           enc[h.id] = tokens;
           a.stock[h.id] += tokens;
