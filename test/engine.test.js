@@ -62,7 +62,7 @@ test('chrono : lancer, pause, remise a zero', () => {
   assert.equal(s.timer.remainingMs, 30000);
 });
 
-test('carte : parade, +1 boule ou subir ; le de 6 ne donne plus de boule', () => {
+test('carte : parade, +1 stress ou subir', () => {
   const s = newGame();
   toSeason(s);
   s.season = 2; // automne : renard / brouillard
@@ -83,7 +83,6 @@ test('carte : parade, +1 boule ou subir ; le de 6 ne donne plus de boule', () =>
   assert.equal(t.bocal, 0);
   E.drawCard(s, 1); // nouvelle carte : les choix sont remis a zero
   assert.equal(t.choice, null);
-  E.rollDie(s, 6);
   assert.equal(t.bocal, 0);
 });
 
@@ -97,9 +96,11 @@ test('boutique : prix, stock, etape achats', () => {
   assert.equal(t.tiles.lait, 3);
   assert.equal(t.bank, 465);
   E.buy(s, t.id, 'chien');
-  assert.throws(() => E.buy(s, t.id, 'chien'), /Déjà acheté/);
+  assert.throws(() => E.buy(s, t.id, 'chien'), /déjà acheté/i);
+  E.buy(s, t.id, 'panier');
+  E.buy(s, t.id, 'panier'); // cumulable : un panier par coureur
   E.buy(s, t.id, 'brouette');
-  E.buy(s, t.id, 'brouette'); // multi
+  assert.throws(() => E.buy(s, t.id, 'brouette'), /déjà acheté/i, 'la brouette ne se cumule pas');
   t.bank = 90;
   assert.throws(() => E.buy(s, t.id, 'tracteur'), /Solde insuffisant/);
   assert.throws(() => E.buy(s, t.id, 'charrette'), /introuvable|inconnu|Article/i, 'la charrette n’existe plus');
@@ -309,8 +310,8 @@ test('menu de la fete : tirage, repartition, livraison, responsabilite', () => {
   const resp = s.teams.find((t) => t.id === s.menu.items[0].team);
   E.fete(s); // calculee : un plat manque
   assert.equal(s.fetes[0].success, false);
-  assert.equal(resp.bocal, 2); // +1 fete ratee, +1 responsable
-  assert.equal(s.teams.find((t) => t !== resp).bocal, 1);
+  assert.equal(resp.bocal, 4); // +2 fete ratee, +2 pour le plat non livre de son responsable
+  assert.equal(s.teams.find((t) => t !== resp).bocal, 2);
   // annee 2 : menu plus complexe et different
   E.nextYear(s);
   assert.equal(s.menu.items.length, 12);
@@ -1031,4 +1032,250 @@ test('défi de saison zéro perte (facultatif) et bilan de saison', () => {
   const s2 = newGame(2); toSeason(s2); E.jumpTo(s2, 1, 0);
   assert.equal(E.viewFor(s2, 'display').challenge, null);
   E.setMode(newGame(1), { size: 5, years: 3, recap: false });
+});
+
+// ---------- Boutique : panier, activités, matériel ----------
+test('panier : tout passe ou rien, prix cumulés, annulation du panier entier', () => {
+  const s = newGame(2);
+  E.startSetup(s);
+  const t = s.teams[0]; // 2 chèvreries, 1 poulailler
+  assert.throws(() => E.buyCart(s, t.id, []), /vide/);
+  // deux fruits-et-légumes : le premier est d'un type nouveau (80), le second du même type (35)
+  const total = E.buyCart(s, t.id, ['tile_fl', 'tile_fl', 'panier', 'panier']);
+  assert.equal(total, 80 + 35 + 40 + 40);
+  assert.equal(t.tiles.fl, 2); assert.equal(t.equipment.filter((e) => e === 'panier').length, 2);
+  assert.equal(t.bank, 500 - total);
+  assert.equal(t.purchases.length, 4);
+  assert.equal(E.viewFor(s, 'team', t.id).teams[0].undo.name.split(', ').length, 4);
+  E.undoBuy(s, t.id);
+  assert.equal(t.bank, 500); assert.equal(t.tiles.fl || 0, 0); assert.equal(t.equipment.length, 0); assert.equal(t.purchases.length, 0);
+  // un article de trop : rien n'est acheté
+  t.bank = 100;
+  assert.throws(() => E.buyCart(s, t.id, ['panier', 'panier', 'panier']), /Solde insuffisant/);
+  assert.equal(t.bank, 100); assert.equal(t.equipment.length, 0);
+  assert.throws(() => E.buyCart(s, t.id, ['chien', 'chien']), /déjà acheté/i);
+  assert.equal(t.equipment.length, 0);
+  assert.throws(() => E.buyCart(s, t.id, ['inconnu']), /Article inconnu/);
+});
+
+test('boutique : hamac unique, vacances dans le panier, jamais plus de voyageurs que de stress', () => {
+  const s = newGame(2);
+  toSeason(s);
+  s.step = 4;
+  const t = s.teams[0];
+  assert.throws(() => E.buyCart(s, t.id, ['vacance']), /0 stress/);
+  E.addBocal(s, t.id, 3, 'test');
+  assert.throws(() => E.buyCart(s, t.id, ['vacance', 'vacance', 'vacance', 'vacance']), /pas plus de 3/);
+  E.buyCart(s, t.id, ['vacance', 'vacance', 'hamac']);
+  assert.equal(t.bocal, 1); assert.equal(t.bank, 500 - 60 - 100);
+  assert.throws(() => E.buyCart(s, t.id, ['hamac']), /déjà acheté/i);
+  E.undoBuy(s, t.id);
+  assert.equal(t.bocal, 3); assert.equal(t.bank, 500);
+  assert.throws(() => E.vacation(s, t.id, 5), /3 stress/);
+  const shop = E.viewFor(s, 'team', t.id).teams[0].shop;
+  assert.equal(shop.find((i) => i.id === 'vacance').max, 3);
+  assert.match(shop.find((i) => i.id === 'tracteur').effect, /15 s de plus/);
+  assert.match(shop.find((i) => i.id === 'serre').effect, /15 s de plus/);
+});
+
+test('brouette : +2 jetons par coureur, uniquement sur les produits récoltables', () => {
+  const s = newGame(2);
+  toSeason(s);
+  s.season = 0; s.step = 1;
+  const t = s.teams[0]; // 2 chèvreries + 1 poulailler
+  t.equipment.push('brouette');
+  E.declareHarvest(s, t.id, { lait: 5, oeuf: 2 }, true);
+  const h = E.viewFor(s, 'team', t.id).teams[0].harvest;
+  assert.equal(h.find((x) => x.id === 'lait').value, 5 + 4); // 2 coureurs x 2
+  assert.equal(h.find((x) => x.id === 'oeuf').value, 2 + 2);
+  assert.equal(E.viewFor(s, 'team', t.id).teams[0].stock.raw.lait, 9);
+  const m = s.teams[1]; // maraîchers : fruits et légumes + œufs, gel tardif => fruits non récoltables
+  m.equipment.push('brouette');
+  s.card = Object.assign({ season: 0 }, D.CARDS[0][0]);
+  E.declareHarvest(s, m.id, { oeuf: 1 }, true);
+  const mh = E.viewFor(s, 'team', m.id).teams.find((x) => x.id === m.id).harvest;
+  assert.equal(mh.find((x) => x.id === 'fl').bonus.brouette, 0, 'pas de bonus sans course');
+});
+
+test('activités : un dé par activité, 1 = rien, achat unique, effets chiffrés', () => {
+  const s = newGame(2);
+  E.startSetup(s);
+  const t = s.teams[0];
+  E.buyCart(s, t.id, ['act_gite', 'act_resto']);
+  assert.deepEqual(t.activities, ['gite', 'resto']);
+  assert.equal(t.tiles.activite, 2);
+  assert.throws(() => E.buyCart(s, t.id, ['act_gite']), /déjà acheté/i);
+  assert.equal(E.estimateCharges(t).taxes, (3 + 2) * 20, 'chaque activité compte pour la taxe');
+  go(s);
+  assert.throws(() => E.rollActivity(s, t.id, 'pedago'), /pas acheté/);
+  E.rollActivity(s, t.id, 'gite', undefined, () => 0.99); // 6
+  assert.equal(t.actRolls.gite, 6);
+  assert.throws(() => E.rollActivity(s, t.id, 'gite'), /déjà lancé/);
+  assert.equal(E.rollAllActivities(s, () => 0), 1, 'le maire lance les dés qui manquent');
+  assert.equal(t.actRolls.resto, 1);
+  assert.equal(E.activityEffect('resto', 1).n, 0);
+  assert.match(E.activityEffect('resto', 1).text, /ne fonctionne pas/);
+  // marché : le gîte garantit 3 plats à l'étal même quand la roue ne vend rien
+  s.step = 3;
+  t.pantry.fromage = 3; t.dishes.simple = 3;
+  E.declareSales(s, t.id, { dir_fromage: 3 });
+  t.wheel = { label: 'Rien ne se vend', frac: 0, idx: 10, n: 1 };
+  const q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.soldUnits, 3);
+  assert.equal(q.sold, 3 * 42);
+  assert.equal(q.total, 3 * 42 - D.MARKET.stallFee);
+  assert.equal(q.activities.find((a) => a.id === 'gite').gain, 3 * 42);
+  // restaurant à 6 : rachète les invendus au prix du supermarché
+  t.actRolls.gite = 1; t.actRolls.resto = 6;
+  const q2 = E.salesQuote(s, t, t.sales);
+  assert.equal(q2.sold, 3 * 21, '3 invendus rachetés à 21 EB (3 x 7)');
+  // le dé de la ferme pédagogique ajoute des jetons au produit le plus cultivé
+  s.step = 1; t.stopped = false;
+  E.buyCart(s, t.id, ['act_pedago'], true);
+  t.actRolls.pedago = 6;
+  E.declareHarvest(s, t.id, { lait: 4, oeuf: 1 }, true);
+  const h = E.viewFor(s, 'team', t.id).teams[0].harvest;
+  assert.equal(h.find((x) => x.id === 'lait').bonus.pedago, 6);
+  assert.equal(h.find((x) => x.id === 'lait').value, 10);
+  assert.equal(h.find((x) => x.id === 'oeuf').bonus.pedago, 0);
+});
+
+test('activités : dé réservé aux fermes qui ont l’activité, hors installation', () => {
+  const s = newGame(1);
+  E.startSetup(s);
+  assert.throws(() => E.rollActivity(s, s.teams[0].id, 'gite'), /pendant une saison/);
+  E.giftTile(s, s.teams[0].id, 'magasin');
+  assert.deepEqual(s.teams[0].activities, ['magasin']);
+  assert.throws(() => E.giftTile(s, s.teams[0].id, 'magasin'), /déjà/);
+  assert.throws(() => E.giftTile(s, s.teams[0].id, 'activite'), /inconnu/);
+});
+
+// ---------- Bourse : produits contre produits ----------
+test('bourse : échange produit contre produit, avec ou sans EB', () => {
+  const s = newGame();
+  toSeason(s);
+  const [a, b] = s.teams;
+  s.step = 1; fullHarvest(s, a); fullHarvest(s, b); s.step = 2;
+  const st = (t) => E.viewFor(s, 'admin').teams.find((x) => x.id === t.id).stock;
+  a.pantry.fromage = 1; a.dishes.simple = 1;
+  assert.throws(() => E.offerTrade(s, a.id, { to: b.id }), /au moins un produit/);
+  const lait = st(a).raw.lait, oeufB = st(b).raw.oeuf, fl = st(b).raw.fl;
+  const id = E.offerTrade(s, a.id, { to: b.id, items: { lait: 2 }, want: { fl: 3 } });
+  assert.equal(E.viewFor(s, 'team', b.id).trades[0].want[0].n, 3);
+  const bankA = a.bank;
+  E.respondTrade(s, b.id, id, true);
+  assert.equal(st(a).raw.lait, lait - 2); assert.equal(st(b).raw.lait, 2);
+  assert.equal(st(a).raw.fl, 3); assert.equal(st(b).raw.fl, fl - 3);
+  assert.equal(a.bank, bankA, 'pas d’argent en jeu');
+  E.revertTrade(s, id);
+  assert.equal(st(a).raw.lait, lait); assert.equal(st(b).raw.fl, fl);
+  // la ferme destinataire doit avoir ce qu'on lui demande
+  const id2 = E.offerTrade(s, a.id, { to: b.id, items: { lait: 1 }, want: { viande: 1 } });
+  assert.throws(() => E.respondTrade(s, b.id, id2, true), /en stock/);
+  // achat : la ferme qui propose paie (payer = from) ; produit contre produit plus un complément en EB
+  const id3 = E.offerTrade(s, a.id, { to: b.id, want: { oeuf: 2 }, price: 25, payer: 'from' });
+  const [ba, bb] = [a.bank, b.bank];
+  E.respondTrade(s, b.id, id3, true);
+  assert.equal(a.bank, ba - 25); assert.equal(b.bank, bb + 25);
+  assert.equal(st(b).raw.oeuf, oeufB - 2);
+  E.revertTrade(s, id3);
+  assert.equal(a.bank, ba); assert.equal(b.bank, bb);
+});
+
+// ---------- Compte du village, fête, charges ----------
+test('compte du village : virement en argent vers la cagnotte d’un aléa collectif', () => {
+  const s = newGame(3);
+  toSeason(s);
+  s.collective = { year: 1, id: 'inondation', season: 0, done: false };
+  const t = s.teams[0];
+  assert.throws(() => E.transfer(s, t.id, 'village', 10, 'Don au village'), /aléa collectif/);
+  E.drawCard(s);
+  const va = E.viewFor(s, 'team', t.id).villageAccount;
+  assert.equal(va.pot, 0); assert.equal(va.need, s.card.need); assert.equal(va.open, true);
+  assert.throws(() => E.transfer(s, t.id, 'village', 10, 'Vente de produits'), /motif/);
+  E.transfer(s, t.id, 'village', 10, 'Don au village');
+  assert.equal(t.bank, 490);
+  assert.equal(E.viewFor(s, 'display').villageAccount.pot, 10);
+  assert.throws(() => E.transfer(s, t.id, 'village', 40, 'Don au village'), /donne au plus/);
+  E.transfer(s, t.id, 'village', s.card.need - 10, 'Don au village');
+  assert.equal(E.viewFor(s, 'team', t.id).villageAccount.open, false);
+  const s2 = newGame(2); toSeason(s2); E.drawCard(s2, 0);
+  assert.equal(E.viewFor(s2, 'team', s2.teams[0].id).villageAccount, null, 'compte fermé sans aléa collectif en argent');
+});
+
+test('fête : livraison par la ferme (le plat quitte son stock), échec plus lourd, charges par année', () => {
+  const s = newGame(2);
+  toSeason(s);
+  const [a, b] = s.teams;
+  s.phase = 'closing'; s.closedYear = false;
+  const mine = s.menu.items.filter((i) => i.team === a.id);
+  assert.throws(() => E.deliverDish(s, a.id, mine[0].key), /charges/);
+  E.closeYear(s);
+  assert.equal(a.chargesLog.length, 1); assert.equal(a.chargesLog[0].year, 1);
+  assert.equal(E.viewFor(s, 'team', a.id).teams.find((x) => x.id === a.id).chargesHistory[0].total, E.estimateCharges(a).total === a.chargesLog[0].total ? a.chargesLog[0].total : -1);
+  assert.throws(() => E.deliverDish(s, a.id, mine[0].key), /stock/);
+  assert.throws(() => E.deliverDish(s, b.id, mine[0].key), /pas à vous/);
+  a.pantry[mine[0].dish] = 1; a.dishes[['', 'simple', 'mixed', 'composed'][D.DISHES.find((d) => d.id === mine[0].dish).tier]] = 1;
+  E.deliverDish(s, a.id, mine[0].key);
+  assert.equal(a.pantry[mine[0].dish], 0);
+  assert.equal(s.menu.items.find((i) => i.key === mine[0].key).delivered, true);
+  assert.equal(E.viewFor(s, 'team', a.id).menu.items.find((i) => i.key === mine[0].key).viaStock, true);
+  E.deliverDish(s, a.id, mine[0].key, false); // la ferme reprend sa livraison
+  assert.equal(a.pantry[mine[0].dish], 1);
+  E.deliverDish(s, a.id, mine[0].key);
+  E.setDelivered(s, mine[0].key, false); // le maire retire la livraison : le plat revient au stock
+  assert.equal(a.pantry[mine[0].dish], 1);
+  // échec : +2 pour tous, +2 par plat non livré (4 au plus) pour le responsable
+  for (const it of s.menu.items) it.delivered = false;
+  a.bocal = 0; b.bocal = 0;
+  E.fete(s);
+  assert.equal(s.fetes[0].success, false);
+  assert.equal(a.bocal, 2 + 4, 'deux plats manquants : plafond de +4');
+  assert.equal(b.bocal, 2 + 4);
+  assert.throws(() => E.deliverDish(s, a.id, mine[0].key), /déjà jouée/);
+});
+
+test('bilan de saison réglable en cours de partie, objectifs affichables', () => {
+  const s = newGame(2);
+  toSeason(s);
+  assert.equal(E.viewFor(s, 'display').recap !== null, true);
+  E.setRecap(s, false);
+  assert.equal(E.viewFor(s, 'display').recap, null);
+  E.setRecap(s, true);
+  assert.notEqual(E.viewFor(s, 'display').recap, null);
+  const g = E.viewFor(s, 'team', s.teams[0].id).goals;
+  assert.equal(g.stars.length, 3); assert.equal(g.perYear.length, 3);
+  assert.equal(g.perYear[0].current, true); assert.equal(g.perYear[0].fete, 'todo');
+  assert.equal(g.stars[0].ok, true);
+  s.teams[0].burnouts = 1;
+  assert.equal(E.viewFor(s, 'display').goals.stars[0].lost, true);
+});
+
+test('roue : numéro de tirage et case exposés', () => {
+  const s = newGame(1);
+  toSeason(s);
+  s.step = 3;
+  const t = s.teams[0];
+  t.tiles = { lait: 2 }; t.pantry = {}; t.rawAdj = { lait: 5 };
+  s.step = 1; E.declareHarvest(s, t.id, { lait: 4 }, true); s.step = 3;
+  E.declareSales(s, t.id, { dir_lait: 2 });
+  const w = E.spinWheel(s, t.id, () => 0);
+  assert.equal(w.idx, 0); assert.equal(w.n, 1);
+  assert.equal(E.viewFor(s, 'display').meta.wheel.length, 12);
+  assert.equal(E.viewFor(s, 'display').teams[0].wheel.idx, 0);
+});
+
+test('chrono différencié : secondes de course de chaque ferme visibles de tous', () => {
+  const s = newGame(2);
+  toSeason(s);
+  s.season = 2; s.step = 1;
+  s.card = Object.assign({ season: 2 }, D.CARDS[2][1]); // brouillard : moitié moins de course
+  const [a, b] = s.teams;
+  a.choice = 'boule'; // protégée
+  a.equipment.push('tracteur');
+  const v = E.viewFor(s, 'display');
+  const ra = v.teams.find((t) => t.id === a.id).runs, rb = v.teams.find((t) => t.id === b.id).runs;
+  assert.ok(ra.oeuf > rb.oeuf, 'la ferme protégée court plus longtemps');
+  assert.equal(rb.oeuf, 30, 'brouillard : moitié moins de course');
+  assert.equal(ra.oeuf - 15, 60, 'tracteur : + un demi aller-retour (15 s) sur 60 s de base');
 });

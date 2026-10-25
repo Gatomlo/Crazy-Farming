@@ -18,7 +18,7 @@
 
   FF.connect({
     role: 'display', code: code,
-    onState: function (v) { V = v; render(); tick(); syncFx(); },
+    onState: function (v) { V = v; render(); tick(); syncFx(); watchFete(); },
     onFatal: function (m) { stage.innerHTML = '<div class="d-big">' + esc(m) + '</div><a href="./" style="font-size:40px">Accueil</a>'; }
   });
 
@@ -34,7 +34,18 @@
     if (!c) { FFX.set(null); return; }
     if (firstState || V.step !== 0) { FFX.set(c.fx || null); return; }
     stage.style.visibility = 'hidden';
-    FFX.reveal(c, { seasonName: V.seasonName, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
+    FFX.reveal(c, { seasonOf: V.seasonOf, onFlip: function () { stage.style.visibility = ''; FFX.set(c.fx || null); }, onDone: function () { stage.style.visibility = ''; } });
+  }
+
+  // Animation de la fete : quand le resultat de la fete de l'annee tombe.
+  var lastFetes = null;
+  function watchFete() {
+    var n = V.fetes ? V.fetes.length : 0;
+    if (lastFetes !== null && n > lastFetes && window.FFX) {
+      var f = V.fetes[n - 1];
+      FFX.fete(f.success, { text: f.success ? 'Le Phoenix renaît de ses cendres : −2 stress pour toutes les fermes !' : 'Plats manquants : +' + V.meta.fete.fail + ' stress pour tout le village, et davantage pour les fermes concernées.' });
+    }
+    lastFetes = n;
   }
 
   // Touche C : mode fort contraste (fond noir, textes agrandis) pour les salles claires ou les projecteurs faibles.
@@ -55,7 +66,7 @@
     FF.toast(on ? 'Effets visuels activés' : 'Effets visuels coupés (touche F pour les remettre)');
   });
 
-  var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 boule' };
+  var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 stress' };
 
   function head() {
     var inSeason = V.phase === 'season';
@@ -80,7 +91,7 @@
       if (t.stopped) extra = '<span class="d-tag bad">😴 À l\'arrêt</span>';
       var segs = ''; for (var i = 0; i < V.meta.bocalMax; i++) segs += '<i class="' + (i < t.bocal ? 'on ' + t.level : '') + '"></i>';
       return '<div class="d-team"><div class="d-team-top"><span class="nm">' + esc(t.name) + '</span><span class="lv" title="' + t.level + '">' + FF.ICON.level[t.level] + '</span></div>' +
-        '<div class="meter" role="img" aria-label="' + t.bocal + ' boules sur ' + V.meta.bocalMax + '">' + segs + '</div>' + (extra ? '<div>' + extra + '</div>' : '') + '</div>';
+        '<div class="meter" role="img" aria-label="' + t.bocal + ' points de stress sur ' + V.meta.bocalMax + '">' + segs + '</div>' + (extra ? '<div>' + extra + '</div>' : '') + '</div>';
     }).join('') + '</div>' + (V.villageGoal ? '<div class="d-village"><span>Caisse du village</span><b>' + V.villageBank + ' EB</b><i><u style="width:' + Math.min(100, Math.round(V.villageBank / V.villageGoal * 100)) + '%"></u></i><span>objectif ' + V.villageGoal + ' EB</span></div>' : '');
   }
 
@@ -109,8 +120,10 @@
     var runners = V.teams.filter(function (t) { return t.bonusSec > 0; }).map(function (t) { return esc(t.name) + ' +' + t.bonusSec + ' s'; });
     var bonus = runners.length ? '<div style="font-size:28px;color:var(--mint);font-weight:700">⏱️ Temps bonus : ' + runners.join(' · ') + '</div>' : '';
     var prot = safe.length && c && c.tone === 'neg' ? '<div style="font-size:26px;color:var(--mint);font-weight:700">Protégées (course normale) : ' + esc(safe.join(', ')) + '</div>' : '';
-    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px"><div class="d-big" style="font-size:56px">Récolte en relais</div><div style="font-size:28px;color:var(--muted)">Un coureur par tuile · un jeton par trajet · chaque produit s\'arrête à son STOP</div>' + rows +
-      '' + banner + stop + bonus + prot + '</section>';
+    // Chronos différenciés (fermes protégées, tracteur, coup de collier) : un décompte par ferme pour savoir qui a encore le droit de courir
+    var board = FF.runsDiffer(V) ? '<div style="font-size:30px;font-weight:800;margin-top:6px">⏱️ Qui peut encore courir ? <span style="font-weight:600;color:var(--muted);font-size:26px">Les temps diffèrent selon les fermes : suivez le vôtre.</span></div>' + FF.runBoard(V) : '';
+    return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px"><div class="d-big" style="font-size:56px">Récolte en relais</div><div style="font-size:28px;color:var(--muted)">Un coureur par tuile · un jeton par trajet · chaque produit s\'arrête à son STOP</div>' + (board ? '' : rows) +
+      board + banner + stop + (board ? '' : bonus + prot) + '</section>';
   }
 
   // Commande de la Fete du Phoenix : connue des le debut de l'annee pour pouvoir produire en consequence.
@@ -141,7 +154,7 @@
     var out = '';
     if (V.challenge) out += '<div style="font-size:40px;font-weight:700;color:var(--amber)">🎯 ' + esc(V.challenge.title) + ' <span style="font-size:30px;font-weight:600;color:var(--muted)">· ' + esc(V.challenge.text) + '</span></div>';
     var l = V.lastChallenge;
-    if (l && V.step === 0 && !(l.year === V.year && l.season === V.season)) out += '<div style="font-size:30px;color:var(--muted)">Défi de la saison dernière : ' + (l.winners.length ? '<b style="color:var(--mint)">' + esc(l.winners.join(', ')) + '</b> ' + (l.winners.length > 1 ? 'ont réussi' : 'a réussi') + ' (−1 boule)' : 'aucune ferme n\'a réussi') + '</div>';
+    if (l && V.step === 0 && !(l.year === V.year && l.season === V.season)) out += '<div style="font-size:30px;color:var(--muted)">Défi de la saison dernière : ' + (l.winners.length ? '<b style="color:var(--mint)">' + esc(l.winners.join(', ')) + '</b> ' + (l.winners.length > 1 ? 'ont réussi' : 'a réussi') + ' (−1 stress)' : 'aucune ferme n\'a réussi') + '</div>';
     return out;
   }
 
@@ -211,21 +224,22 @@
       return '<section class="d-card"><div class="d-big">Clôture de l\'année ' + V.year + '</div>' +
         '<div style="font-size:46px;font-weight:700">' + (V.closedYear ? 'Charges payées.' : 'Bilan comptable : payez vos charges.') + '</div>' +
         '<div style="font-size:38px;color:var(--muted)">Fête du Phoenix : ' + f.perFarm + ' produits transformés par ferme' + (f.mixed ? ', dont ' + f.mixed + ' recette' + (f.mixed > 1 ? 's' : '') + ' mixte' + (f.mixed > 1 ? 's' : '') : '') + '</div>' +
-        (V.feteDone ? '<div style="font-size:46px;font-weight:800;color:var(--mint)">' + (V.fetes[V.fetes.length - 1].success ? 'Fête réussie : −2 boules pour tous !' : 'Fête ratée : +1 boule pour tous, +1 pour les fermes dont un plat manque.') + '</div>' : '') + '</section>' + menuBoard();
+        (V.feteDone ? '<div style="font-size:46px;font-weight:800;color:var(--mint)">' + (V.fetes[V.fetes.length - 1].success ? 'Fête réussie : −2 stress pour tous !' : 'Fête ratée : +' + V.meta.fete.fail + ' stress pour tous, et jusqu\'à +' + V.meta.fete.cap + ' pour les fermes dont un plat manque.') + '</div>' : '') + '</section>' + menuBoard();
     }
     if (V.phase === 'end') {
       var s = V.stars;
       var star = function (ok, label) { return '<div class="d-q" style="font-size:44px;opacity:' + (ok ? 1 : .55) + '"><span style="font-size:64px;color:var(--amber)">' + (ok ? '★' : '☆') + '</span><span>' + esc(label) + '</span></div>'; };
       return '<section style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px"><div class="d-big">Le village a gagné ' + s.count + ' étoile' + (s.count > 1 ? 's' : '') + '</div>' +
-        star(s.s1, 'Aucune ferme au-dessus de ' + s.peakMax + ' boules') + star(s.s2, s.years === 2 ? 'Les deux fêtes du Phoenix réussies' : 'Les trois fêtes du Phoenix réussies') + star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB') +
+        star(s.s1, 'Aucune ferme au-dessus de ' + s.peakMax + ' points de stress') + star(s.s2, s.years === 2 ? 'Les deux fêtes du Phoenix réussies' : 'Les trois fêtes du Phoenix réussies') + star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB') +
         '<div style="font-size:44px">Ferme la plus riche : <b>' + esc(s.richest.join(', ')) + '</b> · Trophée du Sage : <b>' + esc(s.sage.join(', ')) + '</b></div></section>';
     }
     // saison
     var id = V.meta.steps[V.step].id;
     if (id === 'alea') {
       var c = V.card;
-      var die = V.die ? '<div style="font-size:40px;color:var(--muted)">Dé des activités : <b style="color:var(--text)">' + V.die + '</b> · ' + esc(V.dieLabel) + '</div>' : '';
-      if (!c) return '<section class="d-card"><div class="d-big">Aléa du ' + esc(V.seasonName.toLowerCase()) + '</div><div style="font-size:48px;color:var(--muted)">Le maire tire une carte…</div>' + die + '</section>';
+      var acts = V.teams.filter(function (t) { return t.acts && t.acts.length; });
+      var die = acts.length ? '<div style="font-size:34px;color:var(--muted)">🎲 Dés des activités : ' + acts.map(function (t) { return '<b style="color:var(--text)">' + esc(t.name) + '</b> ' + t.acts.map(function (a) { return a.icon + (a.roll ? '<b style="color:' + (a.roll === 1 ? 'var(--flame)' : 'var(--mint)') + '">' + a.roll + '</b>' : '…'); }).join(' '); }).join(' · ') + '</div>' : '';
+      if (!c) return '<section class="d-card"><div class="d-big">Aléa ' + esc(V.seasonOf) + '</div><div style="font-size:48px;color:var(--muted)">Le maire du village tire une carte…</div>' + die + '</section>';
       if (c.collective) return collectiveScreen(c) ;
       var parName = c.parade ? (V.meta.catalogue.filter(function (x) { return x.id === c.parade; })[0] || {}).name : '';
       return '<section class="d-card pop">' + (c.icon ? '<div class="d-icon" aria-hidden="true">' + c.icon + '</div>' : '') + '<span class="pill ' + (c.tone === 'neg' ? 'lv-Stressé' : 'lv-Zen') + '" style="font-size:36px;align-self:flex-start;padding:8px 32px">Carte aléa · ' + (c.tone === 'neg' ? 'Négatif' : 'Positif') + '</span>' +
@@ -238,7 +252,29 @@
       var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
       return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide · Matières ni vendues ni transformées : perdues') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
     }
-    return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 boule') + (V.recap ? recapPanel() : list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']));
+    return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 stress') + (V.recap ? recapPanel() : list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']));
+  }
+
+  // Presentation du jeu : diapositives pilotees depuis la console du maire du village.
+  function tutoSlide() {
+    var T = V.tuto;
+    return '<section class="tuto pop" style="flex:1"><div class="t-ic" aria-hidden="true">' + T.icon + '</div><h2>' + esc(T.title) + '</h2><ul>' + T.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
+      '<div class="t-dots">' + T.titles.map(function (_, i) { return '<i class="' + (i === T.index ? 'on' : '') + '"></i>'; }).join('') + '</div></section>';
+  }
+
+  // Objectifs de la partie, réaffichés à la demande du maire du village.
+  function goalsScreen() {
+    var g = V.goals;
+    if (!g) return '';
+    var stars = g.stars.map(function (s) {
+      var col = s.lost ? 'var(--flame)' : s.ok ? 'var(--mint)' : 'var(--amber)';
+      return '<div class="d-q" style="flex-direction:column;align-items:flex-start;gap:4px;padding:10px 28px;border-left:12px solid ' + col + ';background:var(--surface);border-radius:20px"><span style="font-size:44px;font-weight:800">' + esc(s.title) + '</span><span style="font-size:34px;font-weight:600">' + esc(s.text) + '</span><span style="font-size:28px;color:' + col + '">' + esc(s.detail) + '</span></div>';
+    }).join('');
+    var years = g.perYear.map(function (y) {
+      var f = y.fete === 'success' ? '<b style="color:var(--mint)">✓ fête réussie</b>' : y.fete === 'fail' ? '<b style="color:var(--flame)">✗ fête ratée</b>' : y.fete === 'todo' ? '<span style="color:var(--muted)">fête à venir</span>' : '';
+      return '<div style="flex:1;background:' + (y.current ? 'var(--surface-2)' : 'transparent') + ';border:2px solid ' + (y.current ? 'var(--amber)' : 'var(--line)') + ';border-radius:20px;padding:14px 20px;font-size:28px;display:flex;flex-direction:column;gap:4px"><b style="font-size:38px">Année ' + y.year + '</b>' + f + '<span>🎉 ' + esc(y.dishes || '') + '</span><span>💰 repère de caisse : ' + y.bankMilestone + ' EB</span></div>';
+    }).join('');
+    return '<div style="position:absolute;inset:0;z-index:10;background:rgba(20,14,10,.97);padding:56px 96px;display:flex;flex-direction:column;gap:22px"><div style="font-size:72px;font-weight:800">🎯 Les objectifs du village</div>' + stars + '<div style="display:flex;gap:20px">' + years + '</div></div>';
   }
 
   function joinUrl() { return location.origin + FF.BASE + '/team?s=' + V.code; }
@@ -256,10 +292,14 @@
         '<div style="font-size:44px;color:var(--muted)">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div>' +
         '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:38px;padding:12px 32px;background:var(--surface)">' + esc(t.name) + '</span>'; }).join('') + '</div></div>';
       drawQr();
+      if (V.tuto) stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:5;background:var(--bg);padding:56px 96px;display:flex">' + tutoSlide() + '</div>');
+      if (V.showGoals) stage.insertAdjacentHTML('beforeend', goalsScreen());
       return;
     }
     var strip = V.phase === 'season' || V.phase === 'setup' ? '<div style="display:flex;gap:20px;align-items:stretch">' + (V.card && V.card.when && V.card.when.indexOf(V.meta.steps[V.step].id) >= 0 && V.meta.steps[V.step].id !== 'recolte' ? cardBanner(V.meta.steps[V.step].id) : '') + '</div>' : '';
     stage.innerHTML = head() + '<div class="d-main">' + main() + '</div>' + strip + collectiveStrip() + (V.phase === 'end' ? '' : foot());
+    if (V.tuto) stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:9;background:var(--bg);padding:56px 96px;display:flex">' + tutoSlide() + '</div>');
+    if (V.showGoals) stage.insertAdjacentHTML('beforeend', goalsScreen());
     if (V.showQr) {
       stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:10;background:rgba(20,14,10,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
         '<div style="font-size:64px;font-weight:800">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div></div>');
@@ -295,6 +335,7 @@
     stage.querySelectorAll('[data-pclock]').forEach(function (el) {
       FF.paintProd(el, V, false);
       var key = V.year + '.' + V.season + '.' + el.getAttribute('data-pid');
+      if (el.hasAttribute('data-nobeep')) return;
       if (/pc-stop/.test(el.className)) { if (!stopBeeped[key]) { stopBeeped[key] = true; beep(520, 0.6); } } else stopBeeped[key] = false;
     });
     var clock = stage.querySelector('[data-clock]');

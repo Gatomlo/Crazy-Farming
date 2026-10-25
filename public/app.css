@@ -283,3 +283,80 @@ body.display.hc { --bg: #000; --bg-glow: none; --surface: #161616; --surface-2: 
 body.display.hc .d-tag, body.display.hc .d-meteo small, body.display.hc .d-note, body.display.hc .d-village { font-size: 30px; }
 body.display.hc .d-q, body.display.hc .d-team, body.display.hc .d-mk { outline: 2px solid rgba(255,255,255,.35); }
 body.display.hc canvas { opacity: .3; }
+
+/* Aléa collectif : bandeau tout en haut du mobile (ouvre le détail ; change de couleur et se ferme quand l'objectif est atteint) */
+.col-banner { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-radius: 14px; padding: 8px 12px; background: var(--pb); color: var(--ink); font: inherit; cursor: pointer; box-shadow: 0 6px 16px -10px rgba(224,112,31,.9); }
+.col-banner .cb-ic { font-size: 26px; line-height: 1; }
+.col-banner .cb-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.col-banner .cb-tx b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-banner .cb-tx small { font-size: 12px; font-weight: 600; opacity: .85; }
+.col-banner .cb-go { font-weight: 800; font-size: 13px; white-space: nowrap; background: rgba(255,255,255,.35); border-radius: 99px; padding: 3px 10px; }
+.col-banner.ok { background: var(--teal); color: var(--teal-ink); box-shadow: none; }
+.col-banner.bad { background: var(--bad); color: #fff; box-shadow: none; }
+.col-banner.closed { cursor: default; }
+
+/* Navigation : pastille du panier */
+.t-nav button { position: relative; }
+.t-nav .ic { position: relative; }
+.nav-badge { position: absolute; top: -6px; right: -12px; min-width: 18px; height: 18px; border-radius: 99px; background: var(--pc); color: var(--ink); font: 800 11px/18px var(--f-body); text-align: center; padding: 0 4px; font-style: normal; }
+
+/* Dés des activités */
+.die { width: 52px; height: 52px; flex: none; border-radius: 14px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-size: 28px; font-weight: 800; }
+.die.die-fail { background: var(--bad); color: #fff; }
+.die-roll { animation: dieRoll .9s cubic-bezier(.3,.7,.3,1); }
+@keyframes dieRoll { 0% { transform: rotate(0) scale(.6); } 40% { transform: rotate(420deg) scale(1.25); } 70% { transform: rotate(640deg) scale(.95); } 100% { transform: rotate(720deg) scale(1); } }
+
+/* Roue du marché (mobile) */
+.wheel-modal { position: fixed; inset: 0; z-index: 60; background: rgba(20,14,10,.72); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; }
+.wheel-box { background: var(--surface); color: var(--fg); border-radius: 24px; padding: 18px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+.wheel-title { font-size: 40px; text-align: center; }
+.wheel-svg { width: min(78vw, 340px); height: auto; align-self: center; filter: drop-shadow(0 8px 14px rgba(0,0,0,.3)); }
+.wheel-rot { transform-origin: 0 0; }
+.wheel-result { text-align: center; }
+.wheel-res-label { font-size: 28px; font-weight: 800; line-height: 1.1; }
+.wheel-legend { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.wheel-legend div { display: flex; align-items: center; gap: 8px; }
+.wheel-legend i { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.wheel-legend span { flex: 1; }
+
+/* Animation de la fête (mobile) */
+.fete-ov { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 18px; overflow: hidden; animation: pop .5s ease both; }
+.fete-ov.win { background: radial-gradient(circle at 50% 40%, rgba(255,211,110,.96), rgba(224,112,31,.94)); color: #2b1100; }
+.fete-ov.lose { background: radial-gradient(circle at 50% 40%, rgba(70,82,104,.96), rgba(24,28,40,.96)); color: #eef2f8; }
+.fete-ov .fp { position: absolute; top: -50px; animation: feteFall linear infinite; }
+.fete-ov.win .fp { animation-name: feteUp; top: auto; bottom: -50px; }
+@keyframes feteFall { to { transform: translateY(115vh) rotate(40deg); } }
+@keyframes feteUp { to { transform: translateY(-115vh) rotate(30deg); } }
+.fete-box { position: relative; text-align: center; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
+.fete-box h2 { font-size: 52px; color: inherit; }
+.fete-big { font-size: 110px; line-height: 1; animation: feteBig 1.6s ease-in-out infinite; }
+.fete-ov.lose .fete-big { animation: feteSink 2.4s ease-in-out infinite; }
+@keyframes feteBig { 50% { transform: scale(1.18) rotate(-6deg); } }
+@keyframes feteSink { 50% { transform: translateY(14px) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .fete-ov .fp, .fete-big, .die-roll, .fete-ov { animation: none; } }
+
+/* Qui court encore : un decompte par ferme et par produit */
+table.rb { border-collapse: separate; border-spacing: 0 6px; width: 100%; }
+table.rb th { text-align: left; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 0 8px; white-space: nowrap; }
+table.rb th i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+table.rb td { padding: 4px 8px; vertical-align: middle; }
+table.rb .rb-team { font-weight: 700; }
+.rb-note { display: block; font-size: 11px; font-weight: 700; }
+.rb-note.ok { color: var(--good); }
+.rb .pclock { font-size: 20px; min-width: 76px; padding: 6px 8px; }
+.rb .pclock.rb-diff { outline: 3px solid var(--teal); }
+.display table.rb th { font-size: 26px; }
+.display table.rb td { padding: 4px 14px; }
+.display .rb .pclock { font-size: 46px; min-width: 190px; margin: 0; padding: 6px 16px; }
+.display .rb-team { font-size: 38px; }
+.display .rb-note { font-size: 22px; }
+
+/* Presentation du jeu (projecteur) */
+.tuto { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 30px; }
+.tuto .t-ic { font-size: 190px; line-height: 1; filter: drop-shadow(0 18px 30px rgba(0,0,0,.35)); }
+.tuto h2 { font: 800 96px/1.05 var(--f-body); color: var(--fg); letter-spacing: 0; }
+.tuto ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 22px; font-size: 52px; font-weight: 600; line-height: 1.15; }
+.tuto li::before { content: '▸'; color: var(--pb); margin-right: 20px; }
+.tuto .t-dots { display: flex; gap: 14px; }
+.tuto .t-dots i { width: 36px; height: 10px; border-radius: 99px; background: var(--line2); }
+.tuto .t-dots i.on { background: var(--pb); }

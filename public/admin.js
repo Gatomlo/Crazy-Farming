@@ -1,14 +1,14 @@
 (function () {
   var esc = FF.esc;
   var code = (FF.qs.get('s') || '').toUpperCase();
-  // Jeton : celui de la connexion animateur (mot de passe), ou ?k= pour le banc d'essai.
+  // Jeton : celui de la connexion du maire du village (mot de passe), ou ?k= pour le banc d'essai.
   var token = FF.qs.get('k') || FF.auth.token();
   var root = document.getElementById('app');
   var V = null;
   var conn = null;
 
   if (!code) { location.replace(FF.BASE + '/'); return; }
-  if (!token) { root.innerHTML = '<div class="panel" style="max-width:420px;margin:10vh auto;text-align:center"><h2>Connexion requise</h2><p class="muted">Connecte-toi avec le mot de passe animateur.</p><a class="btn primary" style="display:inline-flex;align-items:center;text-decoration:none" href="./">Se connecter</a></div>'; return; }
+  if (!token) { root.innerHTML = '<div class="panel" style="max-width:420px;margin:10vh auto;text-align:center"><h2>Connexion requise</h2><p class="muted">Connecte-toi avec le mot de passe du maire du village.</p><a class="btn primary" style="display:inline-flex;align-items:center;text-decoration:none" href="./">Se connecter</a></div>'; return; }
 
   conn = FF.connect({
     role: 'admin', code: code, token: token,
@@ -20,7 +20,8 @@
 
   function tilesText(t) {
     var parts = [];
-    Object.keys(t.tilesByType).forEach(function (k) { if (t.tilesByType[k] > 0) parts.push(t.tilesByType[k] + ' ' + V.meta.tileNames[k]); });
+    Object.keys(t.tilesByType).forEach(function (k) { if (t.tilesByType[k] > 0 && k !== 'activite') parts.push(t.tilesByType[k] + ' ' + V.meta.tileNames[k]); });
+    (t.activities || []).forEach(function (id) { var a = V.meta.activities.filter(function (x) { return x.id === id; })[0]; if (a) parts.push(a.icon + ' ' + a.name); });
     return parts.length ? parts.join(' · ') : 'Aucune tuile';
   }
   function equipName(id) { var c = V.meta.catalogue.filter(function (x) { return x.id === id; })[0]; return c ? c.name : id; }
@@ -29,9 +30,9 @@
   function header() {
     var title = V.phase === 'season' ? V.seasonName + ' · année ' + V.year : PHASES[V.phase];
     return '<header class="row" style="justify-content:space-between">' +
-      '<div class="brand"><div class="logo" aria-hidden="true">🚜</div><div><h1 style="font-size:44px">Farming\'s Folies</h1><div class="muted">Console de l\'animateur · partie <b class="num" style="color:var(--fg);letter-spacing:.15em">' + esc(V.code) + '</b></div></div></div>' +
+      '<div class="brand"><div class="logo" aria-hidden="true">🚜</div><div><h1 style="font-size:44px">Farming\'s Folies</h1><div class="muted">Console du maire du village · partie <b class="num" style="color:var(--fg);letter-spacing:.15em">' + esc(V.code) + '</b></div></div></div>' +
       '<div class="row"><span class="pill" style="background:' + (V.phase === 'season' ? V.seasonColor : 'var(--panel2)') + ';color:' + (V.phase === 'season' ? 'var(--ink)' : 'var(--text)') + '">' + esc(title) + '</span>' +
-      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' + (V.undo ? '<button class="btn small" data-act="undo" title="Annule la dernière correction (impossible dès qu\'une ferme a joué)">↶ Annuler : ' + esc(V.undo.label) + '</button>' : '') + '<button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
+      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' + (V.undo ? '<button class="btn small" data-act="undo" title="Annule la dernière correction (impossible dès qu\'une ferme a joué)">↶ Annuler : ' + esc(V.undo.label) + '</button>' : '') + '' + (V.phase !== 'lobby' ? '<button class="btn small' + (V.mode.recap ? ' primary' : '') + '" data-act="setRecap" data-on="' + (V.mode.recap ? '' : '1') + '" aria-pressed="' + (V.mode.recap ? 'true' : 'false') + '" title="Active ou coupe le bilan de saison affiché à l\'étape Achats">📊 Bilan de saison : ' + (V.mode.recap ? 'oui' : 'non') + '</button>' : '') + (V.goals ? '<button class="btn small' + (V.showGoals ? ' primary' : '') + '" data-act="toggleGoals" aria-pressed="' + (V.showGoals ? 'true' : 'false') + '">🎯 ' + (V.showGoals ? 'Masquer les objectifs' : 'Afficher les objectifs à l\'écran') + '</button>' : '') + '<button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
   }
 
   function lobby() {
@@ -53,6 +54,18 @@
       '<div class="row"><button class="btn primary" data-act="startSetup"' + (V.teams.length ? '' : ' disabled') + '>Lancer l\'installation</button><span class="muted">Chrono de 10 minutes pour poser les tuiles.</span></div></section>';
   }
 
+  // Presentation du jeu projetee (salle d'attente et installation) : le maire du village fait defiler les diapositives.
+  function tutoPanel() {
+    if (V.phase !== 'lobby' && V.phase !== 'setup') return '';
+    var T = V.tuto, M = V.meta.tuto;
+    if (!T) return '<section class="panel row" style="gap:14px;border-left:6px solid var(--teal)"><div style="flex:1;min-width:220px"><b>📽️ Présentation du jeu</b><div class="muted" style="font-size:14px">' + M.length + ' diapositives projetées sur l\'écran des joueurs : objectifs, déroulé d\'une saison, stress, fête, mobile. À faire avant de lancer l\'installation.</div></div><button class="btn primary" data-act="setTuto" data-slide="0">▶ Lancer la présentation</button></section>';
+    var next = M[T.index + 1];
+    return '<section class="panel stack" style="border-left:6px solid var(--teal)"><div class="row" style="justify-content:space-between"><b>📽️ Présentation · diapositive ' + (T.index + 1) + ' sur ' + T.total + '</b><button class="btn small" data-act="setTuto" data-slide="-1">✖ Fermer la présentation</button></div>' +
+      '<div style="font-size:26px;font-weight:800">' + T.icon + ' ' + esc(T.title) + '</div><div style="font-size:16px;color:var(--sand)">À dire : ' + esc(T.say) + '</div>' +
+      '<div class="row"><button class="btn" data-act="setTuto" data-slide="' + (T.index - 1) + '"' + (T.index === 0 ? ' disabled' : '') + '>◀ Précédente</button><button class="btn primary" data-act="setTuto" data-slide="' + (T.index + 1) + '"' + (next ? '' : ' disabled') + '>Suivante ▶</button>' +
+      (next ? '<span class="muted" style="font-size:13px">Ensuite : ' + esc(next.title) + '</span>' : '<span class="muted" style="font-size:13px">Dernière diapositive : fermez la présentation puis lancez l\'installation.</span>') + '</div></section>';
+  }
+
   function timerPanel(title, sub) {
     var run = V.timer.running;
     var adj = [[-30, '−30 s'], [-15, '−15 s'], [15, '+15 s'], [30, '+30 s'], [60, '+1 min']].map(function (a) { return '<button class="btn small" data-act="timerAdjust" data-delta="' + a[0] + '">' + a[1] + '</button>'; }).join('');
@@ -66,10 +79,10 @@
       '<button class="btn" style="min-height:52px" data-act="timerReset">↺ Remettre à zéro</button></div>' +
       '<details id="timerAdj"><summary>⏱ Régler le chrono</summary><div class="stack" style="margin-top:8px"><div class="tools">' + adj + '</div>' +
       '<div class="row"><label for="timerSec" class="muted">Durée (secondes)</label><input id="timerSec" inputmode="numeric" placeholder="ex. 90" style="width:100px"><button class="btn small" data-act="timerSet">Fixer</button></div>' +
-      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + '</section>';
+      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + (cur && V.step === 1 && FF.runsDiffer(V) ? '<div style="border-top:1px solid var(--line);padding-top:10px"><b>⏱️ Qui peut encore courir ?</b> <span class="muted" style="font-size:13px">Chronos différents selon les fermes (protection, tracteur, coup de collier). Le contour vert marque un temps différent de la base.</span>' + FF.runBoard(V) + '</div>' : '') + '</section>';
   }
 
-  // "Prochaine action" : ce que l'animateur doit faire maintenant, avec le bouton correspondant.
+  // "Prochaine action" : ce que le maire du village doit faire maintenant, avec le bouton correspondant.
   function nextAction() {
     var active = V.teams.filter(function (t) { return !t.stopped; });
     var names = function (arr) { return arr.map(function (t) { return t.name; }).join(', '); };
@@ -94,7 +107,7 @@
       if (!V.card) { r.text = 'Tire la carte aléa'; r.detail = 'La carte et l\'aléa du village apparaissent sur l\'écran.'; r.label = 'Tirer une carte'; r.act = 'drawCard'; return r; }
       if (!V.card.collective && V.card.tone === 'neg') {
         var wait = active.filter(function (t) { return !t.choice; });
-        if (wait.length) { r.text = 'En attente du choix de ' + names(wait); r.detail = 'Subir, jouer sa parade ou ajouter une boule.'; r.label = next; r.act = 'nextStep'; return r; }
+        if (wait.length) { r.text = 'En attente du choix de ' + names(wait); r.detail = 'Subir, jouer sa parade ou ajouter 1 stress.'; r.label = next; r.act = 'nextStep'; return r; }
       }
       return goNext('Carte lue, les fermes ont choisi', V.card.collective ? 'Rappelle l\'objectif commun et son échéance.' : '');
     }
@@ -154,7 +167,7 @@
 
   // Phrase a dire a chaque etape (mode pas a pas).
   var SAY = [
-    '« Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter une boule. »',
+    '« Une carte aléa est tirée. Chaque ferme choisit : subir, jouer sa parade ou ajouter 1 stress. »',
     '« Coureurs en place… Trois, deux, un, partez ! À la fin, chaque ferme encode les jetons réellement rapportés. »',
     '« Encodez votre récolte, puis déclarez vos recettes : je prépare vos jetons. Rappel : les matières brutes que vous ne transformez pas ni ne vendez seront perdues en fin de saison. »',
     '« Placez vos produits, déclarez, puis tournez la roue. Attention : tout ce qui n\'est ni vendu ni transformé est perdu ! »',
@@ -200,6 +213,19 @@
         : '<div class="muted" style="font-size:13px">Réussite : ' + esc(c.winText) + '<br>Échec : ' + esc(c.loseText) + '<br>Réglé automatiquement à la fin de l\'étape.</div><button class="btn small" data-act="settleCollective">Clôturer maintenant</button>');
   }
 
+  // Activités complémentaires : chaque ferme lance un dé par activité (sur mobile) ; le maire du village peut lancer à sa place.
+  function activitiesAdmin() {
+    var rows = V.teams.filter(function (t) { return t.acts && t.acts.length && !t.stopped; });
+    if (!rows.length) return '<div class="panel"><div class="muted" style="font-size:13px">🎲 Aucune ferme n\'a encore d\'activité complémentaire (achat à l\'installation ou en fin d\'année). Chaque ferme lance un dé par activité à chaque saison : 1 = elle ne fonctionne pas.</div></div>';
+    var missing = rows.reduce(function (n, t) { return n + t.acts.filter(function (a) { return !a.roll; }).length; }, 0);
+    var list = rows.map(function (t) {
+      return '<div class="row" style="justify-content:space-between"><b>' + esc(t.name) + '</b><span class="row" style="gap:6px">' + t.acts.map(function (a) {
+        return a.roll ? '<span class="pill ' + (a.roll === 1 ? 'bad' : 'ok') + '" title="' + esc(a.name) + '">' + a.icon + ' dé ' + a.roll + '</span>' : '<button class="btn small" data-act="rollActivity" data-team="' + t.id + '" data-activity="' + a.id + '" title="Lancer le dé : ' + esc(a.name) + '">' + a.icon + ' 🎲</button>';
+      }).join('') + '</span></div>';
+    }).join('');
+    return '<div class="panel stack"><div class="row" style="justify-content:space-between"><b>🎲 Dés des activités</b><button class="btn small primary" data-act="rollAllActivities"' + (missing ? '' : ' disabled') + '>Lancer les dés manquants' + (missing ? ' (' + missing + ')' : '') + '</button></div>' + list + '<div class="muted" style="font-size:12px">Chaque ferme lance sur son mobile (étape Aléa). 1 = l\'activité ne fonctionne pas ; 2 à 6 = effet de plus en plus fort.</div></div>';
+  }
+
   function cardPanel() {
     var c = V.card;
     var prods = V.meta.products.map(function (p) {
@@ -215,11 +241,9 @@
       : '<p class="muted" style="margin:0">Aucune carte tirée pour cette saison.</p>';
     return '<section style="flex:1 1 340px;display:flex;flex-direction:column;gap:16px">' +
       '<div class="panel" style="display:flex;flex-direction:column;gap:10px;flex:1"><h2 style="font-size:18px">Carte aléa</h2>' + cardHtml +
-      '<div class="muted" style="font-size:13px">La grille « à rapporter par tuile » est déjà ajustée sur l\'écran des joueurs ; les fermes qui ont joué leur parade ou pris +1 boule gardent les valeurs de base.</div>' +
+      '<div class="muted" style="font-size:13px">La grille « à rapporter par tuile » est déjà ajustée sur l\'écran des joueurs ; les fermes qui ont joué leur parade ou pris +1 stress gardent les valeurs de base.</div>' +
       (c && c.collective ? '' : '<button class="btn" style="margin-top:auto" data-act="drawCard">' + (c ? 'Tirer une autre carte' : 'Tirer une carte') + '</button>') + '</div>' +
-      '<div class="panel row"><div style="width:64px;height:64px;border-radius:14px;background:var(--text);color:var(--ink);display:grid;place-items:center;font-size:40px;font-weight:800">' + (V.die || '–') + '</div>' +
-      '<div style="flex:1;min-width:140px"><div class="muted" style="font-size:13px">Dé des activités</div><div style="font-weight:700">' + esc(V.dieLabel || 'Pas encore lancé') + '</div></div>' +
-      '<button class="btn primary" data-act="rollDie">Lancer le dé</button></div>' +
+      activitiesAdmin() +
       '<div class="panel"><div class="muted" style="font-size:13px;margin-bottom:8px">Temps de course par produit · ' + esc(V.seasonName) + '</div><div class="row" style="gap:6px">' + prods + '</div></div></section>';
   }
 
@@ -231,7 +255,8 @@
     var rows = (V.trades || []).slice().reverse().map(function (tr) {
       var st = ST[tr.status] || [tr.status, ''];
       var act = tr.status === 'pending' ? '<button class="btn small" data-act="cancelTrade" data-trade="' + tr.id + '">Annuler</button>' : tr.status === 'done' ? '<button class="btn small" data-act="revertTrade" data-trade="' + tr.id + '">Annuler l\'échange</button>' : '';
-      return '<tr><td>' + esc(name(tr.from)) + ' → ' + esc(name(tr.to)) + '</td><td>' + tr.items.map(function (i) { return i.n + ' × ' + esc(i.name.toLowerCase()); }).join(', ') + '</td><td class="num">' + (tr.price ? tr.price + ' EB' : 'don') + '</td><td><span class="pill ' + st[1] + '">' + st[0] + '</span></td><td>' + act + '</td></tr>';
+      var lst = function (a) { return a.length ? a.map(function (i) { return i.n + ' × ' + esc(i.name.toLowerCase()); }).join(', ') : 'rien'; };
+      return '<tr><td>' + esc(name(tr.from)) + ' ↔ ' + esc(name(tr.to)) + '</td><td>donne ' + lst(tr.items) + '<br>demande ' + lst(tr.want) + '</td><td class="num">' + (tr.price ? tr.price + ' EB<div class="muted" style="font-size:12px">payés par ' + esc(name(tr.payer === 'from' ? tr.from : tr.to)) + '</div>' : (tr.items.length && tr.want.length ? 'troc' : 'don')) + '</td><td><span class="pill ' + st[1] + '">' + st[0] + '</span></td><td>' + act + '</td></tr>';
     }).join('');
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><h2 style="font-size:18px">Bourse : échanges entre fermes</h2>' +
       (rows ? '<div class="tbl"><table><thead><tr><th>Échange</th><th>Produits</th><th>Prix</th><th>État</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="muted" style="margin:0">Aucun échange pour le moment. Les fermes proposent depuis leur mobile ; le destinataire accepte.</p>') +
@@ -264,16 +289,16 @@
   }
 
   function teamsTable() {
-    var tileOpts = Object.keys(V.meta.tileNames).map(function (k) { return '<option value="' + k + '">' + esc(V.meta.tileNames[k]) + '</option>'; }).join('');
+    var tileOpts = V.meta.giftables.map(function (g) { return '<option value="' + g.id + '">' + esc(g.name) + '</option>'; }).join('');
     var showWheel = V.phase === 'season' && V.step === 3;
     var rows = V.teams.map(function (t) {
-      var choice = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 boule' }[t.choice] || (V.card ? 'En attente' : '–');
+      var choice = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 stress' }[t.choice] || (V.card ? 'En attente' : '–');
       var eq = t.equipment.length ? t.equipment.map(equipName).join(', ') : 'Aucun matériel';
       return '<tr><td><b>' + esc(t.name) + '</b>' + (t.stopped ? '<div><span class="pill lv-Stressé">Burn-out : à l\'arrêt</span></div>' : '') + (t.burnouts ? '<div class="muted" style="font-size:13px">' + t.burnouts + ' burn-out(s)</div>' : '') + '</td>' +
         '<td class="nowrap"><div class="num" style="font-size:22px;font-weight:800">' + t.bank + ' EB</div>' +
         '<details id="adj-' + t.id + '"><summary>Ajuster</summary><div class="row" style="margin-top:6px"><input id="amt-' + t.id + '" inputmode="numeric" placeholder="± montant" style="width:110px"><input id="lbl-' + t.id + '" placeholder="Motif" style="width:140px"><button class="btn small" data-act="bank" data-team="' + t.id + '">Valider</button></div></details></td>' +
         '<td class="wide">' + FF.dots(t.bocal, V.meta.bocalMax) + '<div class="row" style="margin-top:6px;gap:8px"><span class="pill lv-' + t.level + '">' + t.level + '</span><span class="muted num">' + t.bocal + ' / ' + V.meta.bocalMax + '</span>' +
-        '<button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="-1" aria-label="Retirer une boule à ' + esc(t.name) + '">−1</button><button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="1" aria-label="Ajouter une boule à ' + esc(t.name) + '">+1</button></div></td>' +
+        '<button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="-1" aria-label="Retirer 1 point de stress à ' + esc(t.name) + '">−1</button><button class="btn small" data-act="bocal" data-team="' + t.id + '" data-delta="1" aria-label="Ajouter une boule à ' + esc(t.name) + '">+1</button></div></td>' +
         '<td><div>' + esc(tilesText(t)) + '</div><div class="muted" style="font-size:13px">' + esc(eq) + '</div>' + stockLine(t) +
         '<details id="gift-' + t.id + '"><summary>Tuile gratuite</summary><div class="row" style="margin-top:6px"><select id="tile-' + t.id + '">' + tileOpts + '</select><button class="btn small" data-act="giftTile" data-team="' + t.id + '">Donner</button></div></details></td>' +
         '<td><button class="btn small ' + (t.ready ? 'good' : '') + '" data-act="setReady" data-team="' + t.id + '" data-ready="' + (t.ready ? '' : '1') + '">' + (t.ready ? '✓ Prête' : 'En cours') + '</button><div class="muted" style="font-size:13px;margin-top:4px">Aléa : ' + esc(choice) + '</div></td>' +
@@ -289,7 +314,7 @@
     window.__logOpen = !window.__logOpen;
     if (typeof render === 'function') render();
   });
-  var DOCS = { rules: ['📖 Règles du jeu', 'rules'], guide: ['🧭 Guide de l\'animateur', 'guide'] };
+  var DOCS = { rules: ['📖 Règles du jeu', 'rules'], guide: ['🧭 Guide du maire du village', 'guide'] };
   document.addEventListener('click', function (e) {
     var d = e.target.closest && e.target.closest('[data-doc]');
     if (d) { window.__doc = d.dataset.doc === 'close' ? null : d.dataset.doc; if (typeof render === 'function') render(); return; }
@@ -318,7 +343,7 @@
       (lines || '<p class="muted" style="margin:0">Rien pour le moment.</p>') + '</section></div>';
   }
 
-  // Transformation : l'animateur echange les jetons et valide.
+  // Transformation : le maire du village echange les jetons et valide.
   function transfoPanel() {
     if (V.phase !== 'season' || V.step !== 2) return '';
     var names = {}; V.meta.products.forEach(function (p) { names[p.id] = p.name.toLowerCase(); }); V.meta.dishes.forEach(function (d) { names[d.id] = d.name.toLowerCase(); });
@@ -334,18 +359,28 @@
       '<p class="muted" style="margin:0;font-size:13px">Reprenez les jetons de la colonne « Reçoit », donnez les jetons de plat, puis validez : le stock de plats de la ferme est mis à jour.</p></section>';
   }
 
-  // Ventes du marche : chaque ferme declare, l'animateur verifie les produits remis puis paie.
+  // Ce que la ferme doit remettre au maire du village : tous les jetons places, au supermarche comme a l'etal (les invendus de l'etal sont perdus).
+  function handover(t) {
+    var S = t.sales;
+    if (!S.declared) return '<span class="muted">—</span>';
+    var sup = 0, dir = 0, parts = [];
+    S.quote.lines.forEach(function (l) { sup += l.sup; dir += l.dir; if (l.sup + l.dir) parts.push(esc(l.name) + ' <b>' + (l.sup + l.dir) + '</b>'); });
+    var tot = sup + dir;
+    return '<div class="num" style="font-size:30px;font-weight:800;line-height:1">' + tot + ' <span style="font-size:14px;font-weight:600">jeton' + (tot > 1 ? 's' : '') + '</span></div><div style="font-size:13px"><b>' + sup + '</b> supermarché · <b>' + dir + '</b> étal</div><div class="muted" style="font-size:12px">' + (parts.join(' · ') || 'rien') + '</div>';
+  }
+
+  // Ventes du marche : chaque ferme declare, le maire du village verifie les produits remis puis paie.
   function marketPanel() {
     if (V.phase !== 'season' || V.step !== 3) return '';
     var rows = V.teams.map(function (t) {
       var S = t.sales, Q = S.quote;
-      if (t.stopped) return '<tr><td><b>' + esc(t.name) + '</b></td><td colspan="4" class="muted">À l\'arrêt</td></tr>';
+      if (t.stopped) return '<tr><td><b>' + esc(t.name) + '</b></td><td colspan="5" class="muted">À l\'arrêt</td></tr>';
       var det = S.declared ? Q.lines.map(function (l) { var tg = l.tag === 'hot' ? ' 🔥' : l.tag === 'cold' ? ' ❄️' : ''; return esc(l.name) + tg + ' : ' + l.sup + ' super / ' + l.dir + ' étal' + (l.frac != null && l.dir ? ' (vendu ' + l.soldUnits + ')' : ''); }).join(' · ') || 'Rien placé' : '<span class="muted">Pas encore placé</span>';
       var amt = S.settled ? '<b class="num">' + S.amount + ' EB</b>' : Q.total == null ? '<span class="muted">roue ?</span>' : '<b class="num">' + Q.total + ' EB</b>';
       var btn = S.settled ? '<span class="pill lv-Zen">Payé</span>' : '<button class="btn small primary" data-act="settleSales" data-team="' + t.id + '"' + (S.declared && (t.wheel || !Q.stallUnits) ? '' : ' disabled') + '>Valider et payer</button>';
-      return '<tr><td><b>' + esc(t.name) + '</b></td><td>' + (t.wheel ? esc(t.wheel.label) : '<span class="muted">pas tournée</span>') + '</td><td>' + det + '</td><td>' + amt + '</td><td>' + btn + '</td></tr>';
+      return '<tr><td><b>' + esc(t.name) + '</b></td><td>' + (t.wheel ? esc(t.wheel.label) : '<span class="muted">pas tournée</span>') + '</td><td>' + det + '</td><td>' + handover(t) + '</td><td>' + amt + '</td><td>' + btn + '</td></tr>';
     }).join('');
-    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><h2 style="font-size:18px">Marché : ventes des fermes</h2><div class="tbl"><table><thead><tr><th>Ferme</th><th>Roue</th><th>Produits placés</th><th>À payer</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><h2 style="font-size:18px">Marché : ventes des fermes</h2><div class="tbl"><table><thead><tr><th>Ferme</th><th>Roue</th><th>Produits placés</th><th>Jetons à recevoir</th><th>À payer</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<p class="muted" style="margin:0;font-size:13px">Vérifiez les produits remis, puis validez : la banque de la ferme est créditée (part de l\'étal vendue selon la roue, frais d\'étal déduits).</p></section>';
   }
 
@@ -378,12 +413,12 @@
       var c = V.lastCharges && V.lastCharges[t.id];
       var ch = c || t.charges;
       return '<tr><td><b>' + esc(t.name) + '</b></td><td class="num">' + ch.taxes + '</td><td class="num">' + ch.eau + '</td><td class="num">' + ch.nourriture + '</td><td class="num">' + ch.electricite + '</td><td class="num"><b>' + ch.total + ' EB</b></td>' +
-        '<td>' + (c ? (c.missing ? '<span class="pill lv-Stressé">Manque ' + c.missing + ' EB, +' + c.boules + ' boule(s)</span>' : '<span class="pill lv-Zen">Payé</span>') : '<span class="muted">À appliquer</span>') + '</td></tr>';
+        '<td>' + (c ? (c.missing ? '<span class="pill lv-Stressé">Manque ' + c.missing + ' EB, +' + c.boules + ' stress</span>' : '<span class="pill lv-Zen">Payé</span>') : '<span class="muted">À appliquer</span>') + '</td></tr>';
     }).join('');
     var f = V.fete;
     var buttons;
     if (!V.closedYear) buttons = '<button class="btn primary" data-act="closeYear">Appliquer les charges</button>';
-    else if (!V.feteDone) buttons = '<button class="btn primary" data-act="fete">Jouer la fête (résultat selon les plats livrés)</button><details id="feteForce"><summary>Forcer le résultat</summary><div class="row" style="margin-top:6px"><button class="btn small good" data-act="fete" data-success="1">Réussie (−2 boules)</button><button class="btn small danger" data-act="fete" data-success="0">Ratée (+1 boule)</button></div></details>';
+    else if (!V.feteDone) buttons = '<button class="btn primary" data-act="fete">Jouer la fête (résultat selon les plats livrés)</button><details id="feteForce"><summary>Forcer le résultat</summary><div class="row" style="margin-top:6px"><button class="btn small good" data-act="fete" data-success="1">Réussie (−2 stress)</button><button class="btn small danger" data-act="fete" data-success="0">Ratée (+' + V.meta.fete.fail + ' stress)</button></div></details>';
     else buttons = V.year < V.years ? '<button class="btn primary" data-act="nextYear">Année suivante (réaménagement 5 min)</button>' : '<button class="btn primary" data-act="finish">Terminer la partie</button>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Clôture de l\'année ' + V.year + '</h2>' +
       '<div class="tbl"><table style="min-width:640px"><thead><tr><th>Ferme</th><th>Taxes</th><th>Eau</th><th>Nourriture</th><th>Électricité</th><th>Total</th><th>Résultat</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
@@ -396,7 +431,7 @@
     var s = V.stars;
     var star = function (ok, label) { return '<div class="step ' + (ok ? 'won' : '') + '"><b class="n">' + (ok ? '★' : '☆') + '</b><span>' + label + '</span></div>'; };
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:24px">Fin de partie : ' + s.count + ' étoile(s) sur 3</h2>' +
-      star(s.s1, 'Aucun burn-out et aucune ferme au-dessus de ' + s.peakMax + ' boules (pic : ' + s.peak + ')') +
+      star(s.s1, 'Aucun burn-out et aucune ferme au-dessus de ' + s.peakMax + ' points de stress (pic : ' + s.peak + ')') +
       star(s.s2, s.years === 2 ? 'Les deux fêtes du Phoenix réussies' : 'Les trois fêtes du Phoenix réussies') +
       star(s.s3, 'Caisse du village : ' + s.totalBank + ' EB sur ' + s.target + ' EB attendus') +
       '<div>Ferme la plus riche : <b>' + esc(s.richest.join(', ')) + '</b></div><div>Trophée du Sage : <b>' + esc(s.sage.join(', ')) + '</b></div></section>';
@@ -405,9 +440,10 @@
   function render() {
     if (!V) return;
     var h = header();
-    if (V.phase === 'lobby') h += lobby();
+    if (V.phase === 'lobby') h += tutoPanel() + lobby();
     else {
       h += nextActionPanel();
+      h += tutoPanel();
       h += forecastBanner();
       if (V.phase === 'setup') {
         h += '<div class="cols">' + timerPanel('Installation des fermes', 'Avant l\'année 1') + '<section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px"><p style="margin:0">1. La commande de la fête est tirée : les fermes se la répartissent. 2. Elles posent leurs tuiles et dépensent leurs 500 EB.</p>' + startBtn('Démarrer l\'année 1') + '</section></div>' + menuPanel() + teamsTable() + '';
@@ -434,6 +470,7 @@
   // ---------- Chrono local ----------
   function tick() {
     if (!V) return;
+    document.querySelectorAll('[data-pclock]').forEach(function (el) { FF.paintProd(el, V, false); });
     var twEl = root.querySelector('[data-tw]'); if (twEl && tw.start) twEl.textContent = Math.round((Date.now() - tw.start) / 1000) + ' s';
     var ms = FF.remaining(V);
     document.querySelectorAll('[data-clock]').forEach(function (el) {
@@ -473,7 +510,7 @@
       if (!amount) return FF.toast('Saisis un montant (positif ou négatif).');
       return conn.act('bank', { teamId: t, amount: amount, label: val('lbl-' + t) }).then(function (r) { if (r && r.ok) { document.getElementById('amt-' + t).value = ''; document.getElementById('lbl-' + t).value = ''; } });
     }
-    if (a === 'bocal') return conn.act('bocal', { teamId: t, delta: parseInt(b.dataset.delta, 10), reason: 'Ajustement animateur' });
+    if (a === 'bocal') return conn.act('bocal', { teamId: t, delta: parseInt(b.dataset.delta, 10), reason: 'Ajustement du maire du village' });
     if (a === 'giftTile') return conn.act('giftTile', { teamId: t, tile: val('tile-' + t) });
     if (a === 'setReady') return conn.act('setReady', { teamId: t, ready: !!b.dataset.ready });
     if (a === 'validateTransfo') return conn.act('validateTransfo', { teamId: t });
@@ -491,6 +528,9 @@
       var keepEl = document.getElementById('timerKeep');
       return conn.act('timerSet', { sec: sec, keep: !!(keepEl && keepEl.checked) }).then(function (r) { if (r && r.ok) FF.toast('Chrono réglé.'); });
     }
+    if (a === 'setRecap') return conn.act('setRecap', { on: !!b.dataset.on });
+    if (a === 'setTuto') return conn.act('setTuto', { slide: parseInt(b.dataset.slide, 10) });
+    if (a === 'rollActivity') return conn.act('rollActivity', { teamId: t, activity: b.dataset.activity });
     if (a === 'cancelTrade' || a === 'revertTrade') return conn.act(a, { tradeId: b.dataset.trade });
     if (a === 'help') return FF.showHelp(parseInt(b.dataset.step, 10));
     if (a === 'twStart') { tw.start = Date.now(); tw.ms = 0; return render(); }

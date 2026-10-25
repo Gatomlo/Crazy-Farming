@@ -1,9 +1,9 @@
-# Guide de l'animateur
+# Guide du maire du village
 
 ## Avant la session (30 minutes avant)
 - Installer 4 stations de jetons (lait blanc, œufs jaunes, viande rose, fruits et légumes verts), 40 jetons chacune, à 15 ou 20 m des dépôts.
 - Un dépôt par équipe (table et panier), le plateau de ferme et les tuiles de son profil.
-- Un bocal par équipe avec 10 boules noires visibles, plus 3 de réserve.
+- Un bocal par équipe avec 10 pastilles de stress noires visibles, plus 3 de réserve.
 - Cloche, chrono visible de loin, accessoires du niveau Agité, badges de rôles.
 - Roue physique facultative : l'app tire le résultat, la roue sert au spectacle.
 - Se connecter à l'accueil (à la toute première visite, créer le mot de passe), puis « Nouvelle partie » : donner un titre.
@@ -11,9 +11,10 @@
 - Faire une saison à blanc seul pour vérifier chrono, carte et roue.
 
 ## Accueil et équipes (10 min)
+- **Présentation du jeu** : dans la salle d'attente, clique « Lancer la présentation » : 8 diapositives (objectifs, ferme, saison, stress, fête, mobile) défilent sur l'écran des joueurs, avec le texte « À dire » dans ta console. Ferme-la avant l'installation.
 - Dire : « Bienvenue au village du Phoenix. Pendant 3 ans, vous dirigez chacun une ferme. Seul, personne n'y arrive : le village réussit ou échoue ensemble. »
 - Former des équipes de 4 à 8 et choisir un nom de ferme. **Sur l'app** : les joueurs scannent le QR code et créent leur ferme depuis l'écran de connexion. Le bouton « Afficher le QR code » de la console le réaffiche à tout moment sur l'écran de projection.
-- Distribuer les badges de rôles et poser les bocaux : « Chaque boule noire est un prix payé pour aller plus vite. Dix boules, c'est le burn-out. »
+- Distribuer les badges de rôles et poser les bocaux : « Chaque point de stress est un prix payé pour aller plus vite. Dix points de stress, c'est le burn-out. »
 - Vérifier que chaque comptable voit 500 EB sur l'onglet Banque. Puis cliquer « Lancer l'installation ».
 
 ## Installation (10 min)
@@ -24,7 +25,7 @@
 ## Une saison pas à pas (5 min)
 Sonner la cloche à chaque changement d'étape. Le chrono de l'écran externe suit ta console. Tu peux **ajuster le chrono** d'une étape (±15 s, ±30 s, +1 min, durée libre, avec l'option de la garder pour les saisons suivantes).
 
-- **1. Aléa (30 s)** : lire la carte avec emphase. Si c'est l'**aléa collectif** de l'année, lis l'objectif commun et son échéance : les fermes donnent depuis leur mobile (argent, plats, jetons que tu récupères, boules), tu suis la jauge dans la console et l'écran de projection, et le résultat s'applique tout seul à l'échéance (bouton « Clôturer maintenant » en secours). Console : « Tirer une carte », dès l'année 2 « Lancer le dé ». Mobile : chaque équipe choisit subir, parade ou boule.
+- **1. Aléa (30 s)** : lire la carte avec emphase. Si c'est l'**aléa collectif** de l'année, lis l'objectif commun et son échéance : les fermes donnent depuis leur mobile (argent, plats, jetons que tu récupères, stress), tu suis la jauge dans la console et l'écran de projection, et le résultat s'applique tout seul à l'échéance (bouton « Clôturer maintenant » en secours). Console : « Tirer une carte ». Mobile : chaque équipe choisit subir, parade ou +1 stress, puis lance le dé de chacune de ses activités complémentaires (le panneau « Dés des activités » de la console permet de lancer à leur place). L'aléa collectif est un bandeau en haut du mobile.
 - **2. Récolte (durée du produit le plus long)** : « Coureurs en place… Trois, deux, un, partez ! » Vérifier un coureur par tuile et un seul type par coureur. À la récolte, l'écran et les mobiles n'affichent **pas de chrono général** mais un **décompte par produit** (seulement les produits que au moins une ferme produit), avec un grand STOP rouge et un bip à la fin de la course de chaque produit. Ton chrono de console sert à lancer et à mettre en pause tous les décomptes en même temps. Chaque coureur fait autant d'allers-retours qu'il peut, un jeton par trajet : aucun plafond. Console : « Lancer le chrono ». Coup de collier : le gardien du bocal l'annonce, l'équipe l'enregistre sur mobile (deux tiers d'aller-retour de course après la fin du chrono, un demi pour le tracteur) : tu laisses courir ces fermes le temps indiqué sur leur mobile. **À la fin de l'étape, chaque ferme encode sur mobile les jetons réellement rapportés pour chaque produit** : un jeton rapporté = une ressource en stock, sans conversion (le nombre de jetons sur la table est le stock). Tu vois le résultat dans la console et tu peux corriger avec − / +.
 - **3. Transformation et bourse (1 min)** : les fermes déclarent leurs recettes sur mobile ; la console liste ce que chacune doit te donner et ce que tu rends. Fais l'échange physique des jetons puis clique « Jetons échangés ». Les fermes négocient entre elles pendant ce temps : elles proposent leurs échanges de stock depuis leur mobile (le destinataire accepte, le stock et l'argent suivent), tu les suis dans le panneau « Bourse » de la console et tu peux les annuler. **Rappelle-le à voix haute : les matières brutes qui ne sont ni transformées ni vendues sont perdues en fin de saison.**
 - **4. Marché (1 min)** : dernier rappel : tout ce qui n'est ni vendu ni transformé est perdu. Chaque ferme place ses produits (grande distribution ou étal) et déclare. Console, colonne roue : « Tourner » pour chaque ferme, puis « Valider et payer ». Les fermes placent leurs produits un par un (stock visible, cases grisées si le produit manque) ; après la roue, chaque produit reçoit un retour de marché (le goût du moment, +25 / −25 points) : lis-les à voix haute, c'est le moment d'animation.
@@ -33,15 +34,15 @@ Sonner la cloche à chaque changement d'étape. Le chrono de l'écran externe su
 Besoin de rattraper du temps ? Le bouton « Aller à » de la console permet de sauter directement à n'importe quelle saison de n'importe quelle année.
 
 ## Clôture d'année et réaménagement
-- Console : « Appliquer les charges ». L'app déduit les charges et ajoute les boules de dette.
+- Console : « Appliquer les charges ». L'app déduit les charges et ajoute le stress de dette.
 - Fête du Phoenix : compter les plats livrés, marquer « Livré ? » pour chacun, puis « Jouer la fête » (ou Réussie / Ratée manuellement).
-- Réaménagement (5 min) : « Année suivante ». La **commande de la fête de la nouvelle année est tirée tout de suite** et répartie avant les achats. Les fermes achètent leurs agrandissements (c'est le seul moment), tu donnes les tuiles gratuites (années 1 et 2) avec « Donner », et tu fais décaler les badges. Année 2 : choisir l'activité complémentaire.
+- Réaménagement (5 min) : « Année suivante ». La **commande de la fête de la nouvelle année est tirée tout de suite** et répartie avant les achats. Les fermes achètent leurs agrandissements (c'est le seul moment), tu donnes les tuiles gratuites (années 1 et 2) avec « Donner », et tu fais décaler les badges. Les activités complémentaires s'achètent aussi à ce moment.
 - Fin de l'année 3 : « Terminer la partie » (pas de réaménagement).
 
 ## Conduire les 3 ans
 - **Année 1, apprentissage.** Prends une minute de plus à la première saison, commente chaque étape, ne pénalise aucune erreur.
-- **Année 2, la pression monte.** Explique le dé des activités. Les premiers bocaux passent à Agité : sors les accessoires. La commande se complique : rappelle-la dès le printemps.
-- **Année 3, tout compte.** Il n'y a plus d'achat après l'hiver : l'argent non dépensé compte pour la caisse du village. Propose les vacances à toute équipe au-dessus de 6 boules.
+- **Année 2, la pression monte.** Rappelle que chaque activité complémentaire a son dé à chaque saison (1 = elle ne marche pas). Les premiers bocaux passent à Agité : sors les accessoires. La commande se complique : rappelle-la dès le printemps.
+- **Année 3, tout compte.** Il n'y a plus d'achat après l'hiver : l'argent non dépensé compte pour la caisse du village. Propose les vacances à toute équipe au-dessus de 6 points de stress.
 - **Tenir le temps** : en retard de plus de 3 minutes à la fin de l'année 2, saute la bourse pendant une saison ou utilise « Aller à ».
 
 ## Fin de partie et trophées
@@ -62,7 +63,7 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - **Jetons de trop** : si une équipe annonce plus de jetons que ses coureurs ne pouvaient en rapporter, corrige avec − / + dans la console.
 - **Un solde ou un bocal est faux** : corrige tout de suite dans le tableau des fermes (banque ou bocal, avec motif), c'est tracé au journal.
 - **Une ferme domine** : rappelle l'objectif collectif et pousse la commande du village.
-- **Une ferme atteint 10 boules** : burn-out, elle s'arrête une saison, ses joueurs conseillent les autres, puis elle repart avec 3 boules.
+- **Une ferme atteint 10 points de stress** : burn-out, elle s'arrête une saison, ses joueurs conseillent les autres, puis elle repart avec 3 points de stress.
 - **Un téléphone ou le réseau lâche** : le comptable note sur papier, tu corriges ensuite. Le joueur peut revenir par le même lien et choisir « Reprendre ma ferme ».
 - **Pluie ou terrain glissant** : tire la carte Brouillard et réduis la distance des stations.
 - **Mot de passe perdu** : supprime `data/settings.json` sur le serveur ; la création du mot de passe sera redemandée.
@@ -71,10 +72,14 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - Dans la **salle d'attente**, choisis la taille des équipes (3 à 6 joueurs par ferme) et la durée (3 ans ou partie courte de 2 ans) avant de lancer l'installation : le réglage change la composition de départ des fermes, les objectifs communs, la cagnotte à atteindre et, en partie courte, le bocal de stress.
 - Avec moins de 5 joueurs par ferme, rappelle qu'une tuile de plus n'est utile que s'il y a un joueur pour courir.
 
-## Outils de l'animateur
+## Outils du maire du village
 - **Annuler** : après une correction (banque, bocal, récolte, achat, tirage de carte, etc.), le bouton « ↶ Annuler » apparaît en haut de la console. Il n'est plus possible dès qu'une ferme a joué après ta correction, et le chrono n'est jamais remis en arrière.
 - **Mesurer un aller-retour** : dans le bloc chrono, « ⏱ Mesurer un aller-retour » (Départ puis Arrivée) propose la durée la plus proche à régler.
 - **Récolte** : la console indique pour chaque ferme « ✓ encodé » ou « en attente » ; un ⚠ signale un total de jetons invraisemblable à vérifier. Sur le mobile, les fermes comptent leurs jetons avec + et − pendant la course puis appuient sur « Encoder ma récolte ».
+- **Objectifs et bilan** : le bouton « Afficher les objectifs à l'écran » réaffiche les 3 étoiles et l'avancement ; « Bilan de saison » s'active ou se coupe à tout moment depuis l'en-tête de la console.
+- **Chronos différents** : quand des fermes ont des temps de course différents (protection, tracteur, coup de collier), le tableau « Qui peut encore courir ? » donne un décompte par ferme sur le projecteur et dans la console.
+- **Marché** : la colonne « Jetons à recevoir » indique d'un coup d'œil ce que la ferme doit te remettre (supermarché + étal).
+- **Fête** : chaque ferme livre ses plats depuis son mobile le jour de la fête ; tu peux valider à la main. Un échec pèse +2 stress pour tous.
 - **Projecteur** : la touche **F** coupe ou remet les effets visuels (tirage de carte, météo animée).
 - **Prochaine action** : un bandeau en haut de la console indique ce qu'il faut faire maintenant (tirer la carte, lancer le chrono, valider les jetons de telle ferme, régler les ventes, étape suivante…), avec le bouton correspondant et un « ? » d'aide sur l'étape.
 - **Projecteur** : la touche **C** active un mode fort contraste (fond noir, petits textes agrandis), à mémoriser pour les salles claires.

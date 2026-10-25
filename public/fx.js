@@ -172,7 +172,7 @@
   var styled = false;
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
-  // opts : { seasonName, tone('neg'|'pos'|'col'), onFlip, onDone } ; card : { icon, title, effect/story, parade }
+  // opts : { seasonOf (ex. « d’automne »), tone('neg'|'pos'|'col'), onFlip, onDone } ; card : { icon, title, effect/story, parade }
   function reveal(card, opts) {
     opts = opts || {};
     if (reduce || off) { if (opts.onFlip) opts.onFlip(); if (opts.onDone) opts.onDone(); return; }
@@ -183,7 +183,7 @@
     var el = document.createElement('div');
     el.className = 'rv'; el.setAttribute('role', 'presentation');
     el.innerHTML = '<div class="rv-card"><div class="rv-in">' +
-      '<div class="rv-face rv-back"><div class="big">🚜</div><b>Aléa du ' + esc((opts.seasonName || '').toLowerCase()) + '</b><span>Le maire tire une carte…</span></div>' +
+      '<div class="rv-face rv-back"><div class="big">🚜</div><b>Aléa ' + esc(opts.seasonOf || '') + '</b><span>Le maire tire une carte…</span></div>' +
       '<div class="rv-face rv-front" style="background:' + bg + '"><span class="tag">' + esc(tag) + '</span><div class="ico">' + (card.icon || '🎴') + '</div><h2>' + esc(card.title) + '</h2><p>' + esc(text || '') + '</p></div>' +
       '</div><div class="rv-burst"></div></div>';
     document.body.appendChild(el);
@@ -200,6 +200,40 @@
     el.addEventListener('click', finish);
   }
 
+  // ---------- Fete du Phoenix : animation de reussite ou d'echec ----------
+  var feteCss = '.fx-fete{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;text-align:center;animation:rvIn .5s ease both;cursor:pointer;font-family:Figtree,system-ui,sans-serif}' +
+    '.fx-fete.win{background:radial-gradient(circle at 50% 45%,rgba(255,226,140,.93),rgba(224,112,31,.9));color:#2b1100}' +
+    '.fx-fete.lose{background:radial-gradient(circle at 50% 45%,rgba(60,70,92,.94),rgba(14,17,26,.96));color:#eef2f8}' +
+    '.fx-fete .bird{font-size:36vh;line-height:1;animation:feteWin 2.4s ease-in-out infinite}' +
+    '.fx-fete.lose .bird{animation:feteLose 3s ease-in-out infinite;filter:grayscale(1) brightness(.8)}' +
+    '.fx-fete h2{font:800 11vh/1.05 Figtree,system-ui,sans-serif;margin:0}' +
+    '.fx-fete p{font:600 4vh/1.25 Figtree,system-ui,sans-serif;margin:0;max-width:70vw}' +
+    '.fx-fete.out{animation:rvOut .8s ease forwards}' +
+    '@keyframes feteWin{0%{transform:translateY(14vh) scale(.5);opacity:0}30%{opacity:1}60%{transform:translateY(-4vh) scale(1.12) rotate(-5deg)}100%{transform:translateY(0) scale(1) rotate(0)}}' +
+    '@keyframes feteLose{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(5vh) rotate(9deg)}}' +
+    '@media (prefers-reduced-motion:reduce){.fx-fete .bird{animation:none}}';
+  var feteStyled = false;
+  // ok : fete reussie (feu d'artifice, phenix) ou ratee (pluie, phenix eteint). opts : { title, text, ms }
+  function fete(ok, opts) {
+    opts = opts || {};
+    if (off) return;
+    if (!feteStyled) { var st = document.createElement('style'); st.textContent = feteCss; document.head.appendChild(st); feteStyled = true; }
+    var before = kind;
+    var el = document.createElement('div');
+    el.className = 'fx-fete ' + (ok ? 'win' : 'lose'); el.setAttribute('role', 'presentation');
+    el.innerHTML = '<div class="bird">' + (ok ? '🔥' : '🥀') + '</div><h2>' + esc(opts.title || (ok ? 'Fête du Phoenix réussie !' : 'Fête du Phoenix ratée…')) + '</h2><p>' + esc(opts.text || '') + '</p>';
+    document.body.appendChild(el);
+    if (!reduce) { set(ok ? 'confetti' : 'rain'); if (cv) cv.style.zIndex = 25; }
+    var done = false;
+    function end() {
+      if (done) return; done = true;
+      el.classList.add('out');
+      setTimeout(function () { el.remove(); if (cv) cv.style.zIndex = 4; kind = null; set(before); if (opts.onDone) opts.onDone(); }, 800);
+    }
+    el.addEventListener('click', end);
+    setTimeout(end, opts.ms || 8000);
+  }
+
   // Touche F de l'ecran projecteur : coupe ou remet les effets (projecteur peu puissant, ambiance qui gene la lecture).
   function toggle() {
     off = !off;
@@ -207,5 +241,5 @@
     if (off) set(null);
     return !off;
   }
-  window.FFX = { set: set, reveal: reveal, toggle: toggle, enabled: function () { return !off; }, kinds: Object.keys(ALIAS) };
+  window.FFX = { set: set, reveal: reveal, fete: fete, toggle: toggle, enabled: function () { return !off; }, kinds: Object.keys(ALIAS) };
 })();

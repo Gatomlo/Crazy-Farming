@@ -55,11 +55,12 @@ function play(P, seed, strat) {
         if (a.invest * 100 > 25 * (3 - yearsLeft) && can(id) && t.bank > 120 + reserve && (yearsLeft >= 1)) { if (tryBuy(id)) a.boughtTiles++; }
       }
     }
-    for (let k = t.equipment.filter((e) => e === 'brouette').length; k < (P.forceBrouette || 0); k++) if (can('brouette')) tryBuy('brouette');
+    for (let k = t.equipment.filter((e) => e === 'panier').length; k < (P.forceBrouette || 0); k++) if (can('panier')) tryBuy('panier');
     if (a.invest > 0.5 && yearsLeft >= 1) {
       if (!P.noTracteur && !t.equipment.includes('tracteur') && can('tracteur') && t.bank > 250 && s.year === 1) tryBuy('tracteur');
-      if (!P.noBrouette && can('brouette') && t.equipment.filter((e) => e === 'brouette').length < (P.maxBrouette || 2) && t.bank > 200) tryBuy('brouette');
+      if (!P.noBrouette && can('panier') && t.equipment.filter((e) => e === 'panier').length < (P.maxBrouette || 2) && t.bank > 200) tryBuy('panier');
       if (!t.equipment.includes('camionnette') && can('camionnette') && t.bank > 250) tryBuy('camionnette');
+      if (!P.noBrouette && !t.equipment.includes('brouette') && can('brouette') && t.bank > 300) tryBuy('brouette');
     }
     // Parades : 'meteo' = achat guide par la prevision de la saison suivante (le risque sans meteo n'est pas couvert).
     const f = s.phase === 'season' || s.phase === 'setup' || s.phase === 'rearrange' || s.phase === 'closing' ? E.viewFor(s, 'team', t.id).forecast : null;
@@ -84,7 +85,6 @@ function play(P, seed, strat) {
     for (let season = 0; season < 4; season++) {
       // 1. Alea
       const card = E.drawCard(s, undefined, r);
-      E.rollDie(s, undefined, r);
       if (card.collective) {
         // chaque ferme donne sa part avec la probabilite P.coop ; l'objectif est regle a l'echeance par le moteur
         const g = card.goal;
@@ -117,7 +117,7 @@ function play(P, seed, strat) {
         a.collier = false;
         if (t.bocal <= 3 && r() < 0.5 + 0.3 * a.invest) { a.collier = true; E.coupDeCollier(s, t.id); }
         const me = E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id);
-        const nBrouette = t.equipment.filter((e) => e === 'brouette').length;
+        const nBrouette = t.equipment.filter((e) => e === 'panier').length;
         const typesOwned = me.harvest.filter((h) => h.runners > 0).sort((x, y) => y.runners - x.runners);
         const enc = {};
         let staffLeft = staff;
@@ -194,7 +194,6 @@ function play(P, seed, strat) {
         gain = Math.round(gain * m);
         if (gain !== 0) E.addBank(s, t.id, gain, 'Ventes', true);
         a.income += gain;
-        if ((t.tiles.activite || 0) > 0 && s.die >= 1 && s.die <= 5 && s.die !== 1) { E.addBank(s, t.id, 15 * t.tiles.activite, 'Activite', true); a.income += 15 * t.tiles.activite; }
       }
       E.nextStep(s, r);
       // 5. Achats / vacances

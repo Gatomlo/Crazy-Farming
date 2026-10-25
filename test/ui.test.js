@@ -23,17 +23,30 @@ function scenario(mode) {
     out.admin.push(j(E.viewFor(s, 'admin'))); out.team.push(j(E.viewFor(s, 'team', t))); out.display.push(j(E.viewFor(s, 'display')));
   };
   snap();
+  for (const i of [0, 3, 7]) { s.tuto = i; snap(); } // presentation projetee en salle d'attente
+  s.tuto = -1;
   E.startSetup(s); snap();
+  E.buyCart(s, t, ['act_gite', 'act_pedago', 'act_resto', 'brouette', 'panier']); // activites complementaires et materiel
+  s.tuto = 1; snap(); s.tuto = -1;
   E.autoAssign(s); E.startYear(s); snap();
   for (const idx of [0, 1, 2, 3]) { // une carte de chaque saison, avec tout le deroule de la saison
-    E.jumpTo(s, 1, idx); E.drawCard(s, 0); snap();
+    E.jumpTo(s, 1, idx); E.drawCard(s, 0);
+    try { E.setChoice(s, t, 'boule'); } catch (e) { /* carte positive */ }
+    E.rollAllActivities(s); snap();
     E.nextStep(s); snap(); // recolte
     E.declareHarvest(s, t, Object.fromEntries(E.viewFor(s, 'team', t).teams.find((x) => x.id === t).harvest.map((h) => [h.id, h.runSec ? 2 : 0])), true);
     E.coupDeCollier(s, t); snap();
-    E.nextStep(s); snap(); E.nextStep(s); snap(); E.nextStep(s); snap();
+    E.nextStep(s); snap(); E.nextStep(s); snap(); // bourse puis marche
+    const stock = E.viewFor(s, 'team', t).teams.find((x) => x.id === t).stock.raw;
+    const prod = Object.keys(stock).find((k) => stock[k] > 1);
+    if (prod) { E.declareSales(s, t, { ['dir_' + prod]: 1, ['sup_' + prod]: 1 }); E.spinWheel(s, t); snap(); }
+    E.nextStep(s); snap();
   }
   E.jumpTo(s, 1, 1); s.collective = { year: 1, id: 'inondation', season: 1, done: false }; E.drawCard(s); snap(); // alea collectif
   s.phase = 'closing'; s.closedYear = false; snap();
+  E.closeYear(s); snap();
+  E.fete(s, true); snap(); // animation de fete reussie
+  s.showGoals = true; snap(); s.showGoals = false;
   E.finish(s); snap();
   return out;
 }
@@ -60,6 +73,12 @@ async function playPage(browser, page, states, query) {
   for (let i = 0; i < states.length; i++) {
     await pg.evaluate((n) => window.__push(n), i);
     await pg.waitForTimeout(40);
+    if (page === 'team') { // on parcourt aussi les autres onglets et le panier
+      for (const tabName of ['ferme', 'boutique', 'banque', 'accueil']) {
+        await pg.$eval('[data-tab="' + tabName + '"]', (el) => el.click());
+        if (tabName === 'boutique') { const add = await pg.$('[data-act="cartAdd"]:not([disabled])'); if (add) { await add.evaluate((el) => el.click()); await pg.$eval('[data-act="cartClear"]', (el) => el.click()).catch(() => {}); } }
+      }
+    }
     const len = await pg.evaluate(() => (document.getElementById('app') || document.getElementById('stage') || document.body).textContent.trim().length);
     assert.ok(len > 0, `${page} : écran vide à l’état ${i}`);
   }

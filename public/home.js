@@ -15,7 +15,7 @@
     root.innerHTML =
       '<section class="login-card panel">' +
         '<div class="logo brand" style="justify-content:center"><div class="logo" aria-hidden="true">🚜</div></div>' +
-        '<h1>Bienvenue !</h1><p class="muted" style="margin:0">Première connexion : crée le mot de passe de l\'espace animateur.</p>' +
+        '<h1>Bienvenue !</h1><p class="muted" style="margin:0">Première connexion : crée le mot de passe de l\'espace du maire du village.</p>' +
         '<form id="setupForm" class="stack"><label for="pw1" class="muted" style="text-align:left">Mot de passe (6 caractères minimum)</label>' +
         '<input id="pw1" type="password" autocomplete="new-password" autofocus>' +
         '<label for="pw2" class="muted" style="text-align:left">Confirmation</label>' +
@@ -39,7 +39,7 @@
     root.innerHTML =
       '<section class="login-card panel">' +
         '<div class="logo brand" style="justify-content:center"><div class="logo" aria-hidden="true">🚜</div></div>' +
-        '<h1>Farming\'s Folies</h1><p class="muted" style="margin:0">Espace animateur</p>' +
+        '<h1>Farming\'s Folies</h1><p class="muted" style="margin:0">Espace du maire du village</p>' +
         '<form id="loginForm" class="stack"><label for="pw" class="muted" style="text-align:left">Mot de passe</label>' +
         '<input id="pw" type="password" autocomplete="current-password" autofocus>' +
         '<button class="btn primary">Se connecter</button></form>' +
