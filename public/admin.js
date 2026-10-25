@@ -375,7 +375,7 @@
     var rows = V.teams.map(function (t) {
       var S = t.sales, Q = S.quote;
       if (t.stopped) return '<tr><td><b>' + esc(t.name) + '</b></td><td colspan="5" class="muted">À l\'arrêt</td></tr>';
-      var det = S.declared ? Q.lines.map(function (l) { var tg = l.tag === 'hot' ? ' 🔥' : l.tag === 'cold' ? ' ❄️' : ''; return esc(l.name) + tg + ' : ' + l.sup + ' super / ' + l.dir + ' étal' + (l.frac != null && l.dir ? ' (vendu ' + l.soldUnits + ')' : ''); }).join(' · ') || 'Rien placé' : '<span class="muted">Pas encore placé</span>';
+      var det = S.declared ? Q.lines.map(function (l) { var tg = ''; return esc(l.name) + tg + ' : ' + l.sup + ' super / ' + l.dir + ' étal' + (l.frac != null && l.dir ? ' (vendu ' + l.soldUnits + ')' : ''); }).join(' · ') || 'Rien placé' : '<span class="muted">Pas encore placé</span>';
       var amt = S.settled ? '<b class="num">' + S.amount + ' EB</b>' : Q.total == null ? '<span class="muted">roue ?</span>' : '<b class="num">' + Q.total + ' EB</b>';
       var btn = S.settled ? '<span class="pill lv-Zen">Payé</span>' : '<button class="btn small primary" data-act="settleSales" data-team="' + t.id + '"' + (S.declared && (t.wheel || !Q.stallUnits) ? '' : ' disabled') + '>Valider et payer</button>';
       return '<tr><td><b>' + esc(t.name) + '</b></td><td>' + (t.wheel ? esc(t.wheel.label) : '<span class="muted">pas tournée</span>') + '</td><td>' + det + '</td><td>' + handover(t) + '</td><td>' + amt + '</td><td>' + btn + '</td></tr>';

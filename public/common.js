@@ -60,7 +60,7 @@
     ['Aléa', 'Une carte tombe sur le village. Négative : chaque ferme choisit de subir l\'effet, de jouer sa parade (si elle a le matériel) ou d\'ajouter 1 stress pour l\'éviter. Positive : rien à faire. Aléa collectif : tout le village doit réunir un objectif avant l\'échéance, sans choix individuel. Si vous avez acheté des activités complémentaires, lancez le dé de chacune : 1 = elle ne fonctionne pas, 2 à 6 = effet de plus en plus fort.'],
     ['Récolte en relais', 'Un coureur par tuile. Chaque produit a sa durée de course, avec un décompte et un STOP. Un trajet = un jeton rapporté = une ressource en stock, sans plafond. Comptez vos jetons avec + et −, puis encodez-les. Le coup de collier (+1 stress) et le tracteur ajoutent du temps de course : seules les fermes qui y ont droit continuent de courir.'],
     ['Transformation et bourse', 'Demandez vos recettes (1 par saison, 4 de plus par atelier) : le maire du village échange vos jetons contre des plats, qui valent 3, 4 ou 5 fois un produit brut. Les cases grisées manquent d\'ingrédients. Échangez avec les autres fermes depuis le mobile, produits contre produits ou contre des EB : tout accord est définitif. Les matières brutes ni transformées ni vendues sont perdues en fin de saison.'],
-    ['Marché', 'Placez d\'abord vos produits, puis tournez la roue. Grande distribution : 7 EB le produit brut, toujours payé. Étal : 14 EB, mais la roue décide de la part vendue, et le goût du moment ajoute ou retire 25 points. Les invendus de l\'étal sont perdus. Vos activités (gîte, magasin, restaurant) peuvent sauver une partie de l\'étal.'],
+    ['Marché', 'Placez d\'abord vos produits, puis tournez la roue. Grande distribution : 7 EB le produit brut, toujours payé. Étal : 14 EB, mais la roue décide de la part vendue. Les invendus de l\'étal sont perdus. Vos activités (gîte, magasin, restaurant) peuvent sauver une partie de l\'étal.'],
     ['Achats et vacances', 'Remplissez votre panier à la boutique, puis validez-le : matériel, vacances (30 EB par voyageur, −1 stress, mais le voyageur ne court pas la saison suivante). Les agrandissements et activités ne s\'achètent qu\'à l\'installation et en fin d\'année. Regardez la météo de la saison suivante : elle n\'est juste que 7 fois sur 10.']
   ];
   function showHelp(step) {
@@ -186,7 +186,7 @@
     var groups = [];
     segs.forEach(function (sg) { var g = groups.filter(function (x) { return x.label === sg.label; })[0]; if (g) g.n += 1; else groups.push({ label: sg.label, n: 1, frac: sg.frac }); });
     return '<div class="wheel-legend">' + groups.map(function (g) {
-      return '<div><i style="background:' + (WHEEL_COLOR[g.label] || '#999') + '"></i><span>' + esc(g.label) + (g.label === 'Rien ne se vend' ? ' <b style="color:var(--bad)">· +1 stress</b>' : '') + '</span><b>' + g.n + ' / ' + segs.length + '</b></div>';
+      return '<div><i style="background:' + (WHEEL_COLOR[g.label] || '#999') + '"></i><span>' + esc(g.label) + (g.label === 'Rien ne se vend' ? ' <b style="color:var(--bad)">· +1 stress</b>' : g.label === 'Tout est vendu' ? ' <b style="color:var(--good)">· −1 stress</b>' : '') + '</span><b>' + g.n + ' / ' + segs.length + '</b></div>';
     }).join('') + '</div>';
   }
   // Fait tourner la roue jusqu'a la case tiree (w.idx) puis annonce le resultat.
@@ -198,7 +198,7 @@
     el.id = 'wheelModal'; el.className = 'wheel-modal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Roue du marché');
     var good = w.frac >= 0.75, mid = w.frac > 0;
     el.innerHTML = '<div class="wheel-box"><div class="eyebrow">Marché · roue de l\'étal</div><h2 class="wheel-title">' + (opts.title ? esc(opts.title) : 'La roue tourne…') + '</h2>' + wheelSvg(segs) +
-      '<div class="wheel-result" style="visibility:hidden"><div class="wheel-res-label" style="color:' + (good ? 'var(--good)' : mid ? 'var(--warn)' : 'var(--bad)') + '">' + esc(w.label) + (w.free ? ' !' : '') + '</div>' + (w.frac === 0 ? '<div style="color:var(--bad);font-weight:700">+1 stress pour la ferme</div>' : '') + '</div>' +
+      '<div class="wheel-result" style="visibility:hidden"><div class="wheel-res-label" style="color:' + (good ? 'var(--good)' : mid ? 'var(--warn)' : 'var(--bad)') + '">' + esc(w.label) + (w.free ? ' !' : '') + '</div>' + (w.frac === 0 ? '<div style="color:var(--bad);font-weight:700">+1 stress pour la ferme</div>' : w.frac === 1 ? '<div style="color:var(--good);font-weight:700">−1 stress pour la ferme</div>' : '') + '</div>' +
       wheelLegend(segs) + '<button class="btn primary block" data-wheel-close="1">Voir mes ventes</button></div>';
     document.body.appendChild(el);
     var rot = el.querySelector('.wheel-rot'), title = el.querySelector('.wheel-title'), res = el.querySelector('.wheel-result');

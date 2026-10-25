@@ -69,6 +69,7 @@
   var cart = [];
   try { cart = JSON.parse(sessionStorage.getItem('ff-cart-' + code) || '[]'); } catch (e) { cart = []; }
   function saveCart() { try { sessionStorage.setItem('ff-cart-' + code, JSON.stringify(cart)); } catch (e) { /* ignore */ } }
+  var feeAsk = null; // placement en attente de confirmation du paiement des frais d'emplacement
   var colOpen = false, lastWheelN = null, lastFetes = null, seenRolls = {};
   var conn = FF.connect({
     role: 'team', code: code, token: token,
@@ -173,6 +174,14 @@
     var cls = neg ? (chosen ? 'neg done' : 'neg') : 'ok';
     var right = neg ? (chosen ? '✓ ' + lab : 'Choisir ›') : 'Voir ›';
     return '<button class="col-banner ' + cls + '" data-act="openCol" aria-label="Ouvrir la carte aléa"><span class="cb-ic" aria-hidden="true">' + (c.icon || '🎴') + '</span><span class="cb-tx"><b>Aléa · ' + esc(c.title) + '</b><small>' + (neg ? (chosen ? 'Choix fait, définitif' : 'Négatif : un choix à faire') : 'Positif : rien à faire') + '</small></span><span class="cb-go">' + right + '</span></button>';
+  }
+  function feeModal() {
+    if (!feeAsk) return '';
+    var fee = V.meta.market.stallFee, ok = me.bank >= fee;
+    return '<div class="help-modal" role="dialog" aria-modal="true" aria-label="Frais d\'emplacement"><div class="help-box"><div class="eyebrow">Marché · étal</div><h2 style="font-size:36px;margin:2px 0 8px">🏷️ Frais d\'emplacement</h2>' +
+      '<p style="margin:0 0 10px;line-height:1.45">Vous posez <b>' + plural(feeAsk.n, 'produit', 'produits') + '</b> à l\'étal. Une place sur le marché coûte <b>' + fee + ' EB</b>, payés au maire du village avec un virement automatique depuis votre banque (' + me.bank + ' EB).</p>' +
+      (ok ? '' : '<p style="margin:0 0 10px;color:var(--bad);font-weight:700">Solde insuffisant : reposez moins de produits à l\'étal ou utilisez le supermarché.</p>') +
+      '<div class="row" style="flex-wrap:nowrap"><button class="btn block" data-act="feeCancel">Annuler et refaire le placement</button><button class="btn primary block" data-act="feePay"' + (ok ? '' : ' disabled') + '>Payer ' + fee + ' EB</button></div></div></div>';
   }
   function colModal() {
     var k = colState();
@@ -423,17 +432,17 @@
     var wheel = me.wheel ? '<div style="font-size:22px;font-weight:800">' + esc(me.wheel.label) + '</div>' : '<div class="muted">La roue ne concerne que l\'étal.</div>';
     var canSpin = S.declared && !S.settled && Q.stallUnits > 0;
     var spin = Q.stallUnits > 0 || me.wheel ? '<button class="btn" data-act="spinWheel"' + (canSpin ? '' : ' disabled') + '>🎡 ' + (me.wheel ? (me.freeSpin ? 'Relancer la roue (gratuit)' : 'Relancer la roue (+1 stress)') : 'Tourner la roue de l\'étal') + '</button>' : '';
-    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.income ? ' · gîte <b class="num">+' + Q.income + ' EB</b>' : '') + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue et le goût du moment, frais ' + Q.fee + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' sur ' + Q.stallUnits + ', frais ' + Q.fee + ')</span>');
+    var est = 'Supermarché garanti : <b class="num">' + Q.safeTotal + ' EB</b>' + (Q.income ? ' · gîte <b class="num">+' + Q.income + ' EB</b>' : '') + (Q.total == null ? (Q.stall ? ' <span class="muted">· étal jusqu\'à ' + Q.stall + ' EB selon la roue' + (Q.feePaid ? ', frais d\'emplacement déjà payés' : ', frais d\'emplacement ' + Q.fee + ' EB') + '</span>' : '') : '<br>Total estimé : <b class="num">' + Q.total + ' EB</b> <span class="muted">(étal vendu : ' + Q.soldUnits + ' sur ' + Q.stallUnits + (Q.feePaid ? ', frais d\'emplacement déjà payés' : ', frais ' + Q.fee) + ')</span>');
     var acts = (Q.activities || []).map(function (a) {
       return '<div style="font-size:13px"><b>' + a.icon + ' ' + esc(a.name) + '</b> : ' + (a.roll ? (a.n ? '<span style="color:var(--good);font-weight:700">dé ' + a.roll + ' · ' + (V.meta.activities.filter(function (x) { return x.id === a.id; })[0].effects[a.roll - 1]) + (a.gain && a.id !== 'gite' ? ' (+' + a.gain + ' EB)' : '') + '</span>' : '<span style="color:var(--bad);font-weight:700">dé 1 · ne fonctionne pas</span>') : '<span class="muted">dé pas encore lancé (onglet Accueil, étape Aléa)</span>') + '</div>';
     }).join('');
     var detail = Q.total != null && Q.lines.some(function (l) { return l.dir > 0; }) ? '<div class="stack" style="gap:2px"><b>🧮 Détail de l\'étal</b>' + Q.lines.filter(function (l) { return l.dir > 0; }).map(function (l) {
-      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;font-size:14px"><span>' + esc(l.name) + (l.tag === 'hot' ? ' 🔥' : l.tag === 'cold' ? ' ❄️' : '') + ' : <b>' + l.soldUnits + '</b> vendu' + (l.soldUnits > 1 ? 's' : '') + ' sur ' + l.dir + ' × ' + l.unitDir + ' EB</span><b class="num">' + l.revenue + ' EB</b></div>';
-    }).join('') + '<div class="row" style="justify-content:space-between;font-size:14px"><span>Frais d\'étal</span><b class="num">−' + Q.fee + ' EB</b></div></div>' : '';
+      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;font-size:14px"><span>' + esc(l.name) + '' + ' : <b>' + l.soldUnits + '</b> vendu' + (l.soldUnits > 1 ? 's' : '') + ' sur ' + l.dir + ' × ' + l.unitDir + ' EB</span><b class="num">' + l.revenue + ' EB</b></div>';
+    }).join('') + '<div class="row" style="justify-content:space-between;font-size:14px"><span>Frais d\'emplacement' + (Q.feePaid ? ' (déjà payés au placement)' : '') + '</span><b class="num">' + (Q.feePaid ? '0' : '−' + Q.fee) + ' EB</b></div></div>' : '';
     var report = Q.report && Q.report.length ? '<div class="stack" style="gap:6px"><b>📣 Retour du marché</b>' + Q.report.map(function (l) { return '<div style="border-left:4px solid ' + (l.level === 'tout' || l.level === 'bien' ? 'var(--good)' : 'var(--bad)') + ';padding-left:10px">' + esc(l.text) + '</div>'; }).join('') + '</div>' : '';
     var status = S.settled ? '<div style="color:var(--good);font-weight:700">Payé : ' + (S.amount >= 0 ? '+' : '−') + Math.abs(S.amount) + ' EB. Bien joué !</div>' : me.wheel ? '<div style="font-weight:700;color:var(--warn)">Montrez vos produits au maire du village : il vérifie et paie.</div>' : S.declared ? '<div style="font-weight:700;color:var(--warn)">Placement validé : tournez la roue de l\'étal, ou attendez le paiement du supermarché.</div>' : '';
     var warn = Q.directBlocked ? '<div style="color:var(--bad);font-weight:700">Pas de vente directe cette saison.</div>' : '';
-    var intro = '<div class="muted" style="font-size:13px">1. Placez vos produits (seuls ceux en stock sont ouverts). 2. Tournez la roue : elle dit quelle part de l\'étal se vend, et le goût du moment avantage ou pénalise certains produits. Les invendus sont perdus.</div>';
+    var intro = '<div class="muted" style="font-size:13px">1. Placez vos produits (seuls ceux en stock sont ouverts). 2. Tournez la roue : elle dit quelle part de l\'étal se vend. Les invendus sont perdus. <b>Poser des produits à l\'étal coûte ' + M.stallFee + ' EB de frais d\'emplacement</b>, payés au maire du village quand vous validez le placement. Tout vendre retire 1 stress ; ne rien vendre en ajoute 1.</div>';
     var legend = '<details id="wheelHelp"><summary>🎡 Que peut donner la roue ?</summary><div style="margin-top:8px">' + FF.wheelLegend(V.meta.wheel) + '</div></details>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>Marché</b>' + wheel + '</div>' + intro + warn + grid +
       '<button class="btn primary" data-act="declareSales"' + (locked ? ' disabled' : '') + '>' + (S.declared ? 'Modifier le placement' : 'Valider le placement') + '</button>' + spin + legend + '<div>' + est + '</div>' + detail + acts + report + status + '</section>';
@@ -754,7 +763,7 @@
     if (tab === 'boutique') { cart = cart.filter(function (id) { return shopById(id); }); }
     var body = tab === 'accueil' ? accueil() : tab === 'ferme' ? ferme() : tab === 'boutique' ? boutique() : banque();
     var navBtn = function (id, ic, label, n) { return '<button data-tab="' + id + '" class="' + (tab === id ? 'on' : '') + '"><span class="ic" aria-hidden="true">' + ic + (n ? '<i class="nav-badge">' + n + '</i>' : '') + '</span>' + label + '</button>'; };
-    root.innerHTML = '<div class="t-wrap">' + topBar() + body + '</div><nav class="t-nav" aria-label="Navigation de l\'équipe">' + navBtn('accueil', '🏠', 'Accueil') + navBtn('ferme', '🏡', 'Ferme') + navBtn('boutique', '🛍️', 'Boutique', cart.length) + navBtn('banque', '🏦', 'Banque') + '</nav>' + colModal();
+    root.innerHTML = '<div class="t-wrap">' + topBar() + body + '</div><nav class="t-nav" aria-label="Navigation de l\'équipe">' + navBtn('accueil', '🏠', 'Accueil') + navBtn('ferme', '🏡', 'Ferme') + navBtn('boutique', '🛍️', 'Boutique', cart.length) + navBtn('banque', '🏦', 'Banque') + '</nav>' + colModal() + feeModal();
   }
 
   function tick() { if (!V) return; root.querySelectorAll('[data-pclock]').forEach(function (el) { FF.paintProd(el, V, true); }); var u = root.querySelector('[data-undo]'); if (u && Date.now() > parseInt(u.getAttribute('data-undo'), 10)) u.remove(); var el = root.querySelector('[data-clock]'); if (el) { var ms = FF.remaining(V); el.textContent = FF.fmt(ms); var box = root.querySelector('[data-chrono]'); if (box) box.classList.toggle('low', V.timer.running && ms <= 10000); } }
@@ -793,9 +802,16 @@
     }
     if (a === 'spinWheel') return conn.act('spinWheel');
     if (a === 'declareSales') {
-      var sales = {};
-      ['sup', 'dir'].forEach(function (w) { V.meta.sell.forEach(function (x) { var n = parseInt(val('sale-' + w + '_' + x.id), 10); sales[w + '_' + x.id] = n > 0 ? n : 0; }); });
-      return conn.act('declareSales', { sales: sales }).then(function (r) { if (r && r.ok) FF.toast('Déclaration envoyée.'); });
+      var sales = {}, stallN = 0;
+      ['sup', 'dir'].forEach(function (w) { V.meta.sell.forEach(function (x) { var n = parseInt(val('sale-' + w + '_' + x.id), 10); sales[w + '_' + x.id] = n > 0 ? n : 0; if (w === 'dir' && n > 0) stallN += n; }); });
+      // des produits à l'étal : rappel des frais d'emplacement, à payer avant que le placement soit validé
+      if (stallN > 0 && !me.sales.feePaid) { feeAsk = { sales: sales, n: stallN }; return render(); }
+      return conn.act('declareSales', { sales: sales, payFee: true }).then(function (r) { if (r && r.ok) FF.toast('Déclaration envoyée.'); });
+    }
+    if (a === 'feeCancel') { feeAsk = null; return render(); }
+    if (a === 'feePay') {
+      var ask = feeAsk; feeAsk = null;
+      return conn.act('declareSales', { sales: ask.sales, payFee: true }).then(function (r) { if (r && r.ok) FF.toast('Frais payés (' + V.meta.market.stallFee + ' EB) : placement validé.'); render(); });
     }
     if (a === 'claimDish') return conn.act('claimDish', { key: b.dataset.key });
     if (a === 'releaseDish') return conn.act('releaseDish', { key: b.dataset.key });

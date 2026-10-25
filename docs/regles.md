@@ -147,12 +147,8 @@ Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et A
 Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits bruts, 9 plats), puis tourne la roue, une fois le placement déclaré (il est alors figé). Un produit absent du stock n'est pas vendable : sa case est grisée.
 
 - **Grande distribution** : 7 EB par produit brut, toujours payé, sans risque.
-- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette, 14 avec les deux), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1, **+1 stress**), relance gratuite (1). Les produits se vendent à l'unité : ce qui est vendu est payé au prix de l'étal. Les invendus de l'étal sont perdus.
-- **Goût du moment** : chaque saison, certains produits sont recherchés (part vendue +25 points) et d'autres boudés (−25 points) quand la roue donne un résultat partiel (trois quarts ou moitié). « Tout est vendu » reste tout et « rien ne se vend » reste rien. Cela ne joue que sur l'étal, jamais au supermarché. Après la roue, chaque ferme lit un retour de marché par produit (« Vos fromages se sont arrachés : par ce froid, tout le monde veut du fromage… »).
-  - Printemps : œufs, fruits et légumes, omelette recherchés ; saucisson, gratin, lasagne boudés.
-  - Été : fruits et légumes, confiture, cake, tarte, lait recherchés ; gratin, lasagne, quiche boudés.
-  - Automne : viande, saucisson, omelette, lasagne, gratin recherchés ; fruits et légumes, confiture, cake boudés.
-  - Hiver : fromage, gratin, quiche, lasagne, viande recherchés ; confiture, tarte, cake, fruits et légumes boudés.
+- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette, 14 avec les deux), **10 EB de frais d'emplacement**, payés au maire du village au moment où la ferme valide son placement : un écran de rappel propose « Payer » (virement automatique) ou « Annuler » pour refaire le placement ; les frais sont remboursés si l'étal est finalement vidé. La roue (12 cases) décide de la part vendue : **tout vendu (2 cases, au plus 20 % des tirages, −1 stress)**, trois quarts (5), moitié (2), rien (1, **+1 stress**), relance gratuite (2). Les produits se vendent à l'unité : ce qui est vendu est payé au prix de l'étal. Les invendus de l'étal sont perdus.
+- Après la roue, chaque ferme lit un **retour de marché** par produit (« Vos fromages se sont arrachés… »), d'après la part réellement vendue.
 - Un plat vaut son multiplicateur × le prix du produit brut (×3, ×4, ×5).
 - Cartes : touristes (au moins trois quarts vendus), grève et routes enneigées (étal fermé), hiver gourmand (+5 EB par plat).
 - Activités complémentaires : le gîte verse une recette en EB, le magasin vend d'office des produits bruts de l'étal et le restaurant des plats transformés, selon le dé de la saison (voir plus haut).

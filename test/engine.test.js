@@ -155,7 +155,7 @@ test('roue : relance payante, relance gratuite, touristes', () => {
   assert.equal(t.freeSpin, true);
   E.spinWheel(s, t.id, () => 0);
   assert.equal(t.bocal, 0);
-  E.spinWheel(s, t.id, () => 0);
+  E.spinWheel(s, t.id, () => 0.55); // trois quarts
   assert.equal(t.bocal, 1); // relance payante
   s.card = { id: 'touristes' };
   let calls = 0;
@@ -342,9 +342,9 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   assert.equal(t.wheel.frac, 0.75);
   assert.throws(() => E.declareSales(s, t.id, { sup_lait: 1 }), /figé/);
   q = E.salesQuote(s, t, t.sales);
-  // printemps : les oeufs sont recherches (+25 %), le lait est neutre
-  assert.equal(q.total, 28 + 4 * 14 + 3 * 14 - 10, 'des unités entières : 4 laits sur 5 vendus, les 3 œufs recherchés partent tous');
-  assert.ok(q.report.some((l) => l.id === 'oeuf' && /arrach/.test(l.text)), 'les oeufs se sont arrachés');
+  // trois quarts vendus, à l'unité : 4 laits sur 5, 2 œufs sur 3
+  assert.equal(q.total, 28 + 4 * 14 + 2 * 14 - 10);
+  assert.ok(q.report.some((l) => l.id === 'lait' && /bien marché/.test(l.text)), 'les laits ont bien marché');
   const bank = t.bank;
   E.settleSales(s, t.id);
   assert.equal(t.bank, bank + q.total);
@@ -637,7 +637,7 @@ test('achat : annulation dans le delai, refus ensuite', () => {
   assert.throws(() => E.undoBuy(s, t.id, Date.now() + 60000), /délai/);
 });
 
-test('marche : stock visible, produits absents refuses, gout du moment par produit et phrases de retour', () => {
+test('marche : stock visible, produits absents refuses, phrases de retour', () => {
   const D = require('../lib/data');
   const s = newGame();
   toSeason(s);
@@ -653,10 +653,9 @@ test('marche : stock visible, produits absents refuses, gout du moment par produ
   E.spinWheel(s, t.id, () => 0.55); // case 6 : trois quarts (0,75)
   const q = E.salesQuote(s, t, t.sales);
   const f = q.lines.find((l) => l.id === 'fromage'), c = q.lines.find((l) => l.id === 'confiture');
-  assert.equal(f.frac, 1); assert.equal(c.frac, 0.5);
-  assert.equal(f.soldUnits, 4); assert.equal(c.soldUnits, 2);
-  assert.ok(/arrach/.test(q.report.find((l) => l.id === 'fromage').text));
-  assert.ok(/froid/.test(q.report.find((l) => l.id === 'fromage').text), 'la raison de la saison est donnée');
+  assert.equal(f.frac, 0.75); assert.equal(c.frac, 0.75, 'plus de goût du moment : la roue seule décide');
+  assert.equal(f.soldUnits, 3); assert.equal(c.soldUnits, 3);
+  assert.ok(/bien marché/.test(q.report.find((l) => l.id === 'fromage').text));
   assert.equal(E.viewFor(s, 'display').teams.find((x) => x.id === t.id).marketNote !== null, true);
   void fixed; void D;
 });
@@ -1299,21 +1298,21 @@ test('chrono différencié : secondes de course de chaque ferme visibles de tous
   assert.equal(ra.oeuf - 15, 60, 'tracteur : + un demi aller-retour (15 s) sur 60 s de base');
 });
 
-test('roue : rien ne se vend = rien (le goût du moment n’y change rien) et +1 stress', () => {
+test('roue : rien ne se vend = rien et +1 stress ; tout vendre = −1 stress', () => {
   const s = newGame(1);
   toSeason(s);
   s.step = 3;
   const t = s.teams[0];
   t.tiles = { oeuf: 2 }; t.rawAdj = { oeuf: 4 };
-  E.declareSales(s, t.id, { dir_oeuf: 2 }); // les œufs sont recherchés au printemps
+  E.declareSales(s, t.id, { dir_oeuf: 2 });
   const before = t.bocal;
-  E.spinWheel(s, t.id, () => 10 / 12 + 0.01); // case « rien ne se vend »
+  E.spinWheel(s, t.id, () => 9 / 12 + 0.01); // case « rien ne se vend »
   assert.equal(t.wheel.frac, 0);
   assert.equal(t.bocal, before + 1, 'rien ne se vend : +1 stress');
   const q = E.salesQuote(s, t, t.sales);
   assert.equal(q.soldUnits, 0);
   assert.equal(q.report[0].level, 'rien');
-  // tout est vendu : même un produit boudé part entièrement, et le paiement est celui annoncé
+  // tout est vendu : −1 stress, tout part et le paiement est celui annoncé
   t.wheel = { label: 'Tout est vendu', frac: 1, idx: 0, n: 2 };
   t.pantry.gratin = 1; t.dishes.composed = 1;
   { const w = t.wheel; t.wheel = null; t.sales = null; E.declareSales(s, t.id, { dir_gratin: 1 }); t.wheel = w; }
@@ -1329,4 +1328,44 @@ test('choix de la carte définitif', () => {
   E.setChoice(s, t.id, 'subit');
   assert.throws(() => E.setChoice(s, t.id, 'boule'), /définitif/);
   assert.ok(E.viewFor(s, 'team', t.id).card.at > 0, 'heure du tirage exposée pour synchroniser les écrans');
+});
+
+test('roue : « tout est vendu » au plus 20 % des tirages, −1 stress', () => {
+  const W = D.WHEEL;
+  assert.equal(W.length, 12);
+  const tout = W.filter((w) => w.label === 'Tout est vendu').length;
+  assert.ok(tout / W.length <= 0.2, 'au plus 20 % des cases');
+  assert.ok(tout / W.filter((w) => !w.free).length <= 0.2, 'même quand on retourne la roue à chaque relance gratuite');
+  const s = newGame(1); toSeason(s); s.step = 3;
+  const t = s.teams[0]; t.rawAdj = { lait: 5 }; t.bocal = 3;
+  E.declareSales(s, t.id, { dir_lait: 2 });
+  E.spinWheel(s, t.id, () => 0); // tout est vendu
+  assert.equal(t.bocal, 2, 'tout vendre soulage 1 stress');
+  assert.equal(E.salesQuote(s, t, t.sales).soldUnits, 2);
+});
+
+test('frais d’emplacement : payés au placement après confirmation, remboursés si l’étal est vidé', () => {
+  const s = newGame(1); toSeason(s); s.step = 3;
+  const t = s.teams[0]; t.rawAdj = { lait: 6 };
+  assert.throws(() => E.declareSales(s, t.id, { dir_lait: 3 }, false), /Frais d’emplacement/);
+  assert.equal(t.bank, 500);
+  E.declareSales(s, t.id, { dir_lait: 3 }, true);
+  assert.equal(t.bank, 490); assert.equal(t.sales.feePaid, true);
+  assert.match(t.ledger.at(-1).label, /Frais d’emplacement/);
+  E.declareSales(s, t.id, { dir_lait: 2, sup_lait: 1 }, false); // déjà payés : pas de nouveau paiement
+  assert.equal(t.bank, 490);
+  E.spinWheel(s, t.id, () => 0.5); // trois quarts : 2 laits à l'étal, 2 vendus
+  const q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.feePaid, true);
+  assert.equal(q.total, 7 + 2 * 14, 'les frais ne sont pas déduits une seconde fois');
+  const bank = t.bank;
+  E.settleSales(s, t.id);
+  assert.equal(t.bank, bank + 7 + 28);
+  const s2 = newGame(1); toSeason(s2); s2.step = 3;
+  const u = s2.teams[0]; u.rawAdj = { lait: 6 };
+  E.declareSales(s2, u.id, { dir_lait: 3 }, true);
+  E.declareSales(s2, u.id, { sup_lait: 3 }, false); // plus rien à l'étal : remboursement
+  assert.equal(u.bank, 500);
+  const poor = newGame(1); toSeason(poor); poor.step = 3; poor.teams[0].rawAdj = { lait: 3 }; poor.teams[0].bank = 5;
+  assert.throws(() => E.declareSales(poor, poor.teams[0].id, { dir_lait: 1 }, true), /Solde insuffisant/);
 });
