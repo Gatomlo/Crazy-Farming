@@ -67,14 +67,23 @@ details[open] > summary::before { transform: rotate(90deg); }
 .brand { display: flex; align-items: center; gap: 14px; }
 .logo { width: 48px; height: 48px; border-radius: 15px; background: linear-gradient(135deg, var(--pb), var(--pc)); display: grid; place-items: center; font-size: 26px; box-shadow: 0 12px 26px -14px rgba(224,112,31,.8); }
 .brand h1 { font-size: 38px; color: var(--sand); } .brand .logo { width: 42px; height: 42px; font-size: 22px; }
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+/* Menu déroulant unique, en haut à droite, sur la ligne du titre */
+.hdr { position: relative; z-index: 200; }
+.menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 300px; max-width: calc(100vw - 24px); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--float); padding: 6px; display: none; }
+.menu.open { display: block; animation: fade .15s ease both; }
+.mi { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; background: transparent; border-radius: 10px; font-weight: 600; font-size: 14.5px; white-space: nowrap; text-align: left; }
+.mi:hover { background: var(--surface2); } .mi .i { width: 1.4em; text-align: center; font-size: 16px; line-height: 1; flex: none; }
+.mi small { margin-left: auto; color: var(--muted); font-weight: 500; }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+.mrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; font-size: 14.5px; font-weight: 600; }
 
 
-/* ----- Grille : déroulé · chrono · carte · fermes ----- */
-.grid { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(320px, 1.5fr) minmax(300px, 1.2fr) minmax(300px, 330px); gap: 16px; align-items: start; }
-.grid .steps { grid-column: 1; } .grid .timer { grid-column: 2; } .grid .side { grid-column: 3; }
-.grid .farms { grid-column: 4; grid-row: 1 / span 3; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding-right: 2px; display: flex; flex-direction: column; gap: 10px; }
-.grid .below { grid-column: 1 / span 3; display: flex; flex-direction: column; gap: 16px; }
+/* ----- Grille : déroulé · étape (chrono + panneaux de l'étape) · fermes ----- */
+.grid { display: grid; grid-template-columns: minmax(230px, 290px) minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+.grid .steps { grid-column: 1; }
+.grid .center { grid-column: 2; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.grid .center.wide { grid-column: 1 / span 2; }
+.grid .farms { grid-column: 3; grid-row: 1; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding-right: 2px; display: flex; flex-direction: column; gap: 10px; }
 .panel h2 { font-size: 30px; }
 .step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; border: 1px solid transparent; }
 .step.active { border-color: var(--pc); background: var(--warn-soft); } .step.done { opacity: .6; }
@@ -124,16 +133,14 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 .opt { display: flex; gap: 10px; align-items: flex-start; } .opt small { display: block; color: var(--muted); }
 .fade { animation: fade .3s ease both; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-@media (max-width: 1400px) {
-  .grid { grid-template-columns: minmax(220px, .9fr) minmax(300px, 1.5fr) minmax(300px, 300px); }
-  .grid .steps { grid-column: 1; } .grid .timer { grid-column: 2; }
-  .grid .side { grid-column: 1 / span 2; }
-  .grid .farms { grid-column: 3; grid-row: 1 / span 3; }
-  .grid .below { grid-column: 1 / span 2; }
+@media (max-width: 1250px) {
+  .grid { grid-template-columns: minmax(0, 1fr) 300px; }
+  .grid .steps { grid-column: 1; grid-row: 1; } .grid .center, .grid .center.wide { grid-column: 1; grid-row: 2; }
+  .grid .farms { grid-column: 2; grid-row: 1 / span 2; }
 }
 @media (max-width: 1000px) {
   .grid { grid-template-columns: minmax(0, 1fr); }
-  .grid .steps, .grid .timer, .grid .side, .grid .farms, .grid .below { grid-column: 1; grid-row: auto; position: static; max-height: none; overflow: visible; }
+  .grid .steps, .grid .center, .grid .center.wide, .grid .farms { grid-column: 1; grid-row: auto; position: static; max-height: none; overflow: visible; }
   .grid .farms { order: 3; }
   .dock { left: 50%; width: calc(100vw - 24px); } .dock .txt span { display: none; } .dock { padding-left: 12px; }
   .panel { overflow-x: auto; } table.t { min-width: 480px; }
@@ -163,7 +170,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     { id: 'marche', label: '4 · Marché', phase: 'season', step: 3 }, { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
     { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
   ];
-  var cur = 4, secs = 24, running = true, settingsOpen = false, view = 'cards';
+  var cur = 4, secs = 24, running = true, settingsOpen = false, menuOpen = false, view = 'cards';
   var app = document.getElementById('app');
   var fmt = function (n) { return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
   var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
@@ -204,10 +211,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
       return '<tr><td><b><span class="dot" style="background:' + f.color + '"></span>' + f.name + '</b></td><td class="num"><b>' + f.bank + ' EB</b></td><td style="min-width:120px">' + stressBar(f) + '<div class="sub">' + L[0] + ' · ' + f.stress + '/10</div></td><td class="sub">' + f.tiles + '<br>' + f.equip + '<br>📦 ' + f.stock + '</td><td><span class="' + (st[0] === 'ok' ? 'ok-t' : st[0] === 'warn' ? 'warn-t' : st[0] === 'bad' ? 'bad-t' : 'muted') + '">' + st[1] + '</span></td><td class="r"><div class="fix" style="justify-content:flex-end">' + sm('Corriger') + sm(f.ready ? '✓ Prête' : 'En cours', f.ready ? 'good' : '') + '</div></td></tr>';
     }).join('') + '</tbody></table></div>';
   }
-  function farmsCol() {
-    var done = FARMS.filter(function (f) { return f.ready; }).length;
-    return '<aside class="farms"><div class="row sb"><b style="font-family:var(--f-display);font-size:28px;letter-spacing:.02em">Les fermes</b><span class="sub">' + done + ' sur 4 prêtes</span></div>' + FARMS.map(farmCard).join('') + '</aside>';
-  }
+  function farmsCol() { return '<aside class="farms" aria-label="Les fermes">' + FARMS.map(farmCard).join('') + '</aside>'; }
 
   /* ---------- Colonnes du centre ---------- */
   function stepsPanel() {
@@ -286,9 +290,12 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 
   function header() {
     var s = S[cur], title = s.phase === 'season' ? ['Printemps · année 1', true] : [s.phase === 'lobby' ? 'Salle d’attente' : s.phase === 'setup' ? 'Installation' : 'Clôture de l’année 1', false];
-    var b = function (ico, label, id) { return '<button class="btn sm" ' + (id ? 'id="' + id + '"' : '') + '><span class="i">' + ico + '</span>' + label + '</button>'; };
+    var mi = function (ico, label, id, extra) { return '<button class="mi"' + (id ? ' id="' + id + '"' : '') + '><span class="i">' + ico + '</span>' + label + (extra || '') + '</button>'; };
+    var menu = '<div class="menu' + (menuOpen ? ' open' : '') + '" role="menu">' + mi('📺', 'Écran des joueurs') + mi('📱', 'QR code sur l’écran') + mi('🎯', 'Objectifs à l’écran') + '<hr>' + mi('⚙️', 'Paramètres de la partie', 'gear') + mi('↶', 'Annuler', '', '<small>correction de banque</small>') +
+      '<div class="mrow"><span>Vue des fermes</span><span class="seg"><button data-view="cards" class="' + (view === 'cards' ? 'on' : '') + '">Cartes</button><button data-view="table" class="' + (view === 'table' ? 'on' : '') + '">Tableau</button></span></div><hr>' +
+      mi('📜', 'Journal') + mi('📖', 'Règles du jeu') + mi('🧭', 'Guide du maire') + '<hr>' + mi('←', 'Mes parties') + '</div>';
     return '<header class="hdr"><div class="brand"><div class="logo">🚜</div><div><h1>Farming’s Folies</h1><div class="muted" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Console du maire du village · partie <b style="letter-spacing:.15em;color:var(--fg)">QWXY</b><span class="pill ' + (title[1] ? 'ok' : '') + '">' + title[0] + '</span></div></div></div>' +
-      '<div class="toolbar">' + b('📺', 'Écran joueurs') + b('📱', 'QR code') + b('⚙️', 'Paramètres', 'gear') + b('↶', 'Annuler : banque') + b('📜', 'Journal') + b('📖', 'Règles') + b('🧭', 'Guide') + b('←', 'Parties') + '</div></header>';
+      '<div style="position:relative"><button class="btn" id="menubtn" aria-haspopup="menu" aria-expanded="' + (menuOpen ? 'true' : 'false') + '"><span class="i">☰</span>Menu<span class="i">' + (menuOpen ? '▴' : '▾') + '</span></button>' + menu + '</div></header>';
   }
   function settings() {
     if (!settingsOpen) return '';
@@ -302,27 +309,27 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 
   function render() {
     var s = S[cur], tableMode = view === 'table', body;
-    var seg = '<div class="seg"><button data-view="cards" class="' + (!tableMode ? 'on' : '') + '">Cartes</button><button data-view="table" class="' + (tableMode ? 'on' : '') + '">Tableau</button></div>';
+    var farms = tableMode ? '' : farmsCol();
     if (s.phase === 'season') {
-      body = '<div class="grid">' + stepsPanel() + timerPanel(STEPS[s.step][0], 'Étape ' + (s.step + 1) + ' sur 5 · Printemps · année 1', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + '<div class="below">' + below() + '</div>' + (tableMode ? '' : farmsCol()) + '</div>' + (tableMode ? farmTable() : '');
-    } else if (s.phase === 'lobby') body = '<div class="grid">' + lobbyPage() + farmsCol() + '</div>';
-    else if (s.phase === 'setup') body = '<div class="grid">' + setupPage() + farmsCol() + '</div>';
-    else body = '<div class="grid">' + cloturePage() + farmsCol() + '</div>';
+      body = '<div class="grid">' + stepsPanel() + '<div class="center">' + timerPanel(STEPS[s.step][0], 'Étape ' + (s.step + 1) + ' sur 5 · Printemps · année 1', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + below() + '</div>' + farms + '</div>' + (tableMode ? farmTable() : '');
+    } else if (s.phase === 'lobby') body = '<div class="grid"><div class="center wide">' + lobbyPage() + '</div>' + farms + '</div>';
+    else if (s.phase === 'setup') body = '<div class="grid"><div class="center wide">' + setupPage() + '</div>' + farms + '</div>';
+    else body = '<div class="grid"><div class="center wide">' + cloturePage() + '</div>' + farms + '</div>';
     app.innerHTML = header() + body + dock() + settings();
-    var seg2 = document.querySelector('.farms .row.sb'); if (seg2 && s.phase === 'season') seg2.insertAdjacentHTML('beforeend', ''); // (bascule Cartes / Tableau ci-dessous)
-    var f = document.querySelector('.farms'); if (f) f.querySelector('.row.sb').insertAdjacentHTML('afterend', '<div style="display:flex;justify-content:flex-end">' + seg + '</div>');
     paintClock();
   }
   function paintClock() { var c = document.getElementById('clock'), b = document.getElementById('bar'); if (c) { c.textContent = fmt(secs); c.classList.toggle('low', secs <= 10); } if (b) b.style.width = Math.round(secs / 60 * 100) + '%'; }
 
   var statesEl = document.getElementById('states');
   S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { go(i); }; statesEl.appendChild(b); });
-  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; sync(); }
+  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; sync(); }
   function sync() { Array.prototype.forEach.call(statesEl.children, function (b, i) { b.classList.toggle('on', i === cur); }); render(); }
   document.addEventListener('click', function (e) {
     var t = e.target, vv = t.closest('[data-view]');
     if (vv) { view = vv.dataset.view; return render(); }
-    if (t.closest('#gear')) { settingsOpen = true; return render(); }
+    if (t.closest('#menubtn')) { menuOpen = !menuOpen; return render(); }
+    if (t.closest('#gear')) { settingsOpen = true; menuOpen = false; return render(); }
+    if (menuOpen && !t.closest('.menu')) { menuOpen = false; render(); }
     if (t.closest('#closeSettings') || t.id === 'veil') { settingsOpen = false; return render(); }
     if (t.closest('#runbtn')) { running = !running; return render(); }
     if (t.closest('#go')) return go(cur + 1);
@@ -330,7 +337,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
   });
   document.addEventListener('keydown', function (e) {
     if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
-    if (e.key === 'Escape') { settingsOpen = false; render(); }
+    if (e.key === 'Escape') { settingsOpen = false; menuOpen = false; render(); }
     if (e.code === 'Space') { e.preventDefault(); running = !running; render(); }
     if (e.key === 'ArrowRight') go(cur + 1); if (e.key === 'ArrowLeft') go(cur - 1);
   });
