@@ -258,9 +258,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
   /* ---------- Sous les colonnes : tableaux secondaires, épurés ---------- */
   function below() {
     var id = S[cur].id;
-    var recap = (id === 'marche' || id === 'achats') ? menuTable(true) : '';
-    var edit = (id === 'alea' || id === 'colec' || id === 'recolte') ? menuTable() : '';
-    return belowStep(id) + recap + edit;
+    return belowStep(id) + (id === 'marche' ? menuTable(true) : '');
   }
   function belowStep(id) {
     if (id === 'transfo') return '<section class="panel stack"><h2>Bourse entre fermes</h2><table class="t"><thead><tr><th>Échange</th><th>Contenu</th><th>Prix</th><th>État</th><th class="r"></th></tr></thead><tbody><tr><td>Bergers ↔ Gourmets</td><td>2 laits contre 1 fromage</td><td class="muted">troc</td><td class="ok-t">Conclu</td><td class="r">' + sm('Annuler l’échange') + '</td></tr><tr><td>Éleveurs → Maraîchers</td><td>3 viandes</td><td>20 EB</td><td class="warn-t">En attente</td><td class="r">' + sm('Annuler') + '</td></tr></tbody></table></section>' + menuTable(true);
@@ -362,7 +360,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
   setInterval(function () { if (running && secs > 0 && S[cur].phase !== 'lobby') { secs--; paintClock(); } }, 1000);
   var themeBtn = document.getElementById('theme');
   themeBtn.onclick = function () { var dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : 'light'; themeBtn.textContent = dark ? '☀️ Mode clair' : '🌙 Mode sombre'; };
-  if (!document.documentElement.dataset.theme && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) themeBtn.click();
+  document.documentElement.dataset.theme = "light";
   sync();
 })();
 </script>
