@@ -38,18 +38,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .logo { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: grid; place-items: center; font-size: 20px; box-shadow: 0 8px 18px -10px rgba(224,112,31,.9); flex: none; }
 .brand h1 { margin: 0; font: 700 28px/1 var(--f-display); letter-spacing: .02em; color: var(--accent); white-space: nowrap; }
 .code { font-weight: 800; letter-spacing: .18em; font-size: 13px; background: var(--card2); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; }
-.rail { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.rail { flex: 1 1 0; min-width: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
 .rail button { border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 99px; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; transition: background .2s, color .2s; }
 .rail button .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: var(--card2); border: 1px solid var(--line); transition: all .2s; }
 .rail button.done .dot { background: var(--teal); color: #fff; border-color: transparent; }
 .rail button.now { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
 .rail button.now .dot { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .rail .bar { width: clamp(8px, 2vw, 26px); height: 2px; background: var(--line); border-radius: 2px; }
-.tools { display: flex; align-items: center; gap: 6px; }
+.tools { display: flex; align-items: center; gap: 6px; flex: none; }
 .icon { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; font-size: 18px; position: relative; transition: transform .15s; }
 .icon:hover { transform: translateY(-1px); }
 .icon.on { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
-.menu { position: absolute; right: 0; top: 46px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 6px; min-width: 210px; display: none; z-index: 30; }
+.menu { position: fixed; right: clamp(10px, 3vw, 28px); top: 66px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 6px; min-width: 230px; display: none; z-index: 200; }
 .menu.open { display: block; }
 .menu button { display: flex; gap: 10px; width: 100%; text-align: left; border: 0; background: transparent; padding: 9px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; }
 .menu button:hover { background: var(--card2); }
@@ -115,6 +115,18 @@ td:first-child { border-radius: 14px 0 0 14px; } td:last-child { border-radius: 
 .fix { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .gage { font-size: 13px; background: var(--card2); border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: flex-start; }
 
+/* ---------- Panneaux flottants (paramètres) : toujours au premier plan ---------- */
+.veil { position: fixed; inset: 0; z-index: 150; background: rgba(20,12,6,.5); backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; padding: clamp(12px, 5vh, 56px) 14px; overflow: auto; animation: fade .2s ease both; }
+.sheet { width: min(640px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.6); padding: clamp(16px, 3vw, 28px); display: grid; gap: 16px; }
+.sheet h3 { margin: 0; font: 700 26px/1 var(--f-display); }
+.sec { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; }
+.opt small { display: block; color: var(--muted); font-weight: 500; }
+.switch { appearance: none; width: 46px; height: 28px; border-radius: 99px; background: var(--line); position: relative; flex: none; cursor: pointer; transition: background .2s; border: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.switch:checked { background: var(--teal); } .switch:checked::after { transform: translateX(18px); }
+select { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 12px; padding: 8px 12px; }
+
 /* ---------- Dock d'action (une action principale, toujours à portée) ---------- */
 .dock { position: sticky; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px clamp(14px, 3vw, 28px) calc(12px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 84%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); }
 .dock .next { flex: 1; min-width: 0; }
@@ -136,10 +148,10 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
   .brand h1 { display: none; }
 }
 @media (max-width: 560px) {
-  .dock .next { display: none; } .dock .go { padding: 0 18px; flex: 1; max-width: none; } .top { overflow: hidden; }
+  .dock .next { display: none; } .dock .go { padding: 0 18px; flex: 1; max-width: none; }
   .cardshow { grid-template-columns: 1fr; }
   .tools .icon.opt { display: none; }
-  .top { gap: 8px; } .rail button { padding: 4px 6px; } .rail button:not(.now) .dot { width: 18px; height: 18px; }
+  .top { gap: 8px; } .code { display: none; } .rail button { padding: 4px 6px; } .rail button:not(.now) .dot { width: 18px; height: 18px; }
   table { min-width: 460px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -175,7 +187,7 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
     { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
     { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
   ];
-  var cur = 1, secs = 24, running = true, menuOpen = false;
+  var cur = 1, secs = 24, running = true, menuOpen = false, settingsOpen = false;
   var app = document.getElementById('app');
   var fmt = function (s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
@@ -279,12 +291,23 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
       STEPS.forEach(function (st, i) { rail += (i ? '<span class="bar"></span>' : '') + '<button class="' + (i < s.step ? 'done' : i === s.step ? 'now' : '') + '" data-go="' + (i + 1) + '"><span class="dot">' + (i < s.step ? '✓' : i + 1) + '</span><span class="lbl">' + st[1] + '</span></button>'; });
     } else rail = '<button class="now"><span class="dot">' + (s.phase === 'lobby' ? '·' : '🎉') + '</span><span class="lbl">' + (s.phase === 'lobby' ? 'Salle d’attente' : 'Clôture de l’année 1') + '</span></button>';
     return '<header class="top"><div class="brand"><div class="logo">🚜</div><h1>Farming’s Folies</h1><span class="code">QWXY</span></div><nav class="rail" aria-label="Étapes">' + rail + '</nav>' +
-      '<div class="tools"><button class="icon opt" title="Écran des joueurs">📺</button><button class="icon opt" title="QR code">📱</button><button class="icon opt" title="Annuler la dernière correction">↶</button><button class="icon" title="Paramètres de la partie">⚙️</button>' +
+      '<div class="tools"><button class="icon opt" title="Écran des joueurs">📺</button><button class="icon opt" title="QR code">📱</button><button class="icon opt" title="Annuler la dernière correction">↶</button><button class="icon" id="gear" title="Paramètres de la partie">⚙️</button>' +
       '<span style="position:relative"><button class="icon" id="more" title="Plus">⋯</button><div class="menu' + (menuOpen ? ' open' : '') + '" id="menu"><button>📜 Journal</button><button>📖 Règles</button><button>🧭 Guide</button><button>🎯 Objectifs à l’écran</button><button>← Mes parties</button></div></span></div></header>';
   }
 
+  function settings() {
+    if (!settingsOpen) return '';
+    var lobbyOnly = S[cur].phase === 'lobby';
+    var sw = function (label, hint, on, dis) { return '<label class="opt"><input type="checkbox" class="switch"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '><span><b>' + label + '</b><small>' + hint + '</small></span></label>'; };
+    return '<div class="veil" id="veil"><section class="sheet" role="dialog" aria-label="Paramètres de la partie"><div class="row sb"><h2 style="font:700 34px/1 var(--f-display);margin:0">⚙️ Paramètres de la partie</h2><button class="btn sm" id="closeSettings">Fermer</button></div>' +
+      '<div class="sec"><h3>👥 Équipes et durée</h3><div class="row"><select' + (lobbyOnly ? '' : ' disabled') + '><option>5 joueurs par ferme</option><option>4 joueurs par ferme</option></select><select' + (lobbyOnly ? '' : ' disabled') + '><option>3 ans · partie normale</option><option>2 ans · partie courte</option></select></div>' + (lobbyOnly ? '' : '<small class="mut">Réglable seulement dans la salle d’attente.</small>') + '</div>' +
+      '<div class="sec"><h3>🎲 Options de jeu</h3>' + sw('Défi de saison « zéro perte »', 'Salle d’attente seulement.', false, !lobbyOnly) + sw('Bilan de saison au projecteur', 'Modifiable à tout moment.', true) + sw('Gages selon le niveau de stress', 'Sans effet sur les règles. Les gages se rédigent dans les Réglages de l’accueil.', true) + '</div>' +
+      '<div class="sec"><h3>📺 Écran des joueurs</h3><div class="row"><button class="btn sm">📱 Afficher le QR code</button><button class="btn sm">🎯 Afficher les objectifs</button></div></div>' +
+      '<div class="sec"><h3>🏃 Parcours</h3><div class="row"><label class="mut">Aller-retour d’un coureur</label><select><option>30 s</option><option>40 s</option></select><button class="btn sm">⏱ Mesurer un aller-retour</button></div></div></section></div>';
+  }
+
   function render() {
-    app.innerHTML = top() + '<main class="stage"><div class="col" id="left">' + stageHtml() + '</div><aside class="col"><div class="row sb"><b>Les fermes</b><span class="mut" style="font-size:13px">' + FARMS.filter(function (f) { return f.ready; }).length + ' sur 4 prêtes</span></div>' + FARMS.map(farmCard).join('') + '</aside></main>' + dock();
+    app.innerHTML = top() + '<main class="stage"><div class="col" id="left">' + stageHtml() + '</div><aside class="col"><div class="row sb"><b>Les fermes</b><span class="mut" style="font-size:13px">' + FARMS.filter(function (f) { return f.ready; }).length + ' sur 4 prêtes</span></div>' + FARMS.map(farmCard).join('') + '</aside></main>' + dock() + settings();
     paintClock();
   }
   function paintClock() {
@@ -299,6 +322,8 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
 
   document.addEventListener('click', function (e) {
     var t = e.target;
+    if (t.id === 'gear') { settingsOpen = true; menuOpen = false; return render(); }
+    if (t.id === 'closeSettings' || t.id === 'veil') { settingsOpen = false; return render(); }
     if (t.id === 'more') { menuOpen = !menuOpen; return render(); }
     if (menuOpen && !t.closest('.menu')) { menuOpen = false; render(); }
     if (t.closest('[data-go]')) { cur = Math.min(S.length - 1, parseInt(t.closest('[data-go]').dataset.go, 10)); secs = 24; return sync(); }
@@ -306,6 +331,7 @@ kbd { font: 700 11px var(--f-body); background: var(--card2); border: 1px solid 
     if (t.id === 'prev') { cur = Math.max(0, cur - 1); secs = 24; return sync(); }
   });
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { settingsOpen = false; menuOpen = false; render(); }
     if (e.code === 'Space') { e.preventDefault(); running = !running; }
     if (e.key === 'ArrowRight') { cur = Math.min(S.length - 1, cur + 1); secs = 24; sync(); }
     if (e.key === 'ArrowLeft') { cur = Math.max(0, cur - 1); secs = 24; sync(); }
