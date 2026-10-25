@@ -39,7 +39,7 @@ Tout se met dans un **panier** : on ajoute les articles, on vérifie le total, p
 - Parades : chien de berger 30 EB (renard, loup), serre 30 EB (gel, grêle ; en hiver, vous pouvez courir plus longtemps pour les fruits et légumes : l'app indique les secondes en plus), arrosage 30 EB (canicule, sécheresse, canalisations gelées), lampe-tempête 25 EB (brouillard, tempête de neige), camionnette 80 EB (grève, routes enneigées, relance gratuite de la roue, étal de 12 produits).
 - **Table de marché** 40 EB : l'étal passe à 10 produits (8 au départ). Elle se cumule avec la camionnette : 14 produits avec les deux.
 - **Hamac** 100 EB (un seul par ferme) : −1 stress à la fin de chaque saison.
-- **Vacances** (dans la boutique, étape Achats) : 30 EB par voyageur, −1 stress chacun, au plus autant de voyageurs que de stress dans le bocal ; le voyageur ne court pas la saison suivante.
+- **Vacances** (dans la boutique, seulement en fin de saison, à l'étape Achats) : 30 EB par voyageur, −1 stress chacun, au plus autant de voyageurs que de stress dans le bocal ; le voyageur ne court pas la saison suivante.
 
 ### Équilibre vacances / hamac
 Une vacance retire 1 stress tout de suite pour 30 EB, mais elle prive la ferme d'un coureur pendant une saison (environ 3 jetons, soit 20 EB ou plus). Elle coûte donc 50 EB et plus par stress : c'est le remède d'urgence. Le hamac coûte 100 EB et retire 1 stress par saison, pour toute la partie : il devient rentable dès la 2ᵉ saison, mais il est limité à 1 par ferme, donc au plus −1 par saison. Les deux se complètent : le hamac pour le stress de fond, les vacances pour les coups durs.
@@ -48,13 +48,13 @@ Une vacance retire 1 stress tout de suite pour 30 EB, mais elle prive la ferme d
 Quatre activités, à acheter à l'installation ou en fin d'année (100 EB chacune, une fois chacune, mais une ferme peut en acheter plusieurs différentes ; chacune compte comme une tuile pour la taxe). **Chacune a un effet différent** :
 - 🛏️ **Gîte à la ferme** : une **recette en EB** s'ajoute à vos ventes du marché, quoi que fasse la roue (15, 20, 25, 35 ou 45 EB pour un dé de 2 à 6).
 - 🥫 **Magasin à la ferme** : des **produits bruts posés à l'étal sont vendus d'office**, sans passer par la roue (2, 2, 3, 3 ou 4 produits).
-- 🍽️ **Restaurant à la ferme** : des **recettes en plus** à la transformation (+1, +1, +2, +2 ou +3 sur la limite de recettes de la saison).
+- 🍽️ **Restaurant à la ferme** : des **plats transformés posés à l'étal sont vendus d'office**, sans passer par la roue (1, 1, 2, 2 ou 3 plats).
 - 🐑 **Ferme pédagogique** : des **jetons bonus à la récolte**, sur le produit que la ferme cultive le plus (2, 3, 4, 5 ou 6 jetons).
 
 **À chaque saison (étape Aléa), la ferme lance un dé par activité.** Sur **1**, l'activité ne fonctionne pas du tout (1 chance sur 6). De 2 à 6, plus le dé est haut, plus l'effet est fort. L'app propose le lancer sur le mobile (le maire du village peut lancer à la place des fermes), explique l'effet obtenu et l'applique.
 
 ## Aléas
-Une carte par saison, tirée par le maire du village. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter 1 stress** pour éviter l'effet. Les fermes qui ont des activités complémentaires lancent leurs dés à cette étape. La carte est affichée dans un **bandeau tout en haut du mobile** qui ouvre le détail et le choix (comme l'aléa collectif).
+Une carte par saison, tirée par le maire du village. Chaque ferme choisit : **subir**, **jouer sa parade** (si elle a le matériel) ou **ajouter 1 stress** pour éviter l'effet. Les fermes qui ont des activités complémentaires lancent leurs dés à cette étape. La carte est affichée dans un **bandeau tout en haut du mobile** qui ouvre le détail et le choix (comme l'aléa collectif). **Le choix est définitif.** La carte n'apparaît sur les mobiles qu'une fois l'animation du projecteur terminée, et le résultat de la roue sur le projecteur qu'une fois l'animation terminée sur le mobile.
 
 ### Météo
 Pendant l'étape Achats (et dès l'installation pour le printemps de l'année 1), une **prévision météo** est annoncée pour la saison suivante, sur l'écran de projection et sur les mobiles : froid, chaleur, orages, brouillard, temps doux, ou ciel incertain. Elle aide à décider d'acheter une parade, mais elle **n'est pas fiable** :
@@ -147,15 +147,15 @@ Chaque ferme voit son **stock** sur mobile (étapes Transformation, Marché et A
 Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits bruts, 9 plats), puis tourne la roue, une fois le placement déclaré (il est alors figé). Un produit absent du stock n'est pas vendable : sa case est grisée.
 
 - **Grande distribution** : 7 EB par produit brut, toujours payé, sans risque.
-- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette, 14 avec les deux), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1), relance gratuite (1). Les invendus de l'étal sont perdus.
-- **Goût du moment** : chaque saison, certains produits sont recherchés (part vendue +25 points) et d'autres boudés (−25 points), en plus de la roue. Cela ne joue que sur l'étal, jamais au supermarché. Après la roue, chaque ferme lit un retour de marché par produit (« Vos fromages se sont arrachés : par ce froid, tout le monde veut du fromage… »).
+- **Vente directe (étal)** : 14 EB par produit brut, étal de 8 produits (10 avec la table de marché, 12 avec la camionnette, 14 avec les deux), 10 EB d'emplacement. La roue décide de la part vendue : tout (5 cases), trois quarts (3), moitié (2), rien (1, **+1 stress**), relance gratuite (1). Les produits se vendent à l'unité : ce qui est vendu est payé au prix de l'étal. Les invendus de l'étal sont perdus.
+- **Goût du moment** : chaque saison, certains produits sont recherchés (part vendue +25 points) et d'autres boudés (−25 points) quand la roue donne un résultat partiel (trois quarts ou moitié). « Tout est vendu » reste tout et « rien ne se vend » reste rien. Cela ne joue que sur l'étal, jamais au supermarché. Après la roue, chaque ferme lit un retour de marché par produit (« Vos fromages se sont arrachés : par ce froid, tout le monde veut du fromage… »).
   - Printemps : œufs, fruits et légumes, omelette recherchés ; saucisson, gratin, lasagne boudés.
   - Été : fruits et légumes, confiture, cake, tarte, lait recherchés ; gratin, lasagne, quiche boudés.
   - Automne : viande, saucisson, omelette, lasagne, gratin recherchés ; fruits et légumes, confiture, cake boudés.
   - Hiver : fromage, gratin, quiche, lasagne, viande recherchés ; confiture, tarte, cake, fruits et légumes boudés.
 - Un plat vaut son multiplicateur × le prix du produit brut (×3, ×4, ×5).
 - Cartes : touristes (au moins trois quarts vendus), grève et routes enneigées (étal fermé), hiver gourmand (+5 EB par plat).
-- Activités complémentaires : le gîte verse une recette en EB et le magasin vend d'office des produits bruts de l'étal, selon le dé de la saison (voir plus haut).
+- Activités complémentaires : le gîte verse une recette en EB, le magasin vend d'office des produits bruts de l'étal et le restaurant des plats transformés, selon le dé de la saison (voir plus haut).
 
 ## Bocal de stress
 - Un point de stress = un prix payé pour aller plus vite. Niveaux : **Zen** (0 à 3), **Agité** (4 à 6), **Stressé** (7 à 9).
@@ -182,6 +182,9 @@ Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits
 - Avant de lancer l'installation, le maire du village peut projeter une **présentation** (8 diapositives : objectifs, ferme, saison, stress, fête, mobile) qu'il fait défiler depuis sa console.
 - Le rappel des **objectifs de la partie** (3 étoiles, année par année, avancement du village) est dans l'onglet Ferme du mobile ; le bouton « Afficher les objectifs à l'écran » de la console le projette à tout moment.
 - Le **bilan de saison** s'active ou se coupe à tout moment depuis la console.
+
+## Connexion des équipes
+Le maire du village crée les fermes dans la salle d'attente. Sur son téléphone, chaque équipe **choisit une ferme libre** (scan du QR code), puis la **nomme comme elle veut** (renommage possible plus tard dans l'onglet Ferme). **Une ferme ne peut être prise que par une équipe** ; si un téléphone est perdu ou changé, le maire du village libère la ferme depuis sa console.
 
 ## Application mobile
 Quatre onglets : **Accueil** (ce qu'il y a à faire maintenant, avec les actions de l'étape), **Ferme** (stock toujours visible, tuiles, activités, matériel, stress, objectifs, commande de la fête, charges), **Boutique** (panier, vacances, matériel, agrandissements et activités en fin d'année) et **Banque**. La carte aléa et l'aléa collectif sont des bandeaux tout en haut : celui de l'aléa collectif ouvre le détail et les dons tant que l'objectif n'est pas atteint, puis change de couleur et se referme. À la roue du marché, une animation montre où elle s'arrête, avec toutes les issues possibles. Si des fermes ont des temps de course différents (protection, tracteur, coup de collier), le projecteur et la console affichent un décompte par ferme.

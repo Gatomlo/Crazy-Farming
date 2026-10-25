@@ -39,7 +39,7 @@
     var opts = V.meta.profiles.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '<option value="">Sans profil (aucune tuile)</option>';
     var list = V.teams.map(function (t) {
       return '<div class="row panel" style="padding:12px 16px"><b style="flex:1">' + esc(t.name) + '</b><span class="muted">' + esc(tilesText(t)) + '</span>' +
-        '<button class="btn small" data-act="removeTeam" data-team="' + t.id + '">Retirer</button></div>';
+        (t.taken ? '<span class="pill ok">Ferme prise</span><button class="btn small" data-act="releaseTeam" data-team="' + t.id + '" title="Libère la ferme : le lien de l\'équipe ne marche plus">Libérer</button>' : '<span class="pill">Libre</span>') + '<button class="btn small" data-act="removeTeam" data-team="' + t.id + '">Retirer</button></div>';
     }).join('');
     var sizes = V.meta.teamSizes.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.size ? ' selected' : '') + '>' + n + ' joueurs par ferme</option>'; }).join('');
     var yrs = V.meta.yearChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.years ? ' selected' : '') + '>' + (n === 3 ? '3 ans · partie normale' : n + ' ans · partie courte') + '</option>'; }).join('');
@@ -50,7 +50,7 @@
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Les fermes</h2>' + mode +
       '<form class="row" data-form="addTeam"><label class="muted" for="newName">Nom</label><input id="newName" maxlength="40" placeholder="Nom de la ferme (facultatif)">' +
       '<label class="muted" for="newProfile">Profil</label><select id="newProfile">' + opts + '</select><button class="btn primary">Ajouter</button></form>' +
-      (list || '<p class="muted" style="margin:0">Aucune ferme pour le moment.</p>') +
+      '<p class="muted" style="margin:0;font-size:14px">Créez les fermes ci-dessous : les joueurs scannent le QR code et <b>choisissent une ferme libre</b>, qu\'ils peuvent ensuite renommer. Une ferme ne peut être prise que par une équipe.</p>' + (list || '<p class="muted" style="margin:0">Aucune ferme pour le moment.</p>') +
       '<div class="row"><button class="btn primary" data-act="startSetup"' + (V.teams.length ? '' : ' disabled') + '>Lancer l\'installation</button><span class="muted">Chrono de 10 minutes pour poser les tuiles.</span></div></section>';
   }
 
@@ -294,7 +294,7 @@
     var rows = V.teams.map(function (t) {
       var choice = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 stress' }[t.choice] || (V.card ? 'En attente' : '–');
       var eq = t.equipment.length ? t.equipment.map(equipName).join(', ') : 'Aucun matériel';
-      return '<tr><td><b>' + esc(t.name) + '</b>' + (t.stopped ? '<div><span class="pill lv-Stressé">Burn-out : à l\'arrêt</span></div>' : '') + (t.burnouts ? '<div class="muted" style="font-size:13px">' + t.burnouts + ' burn-out(s)</div>' : '') + '</td>' +
+      return '<tr><td><b>' + esc(t.name) + '</b>' + (t.stopped ? '<div><span class="pill lv-Stressé">Burn-out : à l\'arrêt</span></div>' : '') + (t.burnouts ? '<div class="muted" style="font-size:13px">' + t.burnouts + ' burn-out(s)</div>' : '') + (t.taken ? '<details id="rel-' + t.id + '"><summary>Accès</summary><button class="btn small" data-act="releaseTeam" data-team="' + t.id + '" title="Téléphone perdu ou changé : libère la ferme">🔓 Libérer la ferme</button></details>' : '') + '</td>' +
         '<td class="nowrap"><div class="num" style="font-size:22px;font-weight:800">' + t.bank + ' EB</div>' +
         '<details id="adj-' + t.id + '"><summary>Ajuster</summary><div class="row" style="margin-top:6px"><input id="amt-' + t.id + '" inputmode="numeric" placeholder="± montant" style="width:110px"><input id="lbl-' + t.id + '" placeholder="Motif" style="width:140px"><button class="btn small" data-act="bank" data-team="' + t.id + '">Valider</button></div></details></td>' +
         '<td class="wide">' + FF.dots(t.bocal, V.meta.bocalMax) + '<div class="row" style="margin-top:6px;gap:8px"><span class="pill lv-' + t.level + '">' + t.level + '</span><span class="muted num">' + t.bocal + ' / ' + V.meta.bocalMax + '</span>' +
@@ -517,6 +517,7 @@
     if (a === 'settleSales') return conn.act('settleSales', { teamId: t });
     if (a === 'spinWheel') return conn.act('spinWheel', { teamId: t });
     if (a === 'removeTeam') return conn.act('removeTeam', { teamId: t });
+    if (a === 'releaseTeam') return conn.act('releaseTeam', { teamId: t });
     if (a === 'fete') return conn.act('fete', b.dataset.success === undefined ? {} : { success: b.dataset.success === '1' });
     if (a === 'setDelivered') return conn.act('setDelivered', { key: b.dataset.key, delivered: !!b.dataset.delivered });
     if (a === 'autoAssign') return conn.act('autoAssign');

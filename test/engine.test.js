@@ -74,10 +74,12 @@ test('carte : parade, +1 stress ou subir', () => {
   assert.equal(t.bocal, 1);
   assert.equal(t.bocalAdded, 1);
   assert.equal(E.viewFor(s, 'display').teams[0].exempt, true);
-  E.setChoice(s, t.id, 'subit'); // changer d'avis rembourse la boule
+  assert.throws(() => E.setChoice(s, t.id, 'subit'), /définitif/);
+  E.setChoice(s, t.id, 'subit', true); // le maire du village peut corriger : cela rembourse le stress
   assert.equal(t.bocal, 0);
   assert.equal(t.bocalAdded, 0);
   t.equipment.push('chien');
+  t.choice = null;
   E.setChoice(s, t.id, 'parade');
   assert.equal(t.choice, 'parade');
   assert.equal(t.bocal, 0);
@@ -341,7 +343,7 @@ test('marche : placement, roue sur l etal, paiement, greve, plafond', () => {
   assert.throws(() => E.declareSales(s, t.id, { sup_lait: 1 }), /figé/);
   q = E.salesQuote(s, t, t.sales);
   // printemps : les oeufs sont recherches (+25 %), le lait est neutre
-  assert.equal(q.total, 28 + Math.round(5 * 14 * 0.75) + 3 * 14 - 10);
+  assert.equal(q.total, 28 + 4 * 14 + 3 * 14 - 10, 'des unités entières : 4 laits sur 5 vendus, les 3 œufs recherchés partent tous');
   assert.ok(q.report.some((l) => l.id === 'oeuf' && /arrach/.test(l.text)), 'les oeufs se sont arrachés');
   const bank = t.bank;
   E.settleSales(s, t.id);
@@ -471,15 +473,26 @@ test('commande de la fete : repartie en debut d annee, figee ensuite', () => {
   assert.equal(E.viewFor(s, 'display').menu.open, false);
 });
 
-test('ecran de connexion unique : un invite cree ou reprend une ferme', () => {
+test('connexion : une ferme proposée ne peut être prise que par une équipe, renommable', () => {
   const { dispatch } = require('../lib/actions');
   const s = E.createSession('GUES');
-  const a = dispatch(s, { role: 'guest' }, { type: 'createTeam', name: 'Les Foins' });
-  assert.ok(a.token);
-  assert.equal(s.teams.length, 1);
-  assert.equal(dispatch(s, { role: 'guest' }, { type: 'joinTeam', teamId: 't1' }).token, a.token);
-  assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'joinTeam', teamId: 'zz' }));
+  E.addTeam(s, { name: '', profile: 'bergers' }); E.addTeam(s, { name: '', profile: 'maraichers' });
+  assert.equal(E.viewFor(s, 'display').teams[0].taken, false);
+  assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'createTeam', name: 'Les Foins' }), /non autorisée/);
+  const a = dispatch(s, { role: 'guest' }, { type: 'claimTeam', teamId: 't1', name: 'Les Foins' });
+  assert.ok(a.token); assert.equal(a.token, s.teams[0].token);
+  assert.equal(s.teams[0].name, 'Les Foins'); assert.equal(s.teams[0].taken, true);
+  assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'claimTeam', teamId: 't1' }), /déjà prise/);
+  assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'claimTeam', teamId: 't2', name: 'les foins' }), /existe déjà/);
+  assert.equal(s.teams[1].taken, false, 'un nom refusé ne prend pas la ferme');
+  assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'claimTeam', teamId: 'zz' }));
   assert.throws(() => dispatch(s, { role: 'guest' }, { type: 'startSetup' }));
+  dispatch(s, { role: 'team', teamId: 't1' }, { type: 'renameTeam', name: 'Foins & Co' });
+  assert.equal(s.teams[0].name, 'Foins & Co');
+  assert.throws(() => dispatch(s, { role: 'team', teamId: 't1' }, { type: 'renameTeam', name: '  ' }), /nom/);
+  const old = s.teams[0].token;
+  dispatch(s, { role: 'admin' }, { type: 'releaseTeam', teamId: 't1' });
+  assert.equal(s.teams[0].taken, false); assert.notEqual(s.teams[0].token, old);
 });
 
 test('aleas : paquets par saison, chances et parades', () => {
@@ -1126,11 +1139,15 @@ test('activités : un dé par activité, 1 = rien, achat unique, effets chiffré
   assert.equal(q.soldUnits, 4); assert.equal(q.sold, 4 * 14);
   assert.equal(q.total, 4 * 14 - D.MARKET.stallFee + 45);
   assert.equal(q.activities.find((a) => a.id === 'magasin').gain, 4 * 14);
-  // le restaurant ajoute des recettes à la transformation
-  t.actRolls.resto = 6; t.activities.push('resto');
-  assert.equal(E.viewFor(s, 'team', t.id).teams[0].recipeLimit, 1 + 3);
+  // le restaurant vend d'office des plats transformés de l'étal
+  t.pantry.fromage = 3; t.dishes.simple = 3;
+  { const w = t.wheel; t.wheel = null; t.sales = null; E.declareSales(s, t.id, { dir_fromage: 3 }); t.wheel = w; }
   t.actRolls.resto = 1;
-  assert.equal(E.viewFor(s, 'team', t.id).teams[0].recipeLimit, 1);
+  assert.equal(E.salesQuote(s, t, t.sales).soldUnits, 0, 'dé à 1 : rien');
+  t.activities.push('resto'); t.actRolls.resto = 6; // 3 plats d'office
+  q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.soldUnits, 3); assert.equal(q.sold, 3 * 42);
+  assert.equal(q.activities.find((a) => a.id === 'resto').gain, 3 * 42);
   // le dé de la ferme pédagogique ajoute des jetons au produit le plus cultivé
   s.step = 1; t.stopped = false;
   E.buyCart(s, t.id, ['act_pedago'], true);
@@ -1262,7 +1279,7 @@ test('roue : numéro de tirage et case exposés', () => {
   s.step = 1; E.declareHarvest(s, t.id, { lait: 4 }, true); s.step = 3;
   E.declareSales(s, t.id, { dir_lait: 2 });
   const w = E.spinWheel(s, t.id, () => 0);
-  assert.equal(w.idx, 0); assert.equal(w.n, 1);
+  assert.equal(w.idx, 0); assert.equal(w.n, 1); assert.ok(w.at > 0);
   assert.equal(E.viewFor(s, 'display').meta.wheel.length, 12);
   assert.equal(E.viewFor(s, 'display').teams[0].wheel.idx, 0);
 });
@@ -1280,4 +1297,36 @@ test('chrono différencié : secondes de course de chaque ferme visibles de tous
   assert.ok(ra.oeuf > rb.oeuf, 'la ferme protégée court plus longtemps');
   assert.equal(rb.oeuf, 30, 'brouillard : moitié moins de course');
   assert.equal(ra.oeuf - 15, 60, 'tracteur : + un demi aller-retour (15 s) sur 60 s de base');
+});
+
+test('roue : rien ne se vend = rien (le goût du moment n’y change rien) et +1 stress', () => {
+  const s = newGame(1);
+  toSeason(s);
+  s.step = 3;
+  const t = s.teams[0];
+  t.tiles = { oeuf: 2 }; t.rawAdj = { oeuf: 4 };
+  E.declareSales(s, t.id, { dir_oeuf: 2 }); // les œufs sont recherchés au printemps
+  const before = t.bocal;
+  E.spinWheel(s, t.id, () => 10 / 12 + 0.01); // case « rien ne se vend »
+  assert.equal(t.wheel.frac, 0);
+  assert.equal(t.bocal, before + 1, 'rien ne se vend : +1 stress');
+  const q = E.salesQuote(s, t, t.sales);
+  assert.equal(q.soldUnits, 0);
+  assert.equal(q.report[0].level, 'rien');
+  // tout est vendu : même un produit boudé part entièrement, et le paiement est celui annoncé
+  t.wheel = { label: 'Tout est vendu', frac: 1, idx: 0, n: 2 };
+  t.pantry.gratin = 1; t.dishes.composed = 1;
+  { const w = t.wheel; t.wheel = null; t.sales = null; E.declareSales(s, t.id, { dir_gratin: 1 }); t.wheel = w; }
+  const q2 = E.salesQuote(s, t, t.sales);
+  assert.equal(q2.soldUnits, 1); assert.equal(q2.total, 70 - 10);
+});
+
+test('choix de la carte définitif', () => {
+  const s = newGame(1);
+  toSeason(s);
+  E.drawCard(s, 1);
+  const t = s.teams[0];
+  E.setChoice(s, t.id, 'subit');
+  assert.throws(() => E.setChoice(s, t.id, 'boule'), /définitif/);
+  assert.ok(E.viewFor(s, 'team', t.id).card.at > 0, 'heure du tirage exposée pour synchroniser les écrans');
 });

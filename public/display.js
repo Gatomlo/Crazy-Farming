@@ -18,7 +18,7 @@
 
   FF.connect({
     role: 'display', code: code,
-    onState: function (v) { V = v; render(); tick(); syncFx(); watchFete(); },
+    onState: function (v) { V = v; render(); tick(); syncFx(); watchFete(); scheduleWheel(); },
     onFatal: function (m) { stage.innerHTML = '<div class="d-big">' + esc(m) + '</div><a href="./" style="font-size:40px">Accueil</a>'; }
   });
 
@@ -66,6 +66,16 @@
     FF.toast(on ? 'Effets visuels activés' : 'Effets visuels coupés (touche F pour les remettre)');
   });
 
+  // Le résultat de la roue n'apparaît ici qu'une fois l'animation terminée sur le mobile de la ferme.
+  var WHEEL_MS = 6200, wheelTimer = null;
+  function wheelShown(t) { return !!t.wheel && FF.age(V, t.wheel.at) >= WHEEL_MS; }
+  function scheduleWheel() {
+    clearTimeout(wheelTimer);
+    var wait = Infinity;
+    V.teams.forEach(function (t) { if (t.wheel && t.wheel.at && !wheelShown(t)) wait = Math.min(wait, WHEEL_MS - FF.age(V, t.wheel.at)); });
+    if (wait < Infinity) wheelTimer = setTimeout(function () { render(); tick(); }, wait + 60);
+  }
+
   var CHOICE = { subit: 'Subit l\'effet', parade: 'Parade jouée', boule: '+1 stress' };
 
   function head() {
@@ -86,7 +96,7 @@
     return '<div class="d-foot">' + V.teams.map(function (t) {
       var extra = '';
       if (V.phase === 'season' && V.step === 0 && V.card && V.card.tone === 'neg') extra = '<span class="d-tag">' + esc(CHOICE[t.choice] || 'Choisit…') + '</span>';
-      else if (V.phase === 'season' && V.step === 3) extra = '<span class="d-tag">' + (t.paid ? '✓ vendu' : esc(t.wheel ? t.wheel.label : 'Roue…')) + '</span>';
+      else if (V.phase === 'season' && V.step === 3) extra = '<span class="d-tag">' + (t.paid ? '✓ vendu' : t.wheel ? (wheelShown(t) ? esc(t.wheel.label) : '🎡 La roue tourne…') : 'Roue…') + '</span>';
       else if (t.ready) extra = '<span class="d-tag ok">✓ Prête</span>';
       if (t.stopped) extra = '<span class="d-tag bad">😴 À l\'arrêt</span>';
       var segs = ''; for (var i = 0; i < V.meta.bocalMax; i++) segs += '<i class="' + (i < t.bocal ? 'on ' + t.level : '') + '"></i>';
@@ -249,7 +259,7 @@
     if (id === 'recolte') return quotas();
     if (id === 'bourse') return clockBlock('Bourse du village', 'Encodez votre récolte · fabriquez vos plats · échangez · ce qui n\'est pas transformé sera perdu') + menuBoard();
     if (id === 'marche') {
-      var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + esc(t.wheel ? t.wheel.label : 'Roue…') + '</span></div>' + (t.marketNote ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
+      var spun = V.teams.map(function (t) { return '<div class="d-mk"><div class="d-mk-top"><b>' + esc(t.name) + '</b>' + (t.paid ? '<span class="d-tag ok">✓ vendu</span>' : '') + '<span class="d-tag">' + (t.wheel ? (wheelShown(t) ? esc(t.wheel.label) : '🎡 La roue tourne…') : 'Roue…') + '</span></div>' + (t.marketNote && wheelShown(t) ? '<div class="d-note pop">📣 ' + esc(t.marketNote) + '</div>' : '') + '</div>'; }).join('');
       return clockBlock('Jour de marché', 'Supermarché : prix garanti · Étal : plus cher, la roue décide · Matières ni vendues ni transformées : perdues') + '<section style="flex:1.3;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px">' + spun + '</section>';
     }
     return clockBlock('Achats et vacances', 'Matériel de la ferme · Vacances 30 EB, −1 stress') + (V.recap ? recapPanel() : list(['Annoncez chaque achat à voix haute', 'Un voyageur ne court pas la saison suivante']));
@@ -290,7 +300,7 @@
       stage.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:32px;text-align:center">' +
         '<div style="font-size:120px;font-weight:800;line-height:1">Farming\'s Folies</div><div style="font-size:56px;color:var(--muted)">Bienvenue au village du Phoenix</div>' +
         '<div style="font-size:44px;color:var(--muted)">Scannez pour rejoindre la partie</div><div id="joinQr" style="background:#fff;padding:20px;border-radius:24px;line-height:0"></div><div style="font-size:30px;color:var(--muted);word-break:break-all">' + esc(joinUrl()) + '</div>' +
-        '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:38px;padding:12px 32px;background:var(--surface)">' + esc(t.name) + '</span>'; }).join('') + '</div></div>';
+        '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">' + V.teams.map(function (t) { return '<span class="d-q" style="font-size:38px;padding:12px 32px;background:var(--surface);' + (t.taken ? '' : 'opacity:.55') + '">' + (t.taken ? '✓ ' : '') + esc(t.name) + '</span>'; }).join('') + '</div></div>';
       drawQr();
       if (V.tuto) stage.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;z-index:5;background:var(--bg);padding:56px 96px;display:flex">' + tutoSlide() + '</div>');
       if (V.showGoals) stage.insertAdjacentHTML('beforeend', goalsScreen());

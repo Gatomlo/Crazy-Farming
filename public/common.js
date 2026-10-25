@@ -31,6 +31,12 @@
     if (!v) return 0;
     return v.timer.durationMs - rawRemaining(v);
   }
+  // Age (ms) d'un evenement date par le serveur : l'ecran attend la fin de l'animation de l'autre ecran avant de reveler le resultat.
+  function age(v, at) {
+    if (!at || !v || v.serverNow === undefined) return Infinity;
+    return (v.serverNow - at) + (Date.now() - (v._rcv || Date.now()));
+  }
+
   // Decompte d'un produit : el porte data-run (secondes de course). Etats : idle (avant le depart), go, low (10 dernieres secondes), stop.
   function paintProd(el, v, vibrate) {
     var run = parseInt(el.getAttribute('data-run'), 10) * 1000;
@@ -133,12 +139,14 @@
   var SVG_BARROW = '<svg viewBox="0 0 64 64" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-.2em"><path d="M10 20h36l-6 18H18z" fill="#c98a3d" stroke="#6b4423" stroke-width="3" stroke-linejoin="round"/><path d="M10 20 2 34M18 38l-4 14M40 38l6 8" stroke="#6b4423" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="48" cy="47" r="9" fill="#3a3a3a"/><circle cx="48" cy="47" r="3.5" fill="#d9d9d9"/><circle cx="26" cy="15" r="4" fill="#e0443a"/><circle cx="34" cy="14" r="4" fill="#8fd36b"/><circle cx="41" cy="16" r="3.5" fill="#f2b63d"/></svg>';
   var SVG_STALL = '<svg viewBox="0 0 64 64" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-.2em"><path d="M5 12h54l-5 15H10z" fill="#e0443a"/><path d="M16 12l-2 15M27 12l-1 15M37 12l1 15M48 12l2 15" stroke="#fff" stroke-width="4" fill="none"/><rect x="8" y="34" width="48" height="6" rx="1.5" fill="#8a5a2b"/><rect x="12" y="40" width="5" height="18" fill="#6b4423"/><rect x="47" y="40" width="5" height="18" fill="#6b4423"/><circle cx="21" cy="30" r="3.5" fill="#f2b63d"/><circle cx="29" cy="30" r="3.5" fill="#8fd36b"/><circle cx="37" cy="30" r="3.5" fill="#f29cb0"/></svg>';
 
+  var SVG_CAN = '<svg viewBox="0 0 64 64" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-.2em"><path d="M14 26h26l-3 24H17z" fill="#4da3ff" stroke="#1d5fa8" stroke-width="3" stroke-linejoin="round"/><path d="M40 32l16-12" stroke="#1d5fa8" stroke-width="5" stroke-linecap="round"/><path d="M52 14l10 8-4 6-10-8z" fill="#4da3ff" stroke="#1d5fa8" stroke-width="3" stroke-linejoin="round"/><path d="M14 30c-8 0-8 12 0 12" fill="none" stroke="#1d5fa8" stroke-width="4" stroke-linecap="round"/><circle cx="59" cy="34" r="1.8" fill="#7cc4ff"/><circle cx="55" cy="40" r="1.8" fill="#7cc4ff"/><circle cx="61" cy="42" r="1.8" fill="#7cc4ff"/></svg>';
+
   // Icones (emoji : aucune dependance, rendu chaleureux sur tous les appareils)
   var ICON = {
     lait: '🥛', oeuf: '🥚', viande: '🥩', fl: '🥕', atelier: '🍳', activite: '🎪',
     seasons: ['🌱', '☀️', '🍂', '❄️'], steps: ['🎴', '🧺', '🍳', '🏪', '🛒'],
     level: { Zen: '😌', Agité: '😬', Stressé: '🤯' }, bank: '💰', fete: '🎉', clock: '⏱️', farm: '🚜',
-    equip: { chien: '🐕', serre: '🌿', arrosage: '🚿', lampe: '🔦', panier: '🧺', brouette: SVG_BARROW, tracteur: '🚜', hamac: '🛌', camionnette: '🚐', table: SVG_STALL, vacance: '🏖️' },
+    equip: { chien: '🐕', serre: '🌿', arrosage: SVG_CAN, lampe: '🔦', panier: '🧺', brouette: SVG_BARROW, tracteur: '🚜', hamac: '🛌', camionnette: '🚐', table: SVG_STALL, vacance: '🏖️' },
     act: { gite: '🛏️', magasin: '🥫', resto: '🍽️', pedago: '🐑' }
   };
 
@@ -178,7 +186,7 @@
     var groups = [];
     segs.forEach(function (sg) { var g = groups.filter(function (x) { return x.label === sg.label; })[0]; if (g) g.n += 1; else groups.push({ label: sg.label, n: 1, frac: sg.frac }); });
     return '<div class="wheel-legend">' + groups.map(function (g) {
-      return '<div><i style="background:' + (WHEEL_COLOR[g.label] || '#999') + '"></i><span>' + esc(g.label) + '</span><b>' + g.n + ' / ' + segs.length + '</b></div>';
+      return '<div><i style="background:' + (WHEEL_COLOR[g.label] || '#999') + '"></i><span>' + esc(g.label) + (g.label === 'Rien ne se vend' ? ' <b style="color:var(--bad)">· +1 stress</b>' : '') + '</span><b>' + g.n + ' / ' + segs.length + '</b></div>';
     }).join('') + '</div>';
   }
   // Fait tourner la roue jusqu'a la case tiree (w.idx) puis annonce le resultat.
@@ -190,7 +198,7 @@
     el.id = 'wheelModal'; el.className = 'wheel-modal'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Roue du marché');
     var good = w.frac >= 0.75, mid = w.frac > 0;
     el.innerHTML = '<div class="wheel-box"><div class="eyebrow">Marché · roue de l\'étal</div><h2 class="wheel-title">' + (opts.title ? esc(opts.title) : 'La roue tourne…') + '</h2>' + wheelSvg(segs) +
-      '<div class="wheel-result" style="visibility:hidden"><div class="wheel-res-label" style="color:' + (good ? 'var(--good)' : mid ? 'var(--warn)' : 'var(--bad)') + '">' + esc(w.label) + (w.free ? ' !' : '') + '</div></div>' +
+      '<div class="wheel-result" style="visibility:hidden"><div class="wheel-res-label" style="color:' + (good ? 'var(--good)' : mid ? 'var(--warn)' : 'var(--bad)') + '">' + esc(w.label) + (w.free ? ' !' : '') + '</div>' + (w.frac === 0 ? '<div style="color:var(--bad);font-weight:700">+1 stress pour la ferme</div>' : '') + '</div>' +
       wheelLegend(segs) + '<button class="btn primary block" data-wheel-close="1">Voir mes ventes</button></div>';
     document.body.appendChild(el);
     var rot = el.querySelector('.wheel-rot'), title = el.querySelector('.wheel-title'), res = el.querySelector('.wheel-result');
@@ -239,5 +247,5 @@
     return '<table class="rb"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table>';
   }
 
-  window.FF = { showWheel: showWheel, wheelSvg: wheelSvg, wheelLegend: wheelLegend, runBoard: runBoard, runsDiffer: runsDiffer, showHelp: showHelp, elapsed: elapsed, paintProd: paintProd, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
+  window.FF = { age: age, showWheel: showWheel, wheelSvg: wheelSvg, wheelLegend: wheelLegend, runBoard: runBoard, runsDiffer: runsDiffer, showHelp: showHelp, elapsed: elapsed, paintProd: paintProd, ICON: ICON, auth: auth, BASE: BASE, qs: qs, esc: esc, fmt: fmt, remaining: remaining, toast: toast, connect: connect, keepInputs: keepInputs, dots: dots, setOffline: setOffline };
 })();
