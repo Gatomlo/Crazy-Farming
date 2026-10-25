@@ -131,7 +131,8 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 .sheet { width: min(640px, 100%); display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: var(--float); }
 .sec { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; } .sec h3 { font-size: 24px; }
 .opt { display: flex; gap: 10px; align-items: flex-start; } .opt small { display: block; color: var(--muted); }
-.fade { animation: fade .3s ease both; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fade { animation: fade .3s ease both; }
+.noanim .fade { animation: none; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 1250px) {
   .grid { grid-template-columns: minmax(0, 1fr) 300px; }
@@ -170,7 +171,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     { id: 'marche', label: '4 · Marché', phase: 'season', step: 3 }, { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
     { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
   ];
-  var cur = 4, secs = 24, running = true, settingsOpen = false, menuOpen = false, jumpOpen = false, view = 'cards';
+  var cur = 4, secs = 24, running = true, settingsOpen = false, menuOpen = false, jumpOpen = false, animNext = true, view = 'cards';
   var app = document.getElementById('app');
   var fmt = function (n) { return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
   var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
@@ -324,13 +325,14 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     else if (s.phase === 'setup') body = '<div class="grid"><div class="center wide">' + setupPage() + '</div>' + farms + '</div>';
     else body = '<div class="grid"><div class="center wide">' + cloturePage() + '</div>' + farms + '</div>';
     app.innerHTML = header() + body + dock() + settings();
+    app.classList.toggle('noanim', !animNext); animNext = false;
     paintClock();
   }
   function paintClock() { var c = document.getElementById('clock'), b = document.getElementById('bar'); if (c) { c.textContent = fmt(secs); c.classList.toggle('low', secs <= 10); } if (b) b.style.width = Math.round(secs / 60 * 100) + '%'; }
 
   var statesEl = document.getElementById('states');
   S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { go(i); }; statesEl.appendChild(b); });
-  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; jumpOpen = false; sync(); }
+  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; jumpOpen = false; animNext = true; sync(); }
   function sync() { Array.prototype.forEach.call(statesEl.children, function (b, i) { b.classList.toggle('on', i === cur); }); render(); }
   document.addEventListener('click', function (e) {
     var t = e.target, vv = t.closest('[data-view]');
