@@ -32,7 +32,32 @@
     return '<header class="row" style="justify-content:space-between">' +
       '<div class="brand"><div class="logo" aria-hidden="true">🚜</div><div><h1 style="font-size:44px">Farming\'s Folies</h1><div class="muted">Console du maire du village · partie <b class="num" style="color:var(--fg);letter-spacing:.15em">' + esc(V.code) + '</b></div></div></div>' +
       '<div class="row"><span class="pill" style="background:' + (V.phase === 'season' ? V.seasonColor : 'var(--panel2)') + ';color:' + (V.phase === 'season' ? 'var(--ink)' : 'var(--text)') + '">' + esc(title) + '</span>' +
-      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' + (V.undo ? '<button class="btn small" data-act="undo" title="Annule la dernière correction (impossible dès qu\'une ferme a joué)">↶ Annuler : ' + esc(V.undo.label) + '</button>' : '') + '' + (V.phase !== 'lobby' ? '<button class="btn small' + (V.mode.recap ? ' primary' : '') + '" data-act="setRecap" data-on="' + (V.mode.recap ? '' : '1') + '" aria-pressed="' + (V.mode.recap ? 'true' : 'false') + '" title="Active ou coupe le bilan de saison affiché à l\'étape Achats">📊 Bilan de saison : ' + (V.mode.recap ? 'oui' : 'non') + '</button>' : '') + (V.goals ? '<button class="btn small' + (V.showGoals ? ' primary' : '') + '" data-act="toggleGoals" aria-pressed="' + (V.showGoals ? 'true' : 'false') + '">🎯 ' + (V.showGoals ? 'Masquer les objectifs' : 'Afficher les objectifs à l\'écran') + '</button>' : '') + '<button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
+      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="display?s=' + esc(V.code) + '" target="_blank" rel="noopener">📺 Écran joueurs</a><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' + (V.undo ? '<button class="btn small" data-act="undo" title="Annule la dernière correction (impossible dès qu\'une ferme a joué)">↶ Annuler : ' + esc(V.undo.label) + '</button>' : '') + '<button class="btn small" data-menu="1">⚙️ Paramètres</button>' + '<button class="btn small" data-logtoggle="1">📜 Journal</button><button class="btn small" data-doc="rules">📖 Règles</button><button class="btn small" data-doc="guide">🧭 Guide</button><a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="./">← Parties</a></div></header>';
+  }
+
+  // Menu des paramètres de la partie : mode, options, projecteur, parcours.
+  function settingsMenu() {
+    if (!window.__menu) return '';
+    var lobbyOnly = V.phase === 'lobby';
+    var sizes = V.meta.teamSizes.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.size ? ' selected' : '') + '>' + n + ' joueurs par ferme</option>'; }).join('');
+    var yrs = V.meta.yearChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.years ? ' selected' : '') + '>' + (n === 3 ? '3 ans · partie normale' : n + ' ans · partie courte') + '</option>'; }).join('');
+    var box = function (id, attrs, checked, dis, label, hint) { return '<label class="stack" style="gap:2px;font-weight:600"><span class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" id="' + id + '" ' + attrs + (checked ? ' checked' : '') + (dis ? ' disabled' : '') + ' style="min-height:0;width:22px;height:22px"> ' + label + '</span><span class="muted" style="font-size:13px;font-weight:400;padding-left:30px">' + hint + '</span></label>'; };
+    var sec = function (title, body) { return '<div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><h3 style="font-size:24px">' + title + '</h3>' + body + '</div>'; };
+    var body =
+      sec('👥 Équipes et durée', '<div class="row"><select id="modeSize" data-mode="1" aria-label="Taille des équipes"' + (lobbyOnly ? '' : ' disabled') + '>' + sizes + '</select><select id="modeYears" data-mode="1" aria-label="Durée de la partie"' + (lobbyOnly ? '' : ' disabled') + '>' + yrs + '</select></div>' +
+        '<div class="muted" style="font-size:13px">' + (lobbyOnly ? 'La taille des équipes adapte les tuiles de départ, les objectifs communs et la cagnotte à atteindre ; la partie courte (8 saisons) resserre le bocal de stress et la cagnotte, et la fête de la 2e année est la finale complète.' : 'Réglable seulement dans la salle d\'attente, avant le début de la partie.') + '</div>') +
+      sec('🎲 Options de jeu',
+        box('modeChallenge', 'data-mode="1"', V.mode.challenge, !lobbyOnly, 'Défi de saison « zéro perte »', 'Une saison par an : les fermes sans aucune matière brute restante retirent 1 stress.' + (lobbyOnly ? '' : ' (réglable seulement en salle d\'attente)')) +
+        box('modeRecap', 'data-opt="recap"', V.mode.recap, false, 'Bilan de saison au projecteur', 'À l\'étape Achats : jetons récoltés, plats, EB, stress moyen. Modifiable à tout moment.') +
+        box('modeGages', 'data-opt="gages"', V.mode.gages, false, 'Gages selon le niveau de stress', 'Chaque saison, un gage physique (ou un privilège pour une ferme Zen) est tiré selon le niveau de stress. Sans aucun effet sur les règles. Modifiable à tout moment ; les gages se rédigent dans les Réglages de l\'accueil.')) +
+      sec('📺 Écran des joueurs',
+        '<div class="row"><button class="btn small' + (V.showQr ? ' primary' : '') + '" data-act="toggleQr" aria-pressed="' + (V.showQr ? 'true' : 'false') + '">' + (V.showQr ? '✖ Masquer le QR code' : '📱 Afficher le QR code') + '</button>' +
+        (V.goals ? '<button class="btn small' + (V.showGoals ? ' primary' : '') + '" data-act="toggleGoals" aria-pressed="' + (V.showGoals ? 'true' : 'false') + '">🎯 ' + (V.showGoals ? 'Masquer les objectifs' : 'Afficher les objectifs à l\'écran') + '</button>' : '') + '</div>') +
+      sec('🏃 Parcours', tripBlock()) +
+      '<div class="muted" style="font-size:13px;border-top:1px solid var(--line);padding-top:10px">Les réglages communs à toutes les parties (titres, textes et gages des niveaux de stress) sont sur l\'<a href="./">accueil</a>, dans « Réglages ».</div>';
+    return '<div data-menu="close" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55;display:flex;align-items:center;justify-content:center;padding:16px">' +
+      '<section class="panel" role="dialog" aria-label="Paramètres de la partie" data-stop="1" style="width:min(680px,100%);max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:12px">' +
+      '<div class="row" style="justify-content:space-between"><h2 style="font-size:30px">⚙️ Paramètres de la partie</h2><button class="btn small" data-menu="close">Fermer</button></div>' + body + '</section></div>';
   }
 
   function lobby() {
@@ -41,12 +66,7 @@
       return '<div class="row panel" style="padding:12px 16px"><b style="flex:1">' + esc(t.name) + '</b><span class="muted">' + esc(tilesText(t)) + '</span>' +
         (t.taken ? '<span class="pill ok">Ferme prise</span><button class="btn small" data-act="releaseTeam" data-team="' + t.id + '" title="Libère la ferme : le lien de l\'équipe ne marche plus">Libérer</button>' : '<span class="pill">Libre</span>') + '<button class="btn small" data-act="removeTeam" data-team="' + t.id + '">Retirer</button></div>';
     }).join('');
-    var sizes = V.meta.teamSizes.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.size ? ' selected' : '') + '>' + n + ' joueurs par ferme</option>'; }).join('');
-    var yrs = V.meta.yearChoices.map(function (n) { return '<option value="' + n + '"' + (n === V.mode.years ? ' selected' : '') + '>' + (n === 3 ? '3 ans · partie normale' : n + ' ans · partie courte') + '</option>'; }).join('');
-    var mode = '<div class="panel row" style="gap:12px;align-items:center"><b>Mode de jeu</b><select id="modeSize" data-mode="1" aria-label="Taille des équipes">' + sizes + '</select><select id="modeYears" data-mode="1" aria-label="Durée de la partie">' + yrs + '</select>' +
-      '<label class="row" style="font-weight:500;gap:6px"><input type="checkbox" id="modeChallenge" data-mode="1"' + (V.mode.challenge ? ' checked' : '') + ' style="min-height:0;width:20px;height:20px"> Défi de saison « zéro perte »</label>' +
-      '<label class="row" style="font-weight:500;gap:6px"><input type="checkbox" id="modeRecap" data-mode="1"' + (V.mode.recap ? ' checked' : '') + ' style="min-height:0;width:20px;height:20px"> Bilan de saison au projecteur</label>' +
-      '<span class="muted" style="font-size:13px;flex-basis:100%">La taille des équipes adapte les tuiles de départ, les objectifs communs et la cagnotte à atteindre ; la partie courte (8 saisons) resserre le bocal de stress et la cagnotte, et la fête de la 2e année est la finale complète.</span></div>';
+    var mode = '<div class="panel row" style="gap:12px;align-items:center"><b>Mode de jeu</b><span>' + V.mode.size + ' joueurs par ferme · ' + (V.mode.years === 3 ? '3 ans' : V.mode.years + ' ans (partie courte)') + (V.mode.challenge ? ' · défi zéro perte' : '') + (V.mode.recap ? ' · bilan de saison' : '') + (V.mode.gages ? ' · gages de stress' : '') + '</span><button class="btn small primary" data-menu="1">⚙️ Modifier dans les paramètres</button></div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Les fermes</h2>' + mode +
       '<form class="row" data-form="addTeam"><label class="muted" for="newName">Nom</label><input id="newName" maxlength="40" placeholder="Nom de la ferme (facultatif)">' +
       '<label class="muted" for="newProfile">Profil</label><select id="newProfile">' + opts + '</select><button class="btn primary">Ajouter</button></form>' +
@@ -79,7 +99,7 @@
       '<button class="btn" style="min-height:52px" data-act="timerReset">↺ Remettre à zéro</button></div>' +
       '<details id="timerAdj"><summary>⏱ Régler le chrono</summary><div class="stack" style="margin-top:8px"><div class="tools">' + adj + '</div>' +
       '<div class="row"><label for="timerSec" class="muted">Durée (secondes)</label><input id="timerSec" inputmode="numeric" placeholder="ex. 90" style="width:100px"><button class="btn small" data-act="timerSet">Fixer</button></div>' +
-      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + tripBlock() + (cur && V.step === 1 && FF.runsDiffer(V) ? '<div style="border-top:1px solid var(--line);padding-top:10px"><b>⏱️ Qui peut encore courir ?</b> <span class="muted" style="font-size:13px">Chronos différents selon les fermes (protection, tracteur, coup de collier). Le contour vert marque un temps différent de la base.</span>' + FF.runBoard(V) + '</div>' : '') + '</section>';
+      (cur ? '<label class="row" style="font-weight:500"><input type="checkbox" id="timerKeep" style="min-height:0;width:20px;height:20px"> Garder cette durée pour cette étape aux saisons suivantes</label>' : '') + '</div></details>' + (cur && V.step === 1 && FF.runsDiffer(V) ? '<div style="border-top:1px solid var(--line);padding-top:10px"><b>⏱️ Qui peut encore courir ?</b> <span class="muted" style="font-size:13px">Chronos différents selon les fermes (protection, tracteur, coup de collier). Le contour vert marque un temps différent de la base.</span>' + FF.runBoard(V) + '</div>' : '') + '</section>';
   }
 
   // "Prochaine action" : ce que le maire du village doit faire maintenant, avec le bouton correspondant.
@@ -314,6 +334,13 @@
     window.__logOpen = !window.__logOpen;
     if (typeof render === 'function') render();
   });
+  document.addEventListener('click', function (e) {
+    var m = e.target.closest && e.target.closest('[data-menu]');
+    if (!m) return;
+    if (m.dataset.menu === 'close' && m.tagName !== 'BUTTON' && e.target.closest('[data-stop]')) return;
+    window.__menu = m.dataset.menu === 'close' ? false : true;
+    render();
+  });
   var DOCS = { rules: ['📖 Règles du jeu', 'rules'], guide: ['🧭 Guide du maire du village', 'guide'] };
   document.addEventListener('click', function (e) {
     var d = e.target.closest && e.target.closest('[data-doc]');
@@ -457,14 +484,16 @@
         h += ended() + teamsTable() + '';
       }
     }
-    root.innerHTML = h + logModal() + docModal();
+    root.innerHTML = h + logModal() + docModal() + settingsMenu();
   }
 
   root.addEventListener('change', function (e) {
     var k = e.target && e.target.dataset && e.target.dataset.assign;
     if (k) conn.act('assignDish', { key: k, teamId: e.target.value });
     if (e.target && e.target.dataset && e.target.dataset.trip) conn.act('setTripSec', { sec: parseInt(e.target.value, 10) });
-    if (e.target && e.target.dataset && e.target.dataset.mode) conn.act('setMode', { size: parseInt(val('modeSize'), 10), years: parseInt(val('modeYears'), 10), challenge: !!(document.getElementById('modeChallenge') || {}).checked, recap: !!(document.getElementById('modeRecap') || {}).checked });
+    if (e.target && e.target.dataset && e.target.dataset.mode) conn.act('setMode', { size: parseInt(val('modeSize'), 10), years: parseInt(val('modeYears'), 10), challenge: !!(document.getElementById('modeChallenge') || {}).checked });
+    if (e.target && e.target.dataset && e.target.dataset.opt === 'recap') conn.act('setRecap', { on: !!e.target.checked });
+    if (e.target && e.target.dataset && e.target.dataset.opt === 'gages') conn.act('setGages', { on: !!e.target.checked });
   });
 
   // ---------- Chrono local ----------

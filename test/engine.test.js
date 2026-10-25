@@ -1418,3 +1418,25 @@ test('réglages des niveaux de stress : gages modifiables, validés, rétablissa
     assert.equal(r.levels.Zen.title, before.title); assert.deepEqual(r.levels.Zen.gages, D.STRESS_DEFAULTS.Zen.gages);
   } finally { config.resetStress(); }
 });
+
+test('gages de stress : activables et désactivables par partie, à tout moment', () => {
+  const s = newGame(2);
+  assert.equal(s.mode.gages, true, 'activés par défaut');
+  E.setMode(s, { size: 5, years: 3, gages: false });
+  assert.equal(s.mode.gages, false); assert.equal(s.mode.recap, true, 'les autres options ne bougent pas');
+  toSeason(s);
+  const [a] = s.teams;
+  assert.equal(a.gage, null);
+  assert.equal(E.viewFor(s, 'display').teams[0].stress, null, 'rien à annoncer quand les gages sont coupés');
+  E.setGages(s, true); // activation en cours de partie : les gages de la saison sont tirés
+  assert.ok(a.gage);
+  assert.equal(E.viewFor(s, 'display').teams[0].stress.gage, a.gage);
+  E.setGages(s, false);
+  assert.equal(a.gage, null); assert.equal(E.viewFor(s, 'team', a.id).teams[0].stress, null);
+  const { dispatch } = require('../lib/actions');
+  dispatch(s, { role: 'admin' }, { type: 'setGages', on: true });
+  assert.equal(s.mode.gages, true);
+  // une ancienne partie sans réglage : gages actifs
+  delete s.mode.gages; E.migrate(s);
+  assert.equal(s.mode.gages, true);
+});

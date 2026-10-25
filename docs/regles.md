@@ -15,6 +15,7 @@ Réglés par le maire du village dans la salle d'attente, avant de lancer l'inst
 
 ### Options de la salle d'attente
 - **Défi de saison « zéro perte »** (facultatif) : une saison par an (jamais celle de l'aléa collectif), annoncée sur l'écran. Chaque ferme qui a récolté et qui termine la saison **sans aucune matière brute restante** (tout vendu ou transformé) retire **1 point de stress**. Sans conséquence en cas d'échec.
+- **Menu Paramètres** : le mode de jeu, les options (défi, bilan de saison, gages), l'affichage des objectifs et du QR code sur l'écran des joueurs et le parcours sont regroupés dans le menu « ⚙️ Paramètres » de la console du maire du village.
 - **Bilan de saison** : à l'étape Achats, le projecteur affiche les jetons récoltés, les plats fabriqués, les EB encaissés aux ventes et le stress moyen du village, avec l'évolution depuis la saison précédente.
 
 ## Déroulé
@@ -155,7 +156,7 @@ Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits
 
 ## Bocal de stress
 - Un point de stress = un prix payé pour aller plus vite. Niveaux : **Zen** (0 à 3), **Agité** (4 à 6), **Stressé** (7 à 9).
-- **Gages, à chaque saison.** Le niveau de chaque ferme est relevé au **début de la saison** (étape Aléa). **Il n'a aucun effet sur les règles du jeu** (ni sur la course, ni sur l'argent) : il donne un **gage physique** à appliquer pendant la saison, tiré au hasard dans la liste du niveau, annoncé sur le mobile de la ferme et sur le projecteur. Le maire du village le valide (« Fait ? ») dans sa console.
+- **Gages, à chaque saison.** Le niveau de chaque ferme est relevé au **début de la saison** (étape Aléa). **Il n'a aucun effet sur les règles du jeu** (ni sur la course, ni sur l'argent) : il donne un **gage physique** à appliquer pendant la saison, tiré au hasard dans la liste du niveau, annoncé sur le mobile de la ferme et sur le projecteur. Le maire du village le valide (« Fait ? ») dans sa console. **Les gages s'activent ou se coupent par partie**, à tout moment, dans le menu « ⚙️ Paramètres » de la console (sans gages, rien n'est annoncé).
   - **Zen** : un privilège (par exemple choisir le cri de ralliement du village ou la musique de la saison).
   - **Agité** : un gage léger (par exemple annoncer ses décisions en rimant, porter l'accessoire du niveau Agité).
   - **Stressé** : un gage plus marqué (par exemple 10 sauts en étoile devant le village, chanter un refrain).

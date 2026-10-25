@@ -76,14 +76,14 @@ Le **journal** (bouton de l'en-tête de la console) rappelle les moments clés.
 - **Annuler** : après une correction (banque, bocal, récolte, achat, tirage de carte, etc.), le bouton « ↶ Annuler » apparaît en haut de la console. Il n'est plus possible dès qu'une ferme a joué après ta correction, et le chrono n'est jamais remis en arrière.
 - **Mesurer un aller-retour** : dans le bloc chrono, « ⏱ Mesurer un aller-retour » (Départ puis Arrivée) propose la durée la plus proche à régler.
 - **Récolte** : la console indique pour chaque ferme « ✓ encodé » ou « en attente » ; un ⚠ signale un total de jetons invraisemblable à vérifier. Sur le mobile, les fermes comptent leurs jetons avec + et − pendant la course puis appuient sur « Encoder ma récolte ».
-- **Objectifs et bilan** : le bouton « Afficher les objectifs à l'écran » réaffiche les 3 étoiles et l'avancement ; « Bilan de saison » s'active ou se coupe à tout moment depuis l'en-tête de la console.
+- **Menu Paramètres** (« ⚙️ Paramètres », en haut de la console) : mode de jeu (salle d'attente), défi, bilan de saison et gages (modifiables à tout moment), affichage des objectifs et du QR code sur l'écran des joueurs, durée d'un aller-retour du parcours.
 - **Chronos différents** : quand des fermes ont des temps de course différents (protection, tracteur, coup de collier), le tableau « Qui peut encore courir ? » donne un décompte par ferme sur le projecteur et dans la console.
 - **Marché** : la colonne « Jetons à recevoir » indique d'un coup d'œil ce que la ferme doit te remettre (supermarché + étal).
 - **Fête** : chaque ferme livre ses plats depuis son mobile le jour de la fête ; tu peux valider à la main. Un échec pèse +2 stress pour tous, +1 par plat manquant pour son responsable.
 - **Projecteur** : la touche **F** coupe ou remet les effets visuels (tirage de carte, météo animée).
 - **Prochaine action** : un bandeau en haut de la console indique ce qu'il faut faire maintenant (tirer la carte, lancer le chrono, valider les jetons de telle ferme, régler les ventes, étape suivante…), avec le bouton correspondant et un « ? » d'aide sur l'étape.
 - **Projecteur** : la touche **C** active un mode fort contraste (fond noir, petits textes agrandis), à mémoriser pour les salles claires.
-- **Options de la salle d'attente** : le **défi de saison « zéro perte »** et le **bilan de saison** se cochent avant l'installation (voir les règles).
+- **Options** : le **défi de saison « zéro perte »** se règle avant l'installation, le **bilan de saison** et les **gages de stress** à tout moment, dans « ⚙️ Paramètres ».
 - **Cartes aléas** : une carte jouée une année ne revient pas les années suivantes tant que le paquet de la saison n'est pas épuisé.
 - **Niveaux de stress et gages** : au début de chaque saison, l'écran de projection et les mobiles annoncent le niveau de chaque ferme et son gage physique (privilège pour une ferme Zen). Aucun effet sur les règles : tu vérifies que le gage est fait et tu cliques « Fait ? » dans le tableau des fermes. Les gages se modifient dans « Réglages » de l'accueil et valent pour toutes les parties : adapte-les au public.
 - **Mobiles** : une carte « À faire maintenant » liste les actions de l'étape et se coche au fil de l'avancement ; l'écran d'attente présente le rôle, la ferme, le déroulé et un petit glossaire.
