@@ -11,6 +11,8 @@ const express = require('express');
 const store = require('./lib/store');
 const E = require('./lib/engine');
 const auth = require('./lib/auth');
+const config = require('./lib/config');
+config.load();
 const { dispatch } = require('./lib/actions');
 
 const app = express();
@@ -56,6 +58,16 @@ app.post('/api/change-password', (req, res) => {
 });
 
 app.get('/api/me', auth.requireAdmin, (req, res) => res.json({ ok: true, defaultPassword: auth.usingDefault() }));
+
+// ---------- Reglages communs a toutes les parties : effets des niveaux de stress ----------
+app.get('/api/config/stress', auth.requireAdmin, (req, res) => res.json(config.view()));
+app.put('/api/config/stress', auth.requireAdmin, (req, res) => {
+  try { res.json(config.setStress((req.body || {}).levels)); } catch (e) {
+    if (e instanceof config.ConfigError) return res.status(400).json({ error: e.message });
+    internal(res, e);
+  }
+});
+app.delete('/api/config/stress', auth.requireAdmin, (req, res) => res.json(config.resetStress()));
 
 // ---------- Parties : creation et historique (animateur uniquement) ----------
 const internal = (res, e) => {

@@ -345,6 +345,7 @@ table.rb td { padding: 4px 8px; vertical-align: middle; }
 table.rb .rb-team { font-weight: 700; }
 .rb-note { display: block; font-size: 11px; font-weight: 700; }
 .rb-note.ok { color: var(--good); }
+.rb-note.bad { color: var(--bad); }
 .rb .pclock { font-size: 20px; min-width: 76px; padding: 6px 8px; }
 .rb .pclock.rb-diff { outline: 3px solid var(--teal); }
 .display table.rb th { font-size: 26px; }

@@ -412,7 +412,7 @@
     var rows = V.teams.map(function (t) {
       var c = V.lastCharges && V.lastCharges[t.id];
       var ch = c || t.charges;
-      return '<tr><td><b>' + esc(t.name) + '</b></td><td class="num">' + ch.taxes + '</td><td class="num">' + ch.eau + '</td><td class="num">' + ch.nourriture + '</td><td class="num">' + ch.electricite + '</td><td class="num"><b>' + ch.total + ' EB</b></td>' +
+      return '<tr><td><b>' + esc(t.name) + '</b></td><td class="num">' + ch.taxes + '</td><td class="num">' + ch.eau + '</td><td class="num">' + ch.nourriture + '</td><td class="num">' + ch.electricite + '</td><td class="num">' + (ch.stress ? (ch.stress > 0 ? '+' : '−') + Math.abs(ch.stress) : '0') + '</td><td class="num"><b>' + ch.total + ' EB</b></td>' +
         '<td>' + (c ? (c.missing ? '<span class="pill lv-Stressé">Manque ' + c.missing + ' EB, +' + c.boules + ' stress</span>' : '<span class="pill lv-Zen">Payé</span>') : '<span class="muted">À appliquer</span>') + '</td></tr>';
     }).join('');
     var f = V.fete;
@@ -421,7 +421,7 @@
     else if (!V.feteDone) buttons = '<button class="btn primary" data-act="fete">Jouer la fête (résultat selon les plats livrés)</button><details id="feteForce"><summary>Forcer le résultat</summary><div class="row" style="margin-top:6px"><button class="btn small good" data-act="fete" data-success="1">Réussie (−2 stress)</button><button class="btn small danger" data-act="fete" data-success="0">Ratée (+' + V.meta.fete.fail + ' stress)</button></div></details>';
     else buttons = V.year < V.years ? '<button class="btn primary" data-act="nextYear">Année suivante (réaménagement 5 min)</button>' : '<button class="btn primary" data-act="finish">Terminer la partie</button>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">Clôture de l\'année ' + V.year + '</h2>' +
-      '<div class="tbl"><table style="min-width:640px"><thead><tr><th>Ferme</th><th>Taxes</th><th>Eau</th><th>Nourriture</th><th>Électricité</th><th>Total</th><th>Résultat</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="tbl"><table style="min-width:640px"><thead><tr><th>Ferme</th><th>Taxes</th><th>Eau</th><th>Nourriture</th><th>Électricité</th><th>Stress</th><th>Total</th><th>Résultat</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       (V.feteDone ? '<span class="pill lv-Zen" style="align-self:flex-start">Fête jouée</span>' : '') +
       '<div class="row">' + buttons + '</div>' +
       '<p class="muted" style="margin:0;font-size:14px">Pense à décaler les badges de rôles d\'un cran avant le réaménagement.</p></section>' + menuPanel();

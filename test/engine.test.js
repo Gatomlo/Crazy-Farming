@@ -4,6 +4,12 @@ const assert = require('node:assert/strict');
 const E = require('../lib/engine');
 const D = require('../lib/data');
 
+// Les tests de règles chiffrées partent d'effets de stress neutres ; les effets ont leurs propres tests.
+const STRESS_DEFAULT = D.STRESS_DEFAULTS;
+const neutralStress = () => { for (const k of Object.keys(D.STRESS_LEVELS)) D.STRESS_LEVELS[k].effects = { runSec: 0, chargesPct: 0 }; };
+const restoreStress = () => { for (const k of Object.keys(STRESS_DEFAULT)) D.STRESS_LEVELS[k].effects = Object.assign({}, STRESS_DEFAULT[k].effects); };
+neutralStress();
+
 function go(s) { if (s.menu) E.autoAssign(s); E.startYear(s); }
 
 function newGame(n = 4) {
@@ -169,7 +175,7 @@ test('cloture : charges, dette, fete, annee suivante', () => {
   const s = newGame();
   toSeason(s);
   const t = s.teams[2]; // eleveurs : viande x2 + lait = 3 tuiles
-  assert.deepEqual(E.estimateCharges(t), { taxes: 60, eau: 0, nourriture: 30, electricite: 0, total: 90 });
+  assert.deepEqual(E.estimateCharges(t), { taxes: 60, eau: 0, nourriture: 30, electricite: 0, stress: 0, total: 90 });
   const poor = s.teams[3]; // gourmets : viande, fl, atelier
   poor.bank = 20;
   s.phase = 'closing';
@@ -1368,4 +1374,57 @@ test('frais d’emplacement : payés au placement après confirmation, rembours�
   assert.equal(u.bank, 500);
   const poor = newGame(1); toSeason(poor); poor.step = 3; poor.teams[0].rawAdj = { lait: 3 }; poor.teams[0].bank = 5;
   assert.throws(() => E.declareSales(poor, poor.teams[0].id, { dir_lait: 1 }, true), /Solde insuffisant/);
+});
+
+test('niveaux de stress : relevés au début de chaque saison, effets sur la course et les charges', () => {
+  restoreStress();
+  try {
+    const s = newGame(3);
+    toSeason(s);
+    const [a, b, c] = s.teams;
+    assert.equal(a.stressLevel, 'Zen');
+    E.addBocal(s, b.id, 5, 'test'); E.addBocal(s, c.id, 8, 'test');
+    E.jumpTo(s, 1, 1); // nouveau relevé en début de saison
+    assert.deepEqual([a, b, c].map((t) => t.stressLevel), ['Zen', 'Agité', 'Stressé']);
+    s.step = 1;
+    const run = (t) => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest[0].runSec;
+    const base = (t) => E.viewFor(s, 'team', t.id).teams.find((x) => x.id === t.id).harvest[0].baseRunSec;
+    assert.equal(run(a) - base(a), 5, 'Zen : +5 s');
+    assert.equal(run(b) - base(b), 0, 'Agité : normal');
+    assert.equal(run(c) - base(c), -10, 'Stressé : −10 s');
+    // le niveau est fixé pour la saison : un stress de plus n'y change rien avant la suivante
+    E.addBocal(s, a.id, 5, 'test');
+    assert.equal(a.stressLevel, 'Zen');
+    const info = E.viewFor(s, 'team', c.id).teams.find((x) => x.id === c.id).stress;
+    assert.equal(info.level, 'Stressé'); assert.match(info.text, /burn-out/);
+    assert.ok(info.effects[0].includes('−10 s'));
+    // charges : −10 % au niveau Zen, +10 % au niveau Stressé (taxes 20 EB par tuile)
+    const base0 = (t) => 20 * Object.values(t.tiles).reduce((n, x) => n + x, 0) + 10 * ((t.tiles.fl || 0) + (t.tiles.lait || 0) + (t.tiles.oeuf || 0) + (t.tiles.viande || 0));
+    assert.equal(E.estimateCharges(c).total, base0(c) + Math.round(base0(c) * 0.1));
+    assert.ok(E.estimateCharges(c).stress > 0);
+    const zen = newGame(1); toSeason(zen);
+    assert.equal(E.estimateCharges(zen.teams[0]).stress, -Math.round(base0(zen.teams[0]) * 0.1) || 0);
+    // la course ne tombe jamais à zéro à cause du stress
+    D.STRESS_LEVELS.Stressé.effects.runSec = -60;
+    assert.ok(run(c) >= 5);
+  } finally { neutralStress(); }
+});
+
+test('réglages des niveaux de stress : modifiables, validés, rétablissables', () => {
+  const config = require('../lib/config');
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const before = config.view().levels.Zen;
+  try {
+    const v = config.setStress({ Zen: { runSec: 10, chargesPct: -20, title: 'Ferme sereine' } });
+    assert.equal(v.levels.Zen.runSec, 10); assert.equal(D.STRESS_LEVELS.Zen.effects.chargesPct, -20); assert.equal(D.STRESS_LEVELS.Zen.title, 'Ferme sereine');
+    assert.equal(v.levels['Agité'].runSec, 0, 'les niveaux non précisés ne changent pas');
+    assert.throws(() => config.setStress({ Zen: { runSec: 7 } }), /multiple de 5/);
+    assert.throws(() => config.setStress({ Zen: { chargesPct: 99 } }), /charges/);
+    assert.throws(() => config.setStress({ Zen: { title: '' } }), /titre/);
+    assert.equal(D.STRESS_LEVELS.Zen.effects.runSec, 10, 'une saisie refusée ne change rien');
+    assert.equal(v.defaults.Zen.runSec, 5);
+    const r = config.resetStress();
+    assert.equal(r.levels.Zen.runSec, 5); assert.equal(r.levels.Zen.title, before.title);
+  } finally { config.resetStress(); neutralStress(); }
+  void fs; void os; void path;
 });

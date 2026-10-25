@@ -229,16 +229,20 @@
 
   // ---------- Qui court encore ? Un decompte par ferme et par produit (protections, bonus de temps) ----------
   function runsDiffer(v) {
-    return !!v.teams.some(function (t) { return !t.stopped && t.runs && Object.keys(t.runs).some(function (k) { return t.runs[k] !== v.runEff[k]; }); });
+    // les temps de course diffèrent d'une ferme à l'autre (protection, tracteur, coup de collier, niveau de stress) pour au moins un produit
+    var seen = {};
+    v.teams.forEach(function (t) { if (!t.stopped && t.runs) Object.keys(t.runs).forEach(function (k) { (seen[k] = seen[k] || []).push(t.runs[k]); }); });
+    return Object.keys(seen).some(function (k) { return seen[k].some(function (x) { return x !== seen[k][0]; }); });
   }
   function runBoard(v) {
     var prods = v.meta.products.filter(function (p) { return v.ownedProducts.indexOf(p.id) >= 0; });
     var rows = v.teams.filter(function (t) { return !t.stopped && t.runs && Object.keys(t.runs).length; }).map(function (t) {
-      var notes = (t.exempt && v.card && v.card.tone === 'neg' ? '<small class="rb-note ok">protégée</small>' : '') + (t.bonusSec ? '<small class="rb-note ok">+' + t.bonusSec + ' s</small>' : '');
+      var notes = (t.exempt && v.card && v.card.tone === 'neg' ? '<small class="rb-note ok">protégée</small>' : '') + (t.bonusSec ? '<small class="rb-note ok">+' + t.bonusSec + ' s (collier, tracteur)</small>' : '') + (t.stressSec ? '<small class="rb-note ' + (t.stressSec > 0 ? 'ok' : 'bad') + '">' + (t.stressSec > 0 ? '+' : '−') + Math.abs(t.stressSec) + ' s (stress)</small>' : '');
       var cells = prods.map(function (p) {
         var r = t.runs[p.id];
         if (r === undefined) return '<td><span class="muted">—</span></td>';
-        var diff = r !== v.runEff[p.id];
+        var all = v.teams.filter(function (x) { return !x.stopped && x.runs && x.runs[p.id] !== undefined; }).map(function (x) { return x.runs[p.id]; });
+        var diff = all.some(function (x) { return x !== all[0]; }) && r === Math.max.apply(null, all); // la ferme qui court le plus longtemps
         return '<td><span class="pclock pc-idle' + (diff ? ' rb-diff' : '') + '" data-pclock data-nobeep data-pid="rb-' + t.id + '-' + p.id + '" data-run="' + r + '">' + (r ? fmt(r * 1000) : '—') + '</span></td>';
       }).join('');
       return '<tr><td class="rb-team"><b>' + esc(t.name) + '</b>' + notes + '</td>' + cells + '</tr>';
