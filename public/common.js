@@ -237,7 +237,7 @@
   function runBoard(v) {
     var prods = v.meta.products.filter(function (p) { return v.ownedProducts.indexOf(p.id) >= 0; });
     var rows = v.teams.filter(function (t) { return !t.stopped && t.runs && Object.keys(t.runs).length; }).map(function (t) {
-      var notes = (t.exempt && v.card && v.card.tone === 'neg' ? '<small class="rb-note ok">protégée</small>' : '') + (t.bonusSec ? '<small class="rb-note ok">+' + t.bonusSec + ' s (collier, tracteur)</small>' : '') + (t.stressSec ? '<small class="rb-note ' + (t.stressSec > 0 ? 'ok' : 'bad') + '">' + (t.stressSec > 0 ? '+' : '−') + Math.abs(t.stressSec) + ' s (stress)</small>' : '');
+      var notes = (t.exempt && v.card && v.card.tone === 'neg' ? '<small class="rb-note ok">protégée</small>' : '') + (t.bonusSec ? '<small class="rb-note ok">+' + t.bonusSec + ' s (collier, tracteur)</small>' : '');
       var cells = prods.map(function (p) {
         var r = t.runs[p.id];
         if (r === undefined) return '<td><span class="muted">—</span></td>';

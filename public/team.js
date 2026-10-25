@@ -238,8 +238,11 @@
   function stressPanel() {
     var st = me.stress;
     if (!st) return '';
-    return '<section class="panel stack" style="border-left:6px solid ' + (st.level === 'Zen' ? 'var(--teal)' : st.level === 'Agité' ? 'var(--pb)' : 'var(--bad)') + '"><div class="row" style="justify-content:space-between"><b>' + st.icon + ' ' + esc(st.title) + '</b><span class="pill lv-' + st.level + '">' + st.level + ' · ' + st.points + ' / ' + st.max + '</span></div>' +
-      '<div style="font-size:14px">' + esc(st.text) + '</div><div style="font-size:14px;font-weight:700;color:' + (st.level === 'Zen' ? 'var(--good)' : st.level === 'Stressé' ? 'var(--bad)' : 'inherit') + '">Effets de la saison : ' + esc(st.effects.join(' · ')) + '</div></section>';
+    var col = st.level === 'Zen' ? 'var(--teal)' : st.level === 'Agité' ? 'var(--pb)' : 'var(--bad)';
+    var gage = st.gage ? '<div class="stack" style="gap:4px;background:var(--surface-2);border-radius:12px;padding:10px 12px"><div class="eyebrow">' + (st.level === 'Zen' ? '🎁 Privilège de la saison' : '🎭 Gage de la saison') + '</div><div style="font-size:16px;font-weight:700">' + esc(st.gage) + '</div>' +
+      (st.gageDone ? '<div style="color:var(--good);font-weight:700">✓ Fait</div>' : '<div class="muted" style="font-size:12px">Le maire du village vérifie et valide.</div>') + '</div>' : '';
+    return '<section class="panel stack" style="border-left:6px solid ' + col + '"><div class="row" style="justify-content:space-between"><b>' + st.icon + ' ' + esc(st.title) + '</b><span class="pill lv-' + st.level + '">' + st.level + ' · ' + st.points + ' / ' + st.max + '</span></div>' +
+      '<div style="font-size:14px">' + esc(st.text) + '</div>' + gage + '</section>';
   }
 
   // Activités complémentaires : un dé par activité et par saison (1 = rien, 2 à 6 = effet plus ou moins fort).
@@ -292,7 +295,7 @@
     var baskets = me.equipment.filter(function (e) { return e === 'panier'; }).length, carry = me.equipment.indexOf('brouette') >= 0 ? '<div style="font-size:13px;color:var(--good);font-weight:700">' + icon('brouette') + ' Brouette : tous vos coureurs peuvent prendre 2 jetons par trajet.</div>' : baskets ? '<div style="font-size:13px;color:var(--good);font-weight:700">🧺 ' + plural(baskets, 'coureur peut', 'coureurs peuvent') + ' prendre 2 jetons par trajet (panier de récolte).</div>' : '';
     var prot = V.card && V.card.tone === 'neg' && me.exempt ? '<div class="muted" style="font-size:13px">Effet de « ' + esc(V.card.title) + ' » évité : course normale.</div>' : '';
     var early = me.stopEarly ? '<div style="font-weight:700;color:var(--bad)">' + esc(V.card.title) + ' : la récolte s\'arrête ' + me.stopEarly + ' s avant la fin du chrono.</div>' : '';
-    var bonus = (me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Bonus : vos coureurs courent ' + me.bonusSec + ' s de plus.</div>' : '') + (me.stressSec ? '<div style="font-weight:700;color:' + (me.stressSec > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (me.stress ? me.stress.icon : '🫙') + ' Niveau ' + (me.stress ? me.stress.level : '') + ' : ' + (me.stressSec > 0 ? '+' : '−') + Math.abs(me.stressSec) + ' s de course pour tous vos produits.</div>' : '');
+    var bonus = me.bonusSec ? '<div style="font-weight:700;color:var(--good)">⏱️ Bonus : vos coureurs courent ' + me.bonusSec + ' s de plus.</div>' : '';
     var btn = open ? '<button class="btn primary" data-act="declareHarvest">' + (declared ? 'Modifier la récolte' : 'Encoder ma récolte') + '</button>' : '';
     var hint = declared ? '<div class="muted" style="font-size:13px">Récolte encodée : ' + tot + ' ressource' + (tot > 1 ? 's' : '') + ' en stock (bonus compris). Ce qui n\'est ni transformé ni vendu est perdu en fin de saison.</div>' : '<div class="muted" style="font-size:13px">Comptez les jetons au fil de la course avec + et −, puis appuyez sur « Encoder ma récolte » : un jeton = une ressource en stock.</div>';
     return '<section class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><b>🧺 Ma récolte</b><b class="num">' + tot + ' en stock</b></div>' + rows + carry + prot + early + bonus + btn + hint + '</section>';
@@ -481,7 +484,7 @@
   }
   function chargesCard() {
     var ch = me.charges, c = V.lastCharges;
-    var rows = [['Taxes', ch.taxes], ['Eau', ch.eau], ['Nourriture', ch.nourriture], ['Électricité', ch.electricite]].concat(ch.stress ? [['Effet du stress (' + (ch.stress > 0 ? '+' : '−') + Math.abs(Math.round(ch.stress / (ch.total - ch.stress) * 100)) + ' %)', ch.stress]] : []).map(function (r) { return '<div class="row" style="justify-content:space-between"><span>' + r[0] + '</span><b class="num">' + r[1] + ' EB</b></div>'; }).join('');
+    var rows = [['Taxes', ch.taxes], ['Eau', ch.eau], ['Nourriture', ch.nourriture], ['Électricité', ch.electricite]].map(function (r) { return '<div class="row" style="justify-content:space-between"><span>' + r[0] + '</span><b class="num">' + r[1] + ' EB</b></div>'; }).join('');
     var res = c ? (c.missing ? '<div class="pill bad">Il manquait ' + c.missing + ' EB : +' + c.boules + ' stress</div>' : '<div class="pill ok">Charges payées</div>') : '<div class="muted" style="font-size:14px">Le comptable les paie quand le maire du village les applique.</div>';
     return '<section class="panel stack"><b>🧾 Charges de l\'année ' + V.year + '</b>' + rows + '<hr class="hr"><div class="row" style="justify-content:space-between"><b>Total</b><b class="num">' + ch.total + ' EB</b></div>' + res + '</section>';
   }
@@ -617,9 +620,9 @@
   function chargesSection() {
     var ch = me.charges;
     var hist = me.chargesHistory.length ? me.chargesHistory.map(function (c) {
-      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span>Année ' + c.year + '<span class="muted" style="font-size:12px"> · taxes ' + c.taxes + ', eau ' + c.eau + ', nourriture ' + c.nourriture + ', électricité ' + c.electricite + (c.stress ? ', stress ' + (c.stress > 0 ? '+' : '−') + Math.abs(c.stress) : '') + '</span></span><b class="num">' + c.total + ' EB' + (c.missing ? ' <span style="color:var(--bad)">(manque ' + c.missing + ')</span>' : '') + '</b></div>';
+      return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span>Année ' + c.year + '<span class="muted" style="font-size:12px"> · taxes ' + c.taxes + ', eau ' + c.eau + ', nourriture ' + c.nourriture + ', électricité ' + c.electricite + '</span></span><b class="num">' + c.total + ' EB' + (c.missing ? ' <span style="color:var(--bad)">(manque ' + c.missing + ')</span>' : '') + '</b></div>';
     }).join('') : '<div class="muted" style="font-size:13px">Aucune année clôturée pour le moment.</div>';
-    var cur = V.phase === 'closing' && V.closedYear ? '' : '<div class="row" style="justify-content:space-between"><span><b>Année ' + V.year + '</b> (estimation)</span><b class="num">' + ch.total + ' EB</b></div><div class="muted" style="font-size:12px">Taxes ' + ch.taxes + ' · eau ' + ch.eau + ' · nourriture ' + ch.nourriture + ' · électricité ' + ch.electricite + (ch.stress ? ' · effet du stress ' + (ch.stress > 0 ? '+' : '−') + Math.abs(ch.stress) : '') + '. Payées à la clôture de l\'année.</div>';
+    var cur = V.phase === 'closing' && V.closedYear ? '' : '<div class="row" style="justify-content:space-between"><span><b>Année ' + V.year + '</b> (estimation)</span><b class="num">' + ch.total + ' EB</b></div><div class="muted" style="font-size:12px">Taxes ' + ch.taxes + ' · eau ' + ch.eau + ' · nourriture ' + ch.nourriture + ' · électricité ' + ch.electricite + '. Payées à la clôture de l\'année.</div>';
     return '<section class="panel stack"><b>🧾 Mes charges</b>' + cur + '<div class="eyebrow" style="margin-top:4px">Années payées</div>' + hist + '</section>';
   }
   function renamePanel() {

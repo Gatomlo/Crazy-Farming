@@ -118,15 +118,13 @@
   var LV = ['Zen', 'Agité', 'Stressé'];
   function cfgHtml() {
     var rows = LV.map(function (k, i) {
-      var l = cfg.levels[k], d = cfg.defaults[k];
+      var l = cfg.levels[k];
       return '<div class="panel soft stack" data-lv="' + k + '"><div class="row" style="justify-content:space-between"><b>' + esc(l.icon) + ' ' + k + '</b><span class="muted" style="font-size:13px">' + ['0 à 3 points de stress (sur 10)', '4 à 6 points', '7 à 9 points'][i] + '</span></div>' +
         '<label class="muted" style="font-size:13px">Titre annoncé<input data-f="title" maxlength="40" value="' + esc(l.title) + '" style="width:100%"></label>' +
         '<label class="muted" style="font-size:13px">Texte annoncé aux fermes (utilisez {next} et {burn} pour les points de stress restants)<textarea data-f="text" maxlength="400" rows="3" style="width:100%;font:inherit;border-radius:12px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);padding:8px 12px">' + esc(l.text) + '</textarea></label>' +
-        '<div class="row"><label class="muted" style="font-size:13px">Secondes de course (par saison, tous les produits)<br><input data-f="runSec" type="number" step="5" min="' + cfg.limits.runSec[0] + '" max="' + cfg.limits.runSec[1] + '" value="' + l.runSec + '" style="width:110px"></label>' +
-        '<label class="muted" style="font-size:13px">Charges de l\'année (%)<br><input data-f="chargesPct" type="number" step="1" min="' + cfg.limits.chargesPct[0] + '" max="' + cfg.limits.chargesPct[1] + '" value="' + l.chargesPct + '" style="width:110px"></label>' +
-        '<span class="muted" style="font-size:12px;flex:1;min-width:160px">Valeurs d\'origine : ' + (d.runSec > 0 ? '+' : '') + d.runSec + ' s · ' + (d.chargesPct > 0 ? '+' : '') + d.chargesPct + ' %</span></div></div>';
+        '<label class="muted" style="font-size:13px">' + (k === 'Zen' ? 'Privilèges possibles' : 'Gages possibles') + ' : un par ligne (un seul est tiré au hasard pour chaque ferme à chaque saison ; liste vide = rien)<textarea data-f="gages" rows="6" style="width:100%;font:inherit;border-radius:12px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);padding:8px 12px">' + esc(l.gages.join('\n')) + '</textarea></label></div>';
     }).join('');
-    return '<p class="muted" style="margin:0;font-size:14px">Le niveau de stress de chaque ferme est relevé au début de chaque saison. Il ajoute ou retire des secondes de course à tous ses produits pendant la saison, et un pourcentage sur les charges de fin d\'année. Ces réglages valent pour toutes les parties (y compris celles en cours).</p>' + rows +
+    return '<p class="muted" style="margin:0;font-size:14px">Le niveau de stress de chaque ferme est relevé au début de chaque saison. <b>Il n\'a aucun effet sur les règles du jeu</b> : il donne un gage physique (ou un privilège pour le niveau Zen) à appliquer pendant la saison, annoncé sur le mobile et le projecteur, que le maire du village valide ensuite. Ces réglages valent pour toutes les parties, y compris celles en cours.</p>' + rows +
       '<div class="row"><button class="btn primary" data-cfg="save">Enregistrer</button><button class="btn" data-cfg="reset">Rétablir les valeurs d\'origine</button></div>';
   }
   function loadStressCfg() {
@@ -144,7 +142,7 @@
     var body = {};
     LV.forEach(function (k) {
       var box = document.querySelector('[data-lv="' + k + '"]');
-      body[k] = { title: box.querySelector('[data-f=title]').value, text: box.querySelector('[data-f=text]').value, runSec: parseInt(box.querySelector('[data-f=runSec]').value, 10), chargesPct: parseInt(box.querySelector('[data-f=chargesPct]').value, 10) };
+      body[k] = { title: box.querySelector('[data-f=title]').value, text: box.querySelector('[data-f=text]').value, gages: box.querySelector('[data-f=gages]').value.split('\n') };
     });
     FF.auth.api('api/config/stress', { method: 'PUT', body: { levels: body } }).then(function (r) {
       if (!r.ok) return say(r.j.error || 'Réglages refusés.');

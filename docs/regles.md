@@ -155,12 +155,11 @@ Chaque ferme **place d'abord** ses produits, **produit par produit** (4 produits
 
 ## Bocal de stress
 - Un point de stress = un prix payé pour aller plus vite. Niveaux : **Zen** (0 à 3), **Agité** (4 à 6), **Stressé** (7 à 9).
-- **Effets des niveaux, à chaque saison.** Le niveau de chaque ferme est relevé au **début de la saison** (étape Aléa) et annoncé sur son mobile et sur le projecteur, avec ses effets. Il s'applique toute la saison, même si le stress bouge ensuite :
-  - **Zen** : +5 s de course pour tous les produits de la ferme ; −10 % sur les charges de l'année.
-  - **Agité** : aucun effet chiffré ; l'équipe porte l'accessoire du niveau Agité.
-  - **Stressé** : −10 s de course pour tous les produits ; +10 % sur les charges de l'année ; accessoire du niveau Stressé.
-  - La course ne tombe jamais sous 5 s, et un produit non récoltable le reste. Les charges utilisent le niveau relevé au début de l'hiver.
-  - Ces effets (secondes, pourcentage, titres et textes) se modifient dans les **réglages de l'application** (accueil du maire du village, « Réglages »), pour toutes les parties.
+- **Gages, à chaque saison.** Le niveau de chaque ferme est relevé au **début de la saison** (étape Aléa). **Il n'a aucun effet sur les règles du jeu** (ni sur la course, ni sur l'argent) : il donne un **gage physique** à appliquer pendant la saison, tiré au hasard dans la liste du niveau, annoncé sur le mobile de la ferme et sur le projecteur. Le maire du village le valide (« Fait ? ») dans sa console.
+  - **Zen** : un privilège (par exemple choisir le cri de ralliement du village ou la musique de la saison).
+  - **Agité** : un gage léger (par exemple annoncer ses décisions en rimant, porter l'accessoire du niveau Agité).
+  - **Stressé** : un gage plus marqué (par exemple 10 sauts en étoile devant le village, chanter un refrain).
+  - Les titres, textes et listes de gages se modifient dans les **réglages de l'application** (accueil du maire du village, « Réglages »), pour toutes les parties ; une liste vide supprime le gage du niveau.
 - À **10 points de stress : burn-out**. La ferme repart avec 3 points de stress mais s'arrête une saison : pas de récolte, de transformation ni de marché. Achats, virements et vacances restent possibles ; les charges courent toujours.
 - **Vacances** : 30 EB par voyageur, à l'étape Achats (dans la boutique) ; −1 stress, et le voyageur ne court pas la saison suivante.
 - Hamac : −1 stress par saison. Fête réussie : −2 stress. **Fête ratée : +2 stress pour toutes les fermes, plus +1 par plat non livré pour son responsable.**
