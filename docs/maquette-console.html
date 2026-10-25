@@ -68,7 +68,7 @@ details[open] > summary::before { transform: rotate(90deg); }
 .logo { width: 48px; height: 48px; border-radius: 15px; background: linear-gradient(135deg, var(--pb), var(--pc)); display: grid; place-items: center; font-size: 26px; box-shadow: 0 12px 26px -14px rgba(224,112,31,.8); }
 .brand h1 { font-size: 38px; color: var(--sand); } .brand .logo { width: 42px; height: 42px; font-size: 22px; }
 /* Menu déroulant unique, en haut à droite, sur la ligne du titre */
-.hdr { position: relative; z-index: 200; }
+.hdr { position: relative; z-index: 100; }
 .menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 300px; max-width: calc(100vw - 24px); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--float); padding: 6px; display: none; }
 .menu.open { display: block; animation: fade .15s ease both; }
 .mi { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; background: transparent; border-radius: 10px; font-weight: 600; font-size: 14.5px; white-space: nowrap; text-align: left; }
@@ -127,7 +127,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 .dock .go { min-height: 48px; padding: 0 24px; font-size: 15px; }
 .dock .pulse { animation: pulse 1.8s infinite; }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(224,112,31,.5); } 50% { box-shadow: 0 0 0 10px rgba(224,112,31,0); } }
-.veil { position: fixed; inset: 0; z-index: 150; background: rgba(20,12,6,.5); backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 14px; overflow: auto; }
+.veil { position: fixed; inset: 0; z-index: 300; background: rgba(20,12,6,.5); backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 14px; overflow: auto; }
 .sheet { width: min(640px, 100%); display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: var(--float); }
 .sec { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; } .sec h3 { font-size: 24px; }
 .opt { display: flex; gap: 10px; align-items: flex-start; } .opt small { display: block; color: var(--muted); }
@@ -170,7 +170,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     { id: 'marche', label: '4 · Marché', phase: 'season', step: 3 }, { id: 'achats', label: '5 · Achats', phase: 'season', step: 4 },
     { id: 'cloture', label: 'Clôture et fête', phase: 'closing' }
   ];
-  var cur = 4, secs = 24, running = true, settingsOpen = false, menuOpen = false, view = 'cards';
+  var cur = 4, secs = 24, running = true, settingsOpen = false, menuOpen = false, jumpOpen = false, view = 'cards';
   var app = document.getElementById('app');
   var fmt = function (n) { return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
   var lvl = function (n) { return n < 4 ? ['Zen', 'z', 'ok'] : n < 7 ? ['Agité', 'a', 'warn'] : ['Stressé', 's', 'bad']; };
@@ -220,22 +220,19 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
       var cls = i === s.step ? 'active' : i < s.step ? 'done' : '';
       return '<div class="step ' + cls + '"><span class="n">' + (i < s.step ? '✓' : i + 1) + '</span><div style="flex:1"><b>' + st[0] + '</b><small>' + st[1] + '</small>' + (i === s.step ? '<div class="say">' + st[3] + '</div>' : '') + '</div><span class="muted num">' + st[2] + '</span></div>';
     }).join('');
-    return '<section class="panel steps stack"><h2>Déroulé de la saison</h2><div class="stack" style="gap:4px">' + items + '</div>' +
-      '<details><summary>Aller à une saison</summary><div class="row" style="margin-top:8px"><select><option>Année 1</option><option>Année 2</option></select><select><option>Printemps</option><option>Été</option></select>' + sm('Aller à') + '</div><div class="sub" style="margin-top:6px">Les charges et la fête des années sautées ne sont pas jouées.</div></details></section>';
+    return '<section class="panel steps stack"><h2>Déroulé de la saison</h2><div class="stack" style="gap:4px">' + items + '</div></section>';
   }
   function timerPanel(title, eyebrow, chip) {
-    return '<section class="panel timer stack"><div class="row sb"><div><div class="eyebrow">' + eyebrow + '</div><h2 style="font-size:46px;margin-top:6px">' + title + '</h2></div>' + (chip ? '<span class="pill warn">' + chip + '</span>' : '') + '</div>' +
-      '<div class="clock" id="clock">' + fmt(secs) + '</div><div class="bar"><i id="bar"></i></div>' +
-      '<div class="row">' + btn(running ? '‖' : '▶', running ? 'Pause' : 'Lancer le chrono', 'primary') + btn('↺', 'Remettre à zéro') + '</div>' +
+    return '<section class="panel timer stack"><div class="row sb"><div>' + (eyebrow ? '<div class="eyebrow">' + eyebrow + '</div>' : '') + '<h2 style="font-size:46px">' + title + '</h2></div>' + (chip ? '<span class="pill warn">' + chip + '</span>' : '') + '</div>' +
+      '<div class="row" style="gap:18px"><div class="clock" id="clock">' + fmt(secs) + '</div>' + btn(running ? '‖' : '▶', running ? 'Pause' : 'Lancer le chrono', 'primary') + btn('↺', 'Remettre à zéro') + '</div>' +
       '<details><summary>Régler le chrono</summary><div class="stack" style="margin-top:8px"><div class="fix">' + ['−30 s', '−15 s', '+15 s', '+30 s', '+1 min'].map(function (x) { return sm(x); }).join('') + '</div><div class="row"><input placeholder="Durée (s)" style="width:110px">' + sm('Fixer') + '</div><label class="row" style="font-size:13px;gap:8px"><input type="checkbox"> Garder cette durée pour cette étape aux saisons suivantes</label></div></details>' +
-      '<div class="row" style="border-top:1px solid var(--line);padding-top:10px"><span class="muted">🏃 Aller-retour d’un coureur</span><select><option>30 s</option></select>' + sm('⏱ Mesurer') + '<span class="sub">Récolte : 75 s · collier +20 s · tracteur +15 s</span></div></section>';
+      '</section>';
   }
   function say(t) { return '<div class="sub" style="color:var(--sand)">' + t + '</div>'; }
 
   function sidePanel() {
     var id = S[cur].id;
-    if (id === 'alea') return '<section class="panel side stack"><h2>Carte aléa</h2><span class="pill bad" style="align-self:flex-start">Négatif</span><div class="cardshow"><div class="ico">🧊</div><div><h3>Gel tardif</h3><div>Fruits et légumes : course trop courte, non récoltable.</div><div class="muted">Parade : <b style="color:var(--fg)">serre</b></div></div></div>' + btn('🎴', 'Tirer une autre carte') +
-      '<div class="row sb" style="border-top:1px solid var(--line);padding-top:10px"><b>🎲 Dés des activités</b>' + sm('Lancer les manquants (2)', 'primary') + '</div><div class="row sb"><span>Les Bergers</span><span class="row" style="gap:6px"><span class="die">4</span><span class="die">5</span></span></div><div class="row sb"><span>Les Gourmets</span><span class="row" style="gap:6px"><span class="die fail">1</span>' + sm('🎲') + '</span></div></section>';
+    if (id === 'alea') return '<section class="panel side stack"><h2>Carte aléa</h2><span class="pill bad" style="align-self:flex-start">Négatif</span><div class="cardshow"><div class="ico">🧊</div><div><h3>Gel tardif</h3><div>Fruits et légumes : course trop courte, non récoltable.</div><div class="muted">Parade : <b style="color:var(--fg)">serre</b></div></div></div>' + btn('🎴', 'Tirer une autre carte') + '</section>';
     if (id === 'colec') return '<section class="panel side stack"><span class="pill warn" style="align-self:flex-start">Aléa collectif · tout le village</span><div style="font-size:26px;font-weight:800">🌱 Semences communes</div><div>Chaque ferme met des fruits et légumes en commun.</div><div><b>Objectif : 8 jetons</b> <span class="muted">avant la fin de « Transformation »</span></div><div class="bar" style="height:10px"><i style="width:50%"></i></div><b class="num">4 / 8</b>' +
       '<table class="t"><tbody>' + FARMS.map(function (f, i) { return '<tr><td>' + f.name + '</td><td class="r"><span class="row" style="justify-content:flex-end;gap:6px">' + sm('−1') + '<b class="num" style="min-width:20px;text-align:center">' + (i === 0 ? 4 : 0) + '</b>' + sm('+1') + '</span></td></tr>'; }).join('') + '</tbody></table><div class="row sb"><span class="sub">Vérifiez la remise physique des jetons.</span>' + sm('Clôturer maintenant') + '</div></section>';
     if (id === 'recolte') return '<section class="panel side stack"><div class="row sb"><h2>Qui court encore ?</h2><span class="sub">chronos différents</span></div><table class="t"><thead><tr><th>Ferme</th><th>Lait</th><th>Œufs</th><th>Fruits</th></tr></thead><tbody>' +
@@ -250,9 +247,19 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     return '';
   }
 
+  function activitiesPanel() {
+    var rows = [['Les Bergers', [['🏡', 'Gîte', 4, '+25 EB'], ['🛒', 'Magasin', 5, '+3 jetons']]], ['Les Gourmets', [['🍽️', 'Restaurant', 1, 'raté']]], ['Les Maraîchers', [['🎓', 'Pédagogique', 0, '']]], ['Les Éleveurs', []]];
+    return '<section class="panel stack"><div class="row sb"><h2>🎲 Activités complémentaires</h2>' + sm('Lancer les dés manquants (1)', 'primary') + '</div><table class="t"><thead><tr><th>Ferme</th><th>Activités et dé de la saison</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + (r[1].length ? '<span class="row" style="gap:18px">' + r[1].map(function (a) { return '<span class="row" style="gap:6px">' + a[0] + ' ' + a[1] + (a[2] ? ' <span class="die' + (a[2] === 1 ? ' fail' : '') + '">' + a[2] + '</span><span class="sub">' + a[3] + '</span>' : ' ' + sm('🎲 Lancer')) + '</span>'; }).join('') + '</span>' : '<span class="muted">aucune</span>') + '</td></tr>'; }).join('') +
+      '</tbody></table><div class="sub">Un dé par activité et par saison : 1 = l’activité ne fonctionne pas, 2 à 6 = effet croissant. Les fermes lancent sur leur mobile ; le maire peut lancer à leur place.</div></section>';
+  }
+
   /* ---------- Sous les colonnes : tableaux secondaires, épurés ---------- */
   function below() {
     var id = S[cur].id;
+    return ((id === 'lobby' || id === 'setup' || id === 'cloture') ? '' : activitiesPanel()) + belowStep(id);
+  }
+  function belowStep(id) {
     if (id === 'transfo') return '<section class="panel stack"><h2>Bourse entre fermes</h2><table class="t"><thead><tr><th>Échange</th><th>Contenu</th><th>Prix</th><th>État</th><th class="r"></th></tr></thead><tbody><tr><td>Bergers ↔ Gourmets</td><td>2 laits contre 1 fromage</td><td class="muted">troc</td><td class="ok-t">Conclu</td><td class="r">' + sm('Annuler l’échange') + '</td></tr><tr><td>Éleveurs → Maraîchers</td><td>3 viandes</td><td>20 EB</td><td class="warn-t">En attente</td><td class="r">' + sm('Annuler') + '</td></tr></tbody></table></section>' + menuTable();
     if (id === 'marche') return '<section class="panel stack"><h2>Produits placés</h2><table class="t"><thead><tr><th>Ferme</th><th>Roue</th><th>Placement</th><th class="r"></th></tr></thead><tbody><tr><td>Les Maraîchers</td><td>Trois quarts</td><td>Œufs 2 super / 3 étal (2 vendus) · Fruits et légumes 2 super</td><td class="r"></td></tr><tr><td>Les Éleveurs</td><td>' + sm('🎡 Tourner') + '</td><td>Viande 5 super</td><td class="r"></td></tr><tr><td>Les Bergers</td><td>Tout vendu</td><td>Lait 3 étal</td><td class="r"></td></tr></tbody></table></section>';
     if (id === 'achats') return '<section class="panel stack"><h2>Achats de la saison</h2><table class="t"><tbody><tr><td>Les Gourmets</td><td>arrosage + 1 vacance</td><td class="r"><b class="num">60 EB</b></td></tr><tr><td>Les Bergers</td><td>panier de récolte</td><td class="r"><b class="num">40 EB</b></td></tr></tbody></table></section>';
@@ -294,7 +301,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     var menu = '<div class="menu' + (menuOpen ? ' open' : '') + '" role="menu">' + mi('📺', 'Écran des joueurs') + mi('📱', 'QR code sur l’écran') + mi('🎯', 'Objectifs à l’écran') + '<hr>' + mi('⚙️', 'Paramètres de la partie', 'gear') + mi('↶', 'Annuler', '', '<small>correction de banque</small>') +
       '<div class="mrow"><span>Vue des fermes</span><span class="seg"><button data-view="cards" class="' + (view === 'cards' ? 'on' : '') + '">Cartes</button><button data-view="table" class="' + (view === 'table' ? 'on' : '') + '">Tableau</button></span></div><hr>' +
       mi('📜', 'Journal') + mi('📖', 'Règles du jeu') + mi('🧭', 'Guide du maire') + '<hr>' + mi('←', 'Mes parties') + '</div>';
-    return '<header class="hdr"><div class="brand"><div class="logo">🚜</div><div><h1>Farming’s Folies</h1><div class="muted" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Console du maire du village · partie <b style="letter-spacing:.15em;color:var(--fg)">QWXY</b><span class="pill ' + (title[1] ? 'ok' : '') + '">' + title[0] + '</span></div></div></div>' +
+    return '<header class="hdr"><div class="brand"><div class="logo">🚜</div><div><h1>Farming’s Folies</h1><div class="muted" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Console du maire du village · partie <b style="letter-spacing:.15em;color:var(--fg)">QWXY</b><span class="pill ' + (title[1] ? 'ok' : '') + '">' + title[0] + '</span>' + (title[1] ? '<span style="position:relative"><button class="btn small" id="jumpbtn">⇄ Changer de saison</button><div class="menu' + (jumpOpen ? ' open' : '') + '" style="left:0;right:auto;min-width:290px;padding:12px"><div class="row"><select><option>Année 1</option><option>Année 2</option></select><select><option>Printemps</option><option>Été</option></select>' + sm('Aller à') + '</div><div class="sub" style="margin-top:6px">Les charges et la fête des années sautées ne sont pas jouées.</div></div></span>' : '') + '</div></div></div>' +
       '<div style="position:relative"><button class="btn" id="menubtn" aria-haspopup="menu" aria-expanded="' + (menuOpen ? 'true' : 'false') + '"><span class="i">☰</span>Menu<span class="i">' + (menuOpen ? '▴' : '▾') + '</span></button>' + menu + '</div></header>';
   }
   function settings() {
@@ -304,6 +311,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     return '<div class="veil" id="veil"><section class="sheet" role="dialog" aria-label="Paramètres de la partie"><div class="row sb"><h2 style="font-size:34px">Paramètres de la partie</h2>' + sm('Fermer') .replace('<button', '<button id="closeSettings"') + '</div>' +
       '<div class="sec"><h3>Équipes et durée</h3><div class="row"><select' + (lobbyOnly ? '' : ' disabled') + '><option>5 joueurs par ferme</option></select><select' + (lobbyOnly ? '' : ' disabled') + '><option>3 ans · partie normale</option></select></div></div>' +
       '<div class="sec"><h3>Options de jeu</h3>' + sw('Défi de saison « zéro perte »', 'Salle d’attente seulement.', false, !lobbyOnly) + sw('Bilan de saison au projecteur', 'Modifiable à tout moment.', true) + sw('Gages selon le niveau de stress', 'Sans effet sur les règles.', true) + '</div>' +
+      '<div class="sec"><h3>Aller-retour d’un coureur</h3><div class="row"><select><option>30 s</option></select>' + sm('⏱ Mesurer') + '</div><div class="sub" style="margin-top:6px">Récolte : 75 s · collier +20 s · tracteur +15 s</div></div>' +
       '<div class="sec"><h3>Écran des joueurs</h3><div class="row">' + sm('📱 Afficher le QR code') + sm('🎯 Afficher les objectifs') + '</div></div></section></div>';
   }
 
@@ -311,7 +319,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     var s = S[cur], tableMode = view === 'table', body;
     var farms = tableMode ? '' : farmsCol();
     if (s.phase === 'season') {
-      body = '<div class="grid">' + stepsPanel() + '<div class="center">' + timerPanel(STEPS[s.step][0], 'Étape ' + (s.step + 1) + ' sur 5 · Printemps · année 1', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + below() + '</div>' + farms + '</div>' + (tableMode ? farmTable() : '');
+      body = '<div class="grid">' + stepsPanel() + '<div class="center">' + timerPanel(STEPS[s.step][0], '', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + below() + '</div>' + farms + '</div>' + (tableMode ? farmTable() : '');
     } else if (s.phase === 'lobby') body = '<div class="grid"><div class="center wide">' + lobbyPage() + '</div>' + farms + '</div>';
     else if (s.phase === 'setup') body = '<div class="grid"><div class="center wide">' + setupPage() + '</div>' + farms + '</div>';
     else body = '<div class="grid"><div class="center wide">' + cloturePage() + '</div>' + farms + '</div>';
@@ -322,13 +330,15 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
 
   var statesEl = document.getElementById('states');
   S.forEach(function (s, i) { var b = document.createElement('button'); b.textContent = s.label; b.onclick = function () { go(i); }; statesEl.appendChild(b); });
-  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; sync(); }
+  function go(i) { cur = Math.max(0, Math.min(S.length - 1, i)); secs = 24; menuOpen = false; jumpOpen = false; sync(); }
   function sync() { Array.prototype.forEach.call(statesEl.children, function (b, i) { b.classList.toggle('on', i === cur); }); render(); }
   document.addEventListener('click', function (e) {
     var t = e.target, vv = t.closest('[data-view]');
     if (vv) { view = vv.dataset.view; return render(); }
     if (t.closest('#menubtn')) { menuOpen = !menuOpen; return render(); }
     if (t.closest('#gear')) { settingsOpen = true; menuOpen = false; return render(); }
+    if (t.closest('#jumpbtn')) { jumpOpen = !jumpOpen; menuOpen = false; return render(); }
+    if (jumpOpen && !t.closest('.menu')) { jumpOpen = false; render(); }
     if (menuOpen && !t.closest('.menu')) { menuOpen = false; render(); }
     if (t.closest('#closeSettings') || t.id === 'veil') { settingsOpen = false; return render(); }
     if (t.closest('#runbtn')) { running = !running; return render(); }
