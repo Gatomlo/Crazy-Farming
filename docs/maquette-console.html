@@ -221,7 +221,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
       var cls = i === s.step ? 'active' : i < s.step ? 'done' : '';
       return '<div class="step ' + cls + '"><span class="n">' + (i < s.step ? '✓' : i + 1) + '</span><div style="flex:1"><b>' + st[0] + '</b><small>' + st[1] + '</small>' + (i === s.step ? '<div class="say">' + st[3] + '</div>' : '') + '</div><span class="muted num">' + st[2] + '</span></div>';
     }).join('');
-    return '<section class="panel steps stack"><h2>Déroulé de la saison</h2><div class="stack" style="gap:4px">' + items + '</div></section>';
+    return '<section class="panel stack"><h2>Déroulé de la saison</h2><div class="stack" style="gap:4px">' + items + '</div></section>';
   }
   function timerPanel(title, eyebrow, chip) {
     return '<section class="panel timer stack"><div class="row sb"><div>' + (eyebrow ? '<div class="eyebrow">' + eyebrow + '</div>' : '') + '<h2 style="font-size:46px">' + title + '</h2></div>' + (chip ? '<span class="pill warn">' + chip + '</span>' : '') + '</div>' +
@@ -249,10 +249,10 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
   }
 
   function activitiesPanel() {
-    var rows = [['Les Bergers', [['🏡', 'Gîte', 4, '+25 EB'], ['🛒', 'Magasin', 5, '+3 jetons']]], ['Les Gourmets', [['🍽️', 'Restaurant', 1, 'raté']]], ['Les Maraîchers', [['🎓', 'Pédagogique', 0, '']]], ['Les Éleveurs', []]];
-    return '<section class="panel stack"><div class="row sb"><h2>🎲 Activités complémentaires</h2>' + sm('Lancer les dés manquants (1)', 'primary') + '</div><table class="t"><thead><tr><th>Ferme</th><th>Activités et dé de la saison</th></tr></thead><tbody>' +
-      rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + (r[1].length ? '<span class="row" style="gap:18px">' + r[1].map(function (a) { return '<span class="row" style="gap:6px">' + a[0] + ' ' + a[1] + (a[2] ? ' <span class="die' + (a[2] === 1 ? ' fail' : '') + '">' + a[2] + '</span><span class="sub">' + a[3] + '</span>' : ' ' + sm('🎲 Lancer')) + '</span>'; }).join('') + '</span>' : '<span class="muted">aucune</span>') + '</td></tr>'; }).join('') +
-      '</tbody></table><div class="sub">Un dé par activité et par saison : 1 = l’activité ne fonctionne pas, 2 à 6 = effet croissant. Les fermes lancent sur leur mobile ; le maire peut lancer à leur place.</div></section>';
+    var rows = [['Bergers', [['🏡', 'Gîte', 4, '+25 EB'], ['🛒', 'Magasin', 5, '+3 jetons']]], ['Gourmets', [['🍽️', 'Restaurant', 1, 'raté']]], ['Maraîchers', [['🎓', 'Pédagogique', 0, '']]]];
+    return '<section class="panel stack" style="gap:8px"><div class="row sb"><h2 style="font-size:24px">🎲 Activités</h2>' + sm('Lancer les manquants (1)', 'primary') + '</div>' +
+      rows.map(function (r) { return '<div class="row sb" style="border-top:1px solid var(--line);padding-top:6px"><b style="font-size:13.5px">' + r[0] + '</b><span class="row" style="gap:8px">' + r[1].map(function (a) { return a[2] ? '<span class="row" style="gap:4px" title="' + a[1] + ' · ' + a[3] + '">' + a[0] + '<span class="die' + (a[2] === 1 ? ' fail' : '') + '" style="width:26px;height:26px;font-size:14px;border-radius:8px">' + a[2] + '</span></span>' : '<button class="btn small" title="Lancer le dé : ' + a[1] + '">' + a[0] + ' 🎲</button>'; }).join('') + '</span></div>'; }).join('') +
+      '<div class="sub">Un dé par activité et par saison : 1 = elle ne fonctionne pas. Les fermes lancent sur mobile ; le maire peut le faire à leur place.</div></section>';
   }
 
   /* ---------- Sous les colonnes : tableaux secondaires, épurés ---------- */
@@ -260,7 +260,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     var id = S[cur].id;
     var recap = (id === 'marche' || id === 'achats') ? menuTable(true) : '';
     var edit = (id === 'alea' || id === 'colec' || id === 'recolte') ? menuTable() : '';
-    return ((id === 'lobby' || id === 'setup' || id === 'cloture') ? '' : activitiesPanel()) + belowStep(id) + recap + edit;
+    return belowStep(id) + recap + edit;
   }
   function belowStep(id) {
     if (id === 'transfo') return '<section class="panel stack"><h2>Bourse entre fermes</h2><table class="t"><thead><tr><th>Échange</th><th>Contenu</th><th>Prix</th><th>État</th><th class="r"></th></tr></thead><tbody><tr><td>Bergers ↔ Gourmets</td><td>2 laits contre 1 fromage</td><td class="muted">troc</td><td class="ok-t">Conclu</td><td class="r">' + sm('Annuler l’échange') + '</td></tr><tr><td>Éleveurs → Maraîchers</td><td>3 viandes</td><td>20 EB</td><td class="warn-t">En attente</td><td class="r">' + sm('Annuler') + '</td></tr></tbody></table></section>' + menuTable(true);
@@ -326,7 +326,7 @@ table.t td.r, table.t th.r { text-align: right; padding-right: 0; }
     var s = S[cur], tableMode = view === 'table', body;
     var farms = tableMode ? '' : farmsCol();
     if (s.phase === 'season') {
-      body = '<div class="grid">' + stepsPanel() + '<div class="center">' + timerPanel(STEPS[s.step][0], '', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + below() + '</div>' + farms + '</div>' + (tableMode ? farmTable() : '');
+      body = '<div class="grid"><div class="steps" style="display:flex;flex-direction:column;gap:16px;min-width:0">' + stepsPanel() + activitiesPanel() + '</div><div class="center">' + timerPanel(STEPS[s.step][0], '', {0: '3 sur 4 ont choisi', 1: '2 sur 4 ont encodé', 2: '1 demande en attente', 3: '2 à payer', 4: '2 fermes prêtes'}[s.step]) + sidePanel() + below() + '</div>' + farms + '</div>' + (tableMode ? farmTable() : '');
     } else if (s.phase === 'lobby') body = '<div class="grid"><div class="center wide">' + lobbyPage() + '</div>' + farms + '</div>';
     else if (s.phase === 'setup') body = '<div class="grid"><div class="center wide">' + setupPage() + '</div>' + farms + '</div>';
     else body = '<div class="grid"><div class="center wide">' + cloturePage() + '</div>' + farms + '</div>';
