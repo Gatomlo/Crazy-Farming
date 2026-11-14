@@ -41,3 +41,7 @@ Prix, quotas, cartes, roue et fête : `lib/data.js`. À calibrer après un premi
 ## Règles et guide dans la console
 
 Les boutons « 📖 Règles » et « 🧭 Guide » de la console du maire du village ouvrent les textes de `docs/regles.md` et `docs/guide.md`. Après modification, régénérer : `node docs/build-guide.js` (écrit `public/guide.js`).
+
+## Connexion centralisée (node-gateway)
+
+Monté derrière node-gateway, l'outil échange l'identité fournie par la passerelle contre un jeton animateur **court (2 h)** : `GET /api/auth/gateway` (`server.js`, copie de `node-gateway/docs/gateway-bridge.js` dans `lib/gateway-bridge.js`) renvoie ce jeton si `req.gateway.role` vaut `admin` pour cet outil (204 sinon). Le front l'appelle au démarrage s'il n'a pas de jeton (`FF.auth.gateway()` dans `public/common.js`, `home.js`, `admin.js`), sauf après une déconnexion volontaire. Le jeton marche pour HTTP et la console temps réel. Un animateur désactivé sur la passerelle perd l'accès au plus tard à l'expiration du jeton (2 h). Le mot de passe partagé reste valable. Hors passerelle : sans effet. Test : `test/gateway-bridge.test.js`.

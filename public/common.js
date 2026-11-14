@@ -158,6 +158,17 @@
     },
     save: function (token, exp) { try { localStorage.setItem(AUTH_KEY, JSON.stringify({ token: token, exp: exp })); } catch (e) { /* ignore */ } },
     clear: function () { try { localStorage.removeItem(AUTH_KEY); } catch (e) { /* ignore */ } },
+    // Connexion centralisee de node-gateway : sans jeton, demande au serveur si la passerelle se porte garante de
+    // l'animateur (route sans effet hors passerelle : 204). Pas tente apres une deconnexion volontaire (cet onglet).
+    gateway: function () {
+      try { if (sessionStorage.getItem('ff-no-gateway') === '1') return Promise.resolve(false); } catch (e) { /* ignore */ }
+      return fetch(BASE + '/api/auth/gateway', { credentials: 'same-origin' })
+        .then(function (r) { return r.status === 200 ? r.json() : null; })
+        .then(function (j) { if (j && j.token) { auth.save(j.token, j.expiresAt); return true; } return false; })
+        .catch(function () { return false; });
+    },
+    // Deconnexion volontaire : ne pas se reconnecter aussitot via la passerelle.
+    noGateway: function () { try { sessionStorage.setItem('ff-no-gateway', '1'); } catch (e) { /* ignore */ } },
     // fetch avec jeton ; renvoie { ok, status, j }
     api: function (path, opts) {
       opts = opts || {};

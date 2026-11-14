@@ -8,7 +8,12 @@
   var conn = null;
 
   if (!code) { location.replace(FF.BASE + '/'); return; }
-  if (!token) { root.innerHTML = '<div class="panel" style="max-width:420px;margin:10vh auto;text-align:center"><h2>Connexion requise</h2><p class="muted">Connecte-toi avec le mot de passe du maire du village.</p><a class="btn primary" style="display:inline-flex;align-items:center;text-decoration:none" href="./">Se connecter</a></div>'; return; }
+  if (!token) {
+    var denied = function () { root.innerHTML = '<div class="panel" style="max-width:420px;margin:10vh auto;text-align:center"><h2>Connexion requise</h2><p class="muted">Connecte-toi avec le mot de passe du maire du village.</p><a class="btn primary" style="display:inline-flex;align-items:center;text-decoration:none" href="./">Se connecter</a></div>'; };
+    // Connexion centralisee de node-gateway : jeton court si la passerelle se porte garante de l'animateur.
+    FF.auth.gateway().then(function (ok) { if (ok) location.reload(); else denied(); });
+    return;
+  }
 
   conn = FF.connect({
     role: 'admin', code: code, token: token,

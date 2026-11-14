@@ -164,7 +164,7 @@
     var b = e.target.closest('[data-act]');
     if (!b) return;
     var cardEl = b.closest('[data-code]'), code = cardEl && cardEl.dataset.code;
-    if (b.dataset.act === 'logout') { FF.auth.clear(); return entry(); }
+    if (b.dataset.act === 'logout') { FF.auth.clear(); FF.auth.noGateway(); return entry(); }
     if (b.dataset.act === 'rename') {
       var g = games.filter(function (x) { return x.code === code; })[0];
       var info = cardEl.querySelector('.info');
@@ -195,5 +195,5 @@
   function entry() {
     FF.auth.api('api/status').then(function (r) { if (r.ok && r.j && r.j.setup) setupView(); else loginView(); }).catch(function () { loginView(); });
   }
-  if (FF.auth.token()) load(false); else entry();
+  if (FF.auth.token()) load(false); else FF.auth.gateway().then(function (ok) { if (ok) load(false); else entry(); });
 })();

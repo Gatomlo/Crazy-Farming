@@ -11,6 +11,7 @@ const express = require('express');
 const store = require('./lib/store');
 const E = require('./lib/engine');
 const auth = require('./lib/auth');
+const gatewayBridge = require('./lib/gateway-bridge');
 const config = require('./lib/config');
 config.load();
 const { dispatch } = require('./lib/actions');
@@ -37,6 +38,16 @@ app.get('/team', page('team.html'));
 // ---------- Acces animateur (mot de passe) ----------
 app.set('trust proxy', 1);
 app.get('/api/status', (req, res) => res.json({ setup: auth.needsSetup() }));
+
+// Connexion centralisee de node-gateway : la passerelle pose req.gateway (cote serveur, dans le meme process) quand
+// l'utilisateur y est connecte. Avec le droit « admin » sur cet outil (les animateurs), le front recoit un jeton
+// animateur COURT (2 h) qu'il utilise comme apres un mot de passe (HTTP et console temps reel). 204 sinon.
+// Hors passerelle : toujours 204. Le mot de passe partage reste valable.
+app.get('/api/auth/gateway', (req, res) => {
+  if (!gatewayBridge.identity(req, 'admin')) return res.status(204).end();
+  const token = auth.issueToken(Date.now(), auth.GATEWAY_TOKEN_TTL_MS);
+  res.json({ ok: true, token, expiresAt: auth.expiry(token), defaultPassword: false });
+});
 
 app.post('/api/setup', (req, res) => {
   const r = auth.setup(req.ip, (req.body || {}).password);
