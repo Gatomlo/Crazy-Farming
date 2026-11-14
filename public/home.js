@@ -25,7 +25,7 @@
     document.getElementById('setupForm').addEventListener('submit', function (e) {
       e.preventDefault();
       var a = document.getElementById('pw1').value, b = document.getElementById('pw2').value;
-      if (a.length < 6) return say('Au moins 6 caractères.');
+      if (a.length < 8) return say('Au moins 8 caractères.');
       if (a !== b) return say('Les deux mots de passe ne correspondent pas.');
       FF.auth.api('api/setup', { method: 'POST', body: { password: a } }).then(function (r) {
         if (r.ok) { FF.auth.save(r.j.token, r.j.expiresAt); load(false); return; }

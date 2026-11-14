@@ -50,6 +50,10 @@ app.get('/api/auth/gateway', (req, res) => {
 });
 
 app.post('/api/setup', (req, res) => {
+  // Derriere node-gateway, c'est elle qui authentifie : le premier visiteur ne peut plus s'approprier l'outil.
+  if (gatewayBridge.behindGateway(req) && !gatewayBridge.identity(req, 'admin')) {
+    return res.status(403).json({ error: 'forbidden', message: 'Connectez-vous à la passerelle avec un compte ayant le droit admin.' });
+  }
   const r = auth.setup(req.ip, (req.body || {}).password);
   if (!r.ok) return res.status(r.status).json({ ok: false, error: r.error });
   res.json({ ok: true, token: r.token, expiresAt: auth.expiry(r.token), defaultPassword: false });

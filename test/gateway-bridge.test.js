@@ -44,8 +44,18 @@ test('un simple membre, un anonyme ou un droit nul n\'obtiennent rien (204)', as
   for (const h of [gw('member'), gw(null), {}]) assert.equal((await bridge(h)).status, 204);
 });
 
-test('mot de passe partage inchange : creation puis connexion', async () => {
-  let r = await fetch(base + '/api/setup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'motdepasse-solide' }) });
+test('creation du mot de passe : refusee au premier visiteur derriere la passerelle, permise a son admin ; 8 caracteres min.', async () => {
+  const setup = (h, password = 'motdepasse-solide') => fetch(base + '/api/setup', { method: 'POST', headers: { 'content-type': 'application/json', ...h }, body: JSON.stringify({ password }) });
+  const anon = { 'x-test-gateway': JSON.stringify({ app: 'farming-folies', role: null, user: null }) };
+  assert.equal((await setup(anon)).status, 403);
+  assert.equal((await setup(gw('member'))).status, 403);
+  assert.equal((await (await fetch(base + '/api/status')).json()).setup, true, 'rien n\'a ete cree');
+  assert.equal((await setup(gw('admin'), 'court')).status, 400, 'trop court');
+  assert.equal((await setup(gw('admin'))).status, 200);
+});
+
+test('mot de passe partage inchange : connexion', async () => {
+  let r = { status: 200 };
   assert.equal(r.status, 200);
   r = await fetch(base + '/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'motdepasse-solide' }) });
   assert.equal(r.status, 200);
